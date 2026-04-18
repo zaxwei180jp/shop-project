@@ -14,10 +14,9 @@ document.addEventListener("DOMContentLoaded", () => {
         path.includes("index.html");
 
       if (isHome) {
-        // ⭐ 首頁：只顯示 isNew
+        // ⭐ 首頁：新商品
         const newProducts = allProducts.filter(p => p.isNew === true);
 
-        // 如果沒設 isNew，就顯示前3個避免空白
         if (newProducts.length > 0) {
           renderProducts(newProducts);
         } else {
@@ -25,13 +24,59 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
       } else {
-        // ⭐ 商品頁：全部
+        // ⭐ 商品頁
+        setupFilters();
         renderProducts(allProducts);
       }
-    })
-    .catch(err => console.error("API錯:", err));
+    });
 });
 
+
+// ⭐ 設定篩選功能
+function setupFilters() {
+
+  const categoryFilter = document.getElementById("categoryFilter");
+  const sortOption = document.getElementById("sortOption");
+
+  if (!categoryFilter || !sortOption) return;
+
+  categoryFilter.addEventListener("change", applyFilters);
+  sortOption.addEventListener("change", applyFilters);
+}
+
+
+// ⭐ 套用篩選 + 排序
+function applyFilters() {
+
+  let filtered = [...allProducts];
+
+  const category = document.getElementById("categoryFilter").value;
+  const sort = document.getElementById("sortOption").value;
+
+  // 篩選分類
+  if (category) {
+    filtered = filtered.filter(p => p.category === category);
+  }
+
+  // 排序
+  if (sort === "price-high") {
+    filtered.sort((a, b) => b.price - a.price);
+  }
+
+  if (sort === "price-low") {
+    filtered.sort((a, b) => a.price - b.price);
+  }
+
+  if (sort === "new") {
+    // 預設 Notion 新的在前（通常已經是）
+    filtered.reverse();
+  }
+
+  renderProducts(filtered);
+}
+
+
+// ⭐ 渲染商品
 function renderProducts(products) {
   const list = document.getElementById("product-list");
   if (!list) return;
@@ -63,10 +108,14 @@ function renderProducts(products) {
   });
 }
 
+
+// ⭐ 跳轉商品頁
 window.goToProduct = function(id) {
   window.location.href = `/product.html?id=${id}`;
 };
 
+
+// ⭐ 購物車
 window.addToCart = function(id) {
   let cart = JSON.parse(localStorage.getItem("cart")) || {};
   cart[id] = (cart[id] || 0) + 1;
