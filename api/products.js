@@ -17,35 +17,30 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // ⭐ 直接把 Notion 回傳印出來
-    console.log("NOTION RESPONSE:", JSON.stringify(data, null, 2));
-
-    // ❗ 如果沒有 results，直接回錯誤
     if (!data.results) {
-      return res.status(500).json({
-        error: "Notion API failed",
-        notionResponse: data
-      });
+      return res.status(500).json(data);
     }
 
     const products = data.results.map((page) => {
-      const props = page.properties || {};
+      const props = page.properties;
 
       return {
         id: page.id,
         name: props.name?.title?.[0]?.plain_text || "",
         price: props.price?.number || 0,
-        image: "",
-        category: "",
-        description: "",
-        images: []
+        image: props.image?.url || "",
+        category: props.category?.select?.name || "",
+        description: props.description?.rich_text?.[0]?.plain_text || "",
+        isNew: props.isNew?.checkbox || false,
+        images: props.images?.rich_text?.[0]?.plain_text
+          ? props.images.rich_text[0].plain_text.split(",")
+          : [],
       };
     });
 
     res.status(200).json(products);
 
   } catch (err) {
-    console.error("🔥 ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 }
