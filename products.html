@@ -12,38 +12,39 @@
 <div class="w-60 bg-white h-screen p-5 shadow">
   <h2 class="text-xl font-bold mb-5">我的商店</h2>
   <a href="index.html" class="block mb-3">首頁</a>
-  <a href="products.html" class="block mb-3 font-bold">商品</a>
+  <a href="products.html" class="block mb-3">商品</a>
   <a href="cart.html" class="block">購物車</a>
 </div>
 
 <!-- 主內容 -->
 <div class="flex-1 p-10">
 
-  <h1 class="text-3xl font-bold mb-6">🛍️ 商品列表</h1>
+  <h1 class="text-3xl font-bold mb-6">全部商品</h1>
 
-  <!-- ⭐ 搜尋 + 排序 -->
+  <!-- ⭐ 篩選區 -->
   <div class="flex gap-4 mb-6">
-    <input id="search-input"
-      type="text"
-      placeholder="搜尋商品..."
-      class="px-4 py-2 border rounded w-60">
 
-    <select id="sort-select" class="px-4 py-2 border rounded">
-      <option value="default">排序</option>
-      <option value="price-asc">價格：低 → 高</option>
-      <option value="price-desc">價格：高 → 低</option>
+    <select id="categoryFilter" class="p-2 border rounded">
+      <option value="">全部分類</option>
+      <option value="COSTCO">COSTCO</option>
+      <option value="日本超市">日本超市</option>
+      <option value="日本超商">日本超商</option>
     </select>
+
+    <select id="sortOption" class="p-2 border rounded">
+      <option value="">預設排序</option>
+      <option value="price-high">價格高 → 低</option>
+      <option value="price-low">價格低 → 高</option>
+      <option value="new">最新</option>
+    </select>
+
   </div>
 
-  <!-- ⭐ 分類 -->
-  <div id="category-list" class="mb-6 flex gap-3 flex-wrap"></div>
-
-  <!-- 商品 -->
+  <!-- 商品列表 -->
   <div id="product-list" class="grid grid-cols-3 gap-6"></div>
 
 </div>
 
-<script src="./js/main.js?v=5"></script>
-
+<script src="js/main.js"></script>
 </body>
 </html>
