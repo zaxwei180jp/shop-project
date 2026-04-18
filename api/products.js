@@ -22,19 +22,33 @@ export default async function handler(req, res) {
     }
 
     const products = data.results.map((page) => {
-      const props = page.properties;
+      const props = page.properties || {};
 
       return {
         id: page.id,
+
         name: props.name?.title?.[0]?.plain_text || "",
+
         price: props.price?.number || 0,
-        image: props.image?.url || "",
+
+        // ⭐ 圖片防呆（支援多種型態）
+        image:
+          props.image?.url ||
+          props.image?.rich_text?.[0]?.plain_text ||
+          props.image?.files?.[0]?.file?.url ||
+          "",
+
         category: props.category?.select?.name || "",
-        description: props.description?.rich_text?.[0]?.plain_text || "",
-        isNew: props.isNew?.checkbox || false,
-        images: props.images?.rich_text?.[0]?.plain_text
-          ? props.images.rich_text[0].plain_text.split(",")
-          : [],
+
+        description:
+          props.description?.rich_text?.[0]?.plain_text || "",
+
+        isNew: props.isNew?.checkbox === true,
+
+        images:
+          props.images?.rich_text?.[0]?.plain_text
+            ? props.images.rich_text[0].plain_text.split(",")
+            : [],
       };
     });
 
