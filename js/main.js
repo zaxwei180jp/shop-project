@@ -1,17 +1,17 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-  console.log("✅ JS 已載入");
+  console.log("JS OK");
 
   fetch("/api/products")
     .then(res => res.json())
     .then(data => {
 
-      console.log("✅ 商品資料:", data);
+      console.log("資料 OK", data);
 
       const list = document.getElementById("product-list");
 
       if (!list) {
-        console.error("❌ 找不到 #product-list");
+        console.error("抓不到 product-list");
         return;
       }
 
@@ -20,9 +20,9 @@ document.addEventListener("DOMContentLoaded", () => {
       data.forEach(p => {
         list.innerHTML += `
           <div class="bg-white p-4 rounded-2xl shadow">
-            <img src="${p.image}" class="rounded-xl mb-3 w-full h-40 object-cover">
-            <h3 class="font-bold text-lg">${p.name}</h3>
-            <p class="text-gray-500">NT$${p.price}</p>
+            <img src="${p.image}" class="w-full h-40 object-cover rounded-xl mb-3">
+            <h3 class="font-bold">${p.name}</h3>
+            <p>NT$${p.price}</p>
             <button onclick="addToCart('${p.id}')"
               class="mt-3 bg-black text-white px-4 py-2 rounded-xl w-full">
               加入購物車
@@ -32,9 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
     })
-    .catch(err => {
-      console.error("❌ API 錯誤:", err);
-    });
+    .catch(err => console.error("API錯:", err));
 
 });
 
@@ -43,5 +41,4 @@ window.addToCart = function(id) {
   cart[id] = (cart[id] || 0) + 1;
   localStorage.setItem("cart", JSON.stringify(cart));
   alert("已加入購物車");
-}
-}
+};
