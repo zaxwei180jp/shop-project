@@ -38,9 +38,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
-function addToCart(id) {
+window.addToCart = function(id) {
   let cart = JSON.parse(localStorage.getItem("cart")) || {};
   cart[id] = (cart[id] || 0) + 1;
   localStorage.setItem("cart", JSON.stringify(cart));
   alert("已加入購物車");
+}
 }
