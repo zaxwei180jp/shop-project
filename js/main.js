@@ -39,7 +39,14 @@ function renderProducts(products) {
     list.innerHTML += `
       <div class="bg-white p-4 rounded-2xl shadow">
         <img src="${p.image}" class="w-full h-40 object-cover rounded-xl mb-3">
-        <h3 class="font-bold text-lg">${p.name}</h3>
+        <h3 class="font-bold text-lg cursor-pointer"
+  onclick="goToProduct('${p.id}')">
+  ${p.name}
+</h3>
+
+<img src="${p.image}"
+  class="w-full h-40 object-cover rounded-xl mb-3 cursor-pointer"
+  onclick="goToProduct('${p.id}')">
         <p class="text-gray-500">NT$${p.price}</p>
         <button onclick="addToCart('${p.id}')"
           class="mt-3 bg-black text-white px-4 py-2 rounded-xl w-full">
