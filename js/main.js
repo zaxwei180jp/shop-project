@@ -7,17 +7,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
       allProducts = data;
 
-      const isHome = window.location.pathname.includes("index");
+      const path = window.location.pathname;
+
+      const isHome =
+        path === "/" ||
+        path.includes("index.html");
 
       if (isHome) {
         // ⭐ 首頁：只顯示 isNew
-        const newProducts = allProducts.filter(p => p.isNew);
-        renderProducts(newProducts);
+        const newProducts = allProducts.filter(p => p.isNew === true);
+
+        // 如果沒設 isNew，就顯示前3個避免空白
+        if (newProducts.length > 0) {
+          renderProducts(newProducts);
+        } else {
+          renderProducts(allProducts.slice(0, 3));
+        }
+
       } else {
         // ⭐ 商品頁：全部
         renderProducts(allProducts);
       }
-    });
+    })
+    .catch(err => console.error("API錯:", err));
 });
 
 function renderProducts(products) {
