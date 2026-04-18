@@ -63,7 +63,7 @@ function getRichText(field) {
 }
 
 function getNumber(field) {
-  return field?.formula?.number || 0;
+  return field?.number || 0;
 }
 
 function parseImages(field) {
