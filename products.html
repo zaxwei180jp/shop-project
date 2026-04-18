@@ -6,42 +6,58 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100 flex">
+<body class="bg-gray-100">
 
-<!-- 側邊欄 -->
-<div class="w-60 bg-white h-screen p-5 shadow">
-  <h2 class="text-xl font-bold mb-5">我的商店</h2>
-  <a href="index.html" class="block mb-3">首頁</a>
-  <a href="products.html" class="block mb-3">商品</a>
-  <a href="cart.html" class="block">購物車</a>
+<!-- 手機導覽 -->
+<div class="bg-white p-4 shadow md:hidden flex justify-between">
+  <h2 class="font-bold">我的商店</h2>
+  <div class="flex gap-4">
+    <a href="index.html">首頁</a>
+    <a href="products.html">商品</a>
+    <a href="cart.html">購物車</a>
+  </div>
 </div>
 
-<!-- 主內容 -->
-<div class="flex-1 p-10">
+<div class="flex">
 
-  <h1 class="text-3xl font-bold mb-6">全部商品</h1>
-
-  <!-- ⭐ 篩選區 -->
-  <div class="flex gap-4 mb-6">
-
-    <select id="categoryFilter" class="p-2 border rounded">
-      <option value="">全部分類</option>
-      <option value="COSTCO">COSTCO</option>
-      <option value="日本超市">日本超市</option>
-      <option value="日本超商">日本超商</option>
-    </select>
-
-    <select id="sortOption" class="p-2 border rounded">
-      <option value="">預設排序</option>
-      <option value="price-high">價格高 → 低</option>
-      <option value="price-low">價格低 → 高</option>
-      <option value="new">最新</option>
-    </select>
-
+  <!-- 側邊欄 -->
+  <div class="hidden md:block w-60 bg-white h-screen p-5 shadow">
+    <h2 class="text-xl font-bold mb-5">我的商店</h2>
+    <a href="index.html" class="block mb-3">首頁</a>
+    <a href="products.html" class="block mb-3">商品</a>
+    <a href="cart.html" class="block">購物車</a>
   </div>
 
-  <!-- 商品列表 -->
-  <div id="product-list" class="grid grid-cols-3 gap-6"></div>
+  <!-- 主內容 -->
+  <div class="flex-1 p-5 md:p-10">
+
+    <h1 class="text-2xl md:text-3xl font-bold mb-6">全部商品</h1>
+
+    <!-- 篩選 -->
+    <div class="flex flex-col md:flex-row gap-4 mb-6">
+
+      <select id="categoryFilter" class="p-2 border rounded w-full md:w-auto">
+        <option value="">全部分類</option>
+        <option value="COSTCO">COSTCO</option>
+        <option value="日本超市">日本超市</option>
+        <option value="日本超商">日本超商</option>
+      </select>
+
+      <select id="sortOption" class="p-2 border rounded w-full md:w-auto">
+        <option value="">預設排序</option>
+        <option value="price-high">價格高 → 低</option>
+        <option value="price-low">價格低 → 高</option>
+        <option value="new">最新</option>
+      </select>
+
+    </div>
+
+    <!-- 商品 -->
+    <div id="product-list"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    </div>
+
+  </div>
 
 </div>
 

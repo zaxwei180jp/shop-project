@@ -2,29 +2,37 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>商品詳情</title>
+  <title>商品詳細</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100 flex">
+<body class="bg-gray-100">
 
-<!-- 側邊欄 -->
-<div class="w-60 bg-white h-screen p-5 shadow">
-  <h2 class="text-xl font-bold mb-5">我的商店</h2>
-  <a href="index.html" class="block mb-3">首頁</a>
-  <a href="products.html" class="block mb-3">商品</a>
-  <a href="cart.html" class="block">購物車</a>
+<!-- ⭐ 手機導覽 -->
+<div class="bg-white p-4 shadow md:hidden flex justify-between">
+  <h2 class="font-bold">我的商店</h2>
+  <div class="flex gap-4">
+    <a href="index.html">首頁</a>
+    <a href="products.html">商品</a>
+    <a href="cart.html">購物車</a>
+  </div>
 </div>
 
-<!-- 主內容 -->
-<div class="flex-1 p-10">
+<div class="flex">
 
-  <div id="product-detail"></div>
+  <!-- ⭐ 側邊欄（桌機） -->
+  <div class="hidden md:block w-60 bg-white h-screen p-5 shadow">
+    <h2 class="text-xl font-bold mb-5">我的商店</h2>
+    <a href="index.html" class="block mb-3">首頁</a>
+    <a href="products.html" class="block mb-3">商品</a>
+    <a href="cart.html" class="block">購物車</a>
+  </div>
+
+  <!-- ⭐ 主內容 -->
+  <div id="product-detail" class="flex-1 p-5 md:p-10"></div>
 
 </div>
 
-<!-- ⭐ 只載入這個 -->
-<script src="./js/product.js?v=2"></script>
-
+<script src="js/product.js"></script>
 </body>
 </html>
