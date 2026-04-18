@@ -14,7 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
         path.includes("index.html");
 
       if (isHome) {
-        // ⭐ 首頁：新商品
         const newProducts = allProducts.filter(p => p.isNew === true);
 
         if (newProducts.length > 0) {
@@ -24,7 +23,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
       } else {
-        // ⭐ 商品頁
         setupFilters();
         renderProducts(allProducts);
       }
@@ -32,9 +30,8 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-// ⭐ 設定篩選功能
+// ⭐ 篩選功能
 function setupFilters() {
-
   const categoryFilter = document.getElementById("categoryFilter");
   const sortOption = document.getElementById("sortOption");
 
@@ -45,20 +42,17 @@ function setupFilters() {
 }
 
 
-// ⭐ 套用篩選 + 排序
+// ⭐ 套用篩選
 function applyFilters() {
-
   let filtered = [...allProducts];
 
   const category = document.getElementById("categoryFilter").value;
   const sort = document.getElementById("sortOption").value;
 
-  // 篩選分類
   if (category) {
     filtered = filtered.filter(p => p.category === category);
   }
 
-  // 排序
   if (sort === "price-high") {
     filtered.sort((a, b) => b.price - a.price);
   }
@@ -68,7 +62,6 @@ function applyFilters() {
   }
 
   if (sort === "new") {
-    // 預設 Notion 新的在前（通常已經是）
     filtered.reverse();
   }
 
@@ -76,7 +69,7 @@ function applyFilters() {
 }
 
 
-// ⭐ 渲染商品
+// ⭐ 渲染商品（🔥 正方形圖片）
 function renderProducts(products) {
   const list = document.getElementById("product-list");
   if (!list) return;
@@ -88,7 +81,7 @@ function renderProducts(products) {
       <div class="bg-white p-4 rounded-2xl shadow">
         
         <img src="${p.image || 'https://picsum.photos/300'}"
-          class="w-full h-40 object-cover rounded-xl mb-3 cursor-pointer"
+          class="w-full aspect-square object-cover rounded-xl mb-3 cursor-pointer hover:scale-105 transition"
           onclick="goToProduct('${p.id}')">
 
         <h3 class="font-bold cursor-pointer"
@@ -109,7 +102,7 @@ function renderProducts(products) {
 }
 
 
-// ⭐ 跳轉商品頁
+// ⭐ 跳轉
 window.goToProduct = function(id) {
   window.location.href = `/product.html?id=${id}`;
 };
