@@ -1,26 +1,37 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-  const path = window.location.pathname;
+  console.log("✅ JS 已載入");
 
-const isHome = path === "/" || path.includes("index");
+  fetch("/api/products")
+    .then(res => res.json())
+    .then(data => {
 
-fetch("/api/products")
-  .then(res => res.json())
-  .then(data => {
+      console.log("商品資料:", data);
 
-    if (isHome) {
-      data = data.slice(0, 3);
-    }
+      // ⭐ 用標題判斷是不是首頁（最穩）
+      const title = document.querySelector("h1")?.innerText || "";
+      const isHome = title.includes("新商品");
 
-    renderProducts(data);
+      // ⭐ 首頁只顯示3個
+      if (isHome) {
+        data = data.slice(0, 3);
+      }
 
-  })
-  .catch(err => console.error("API錯誤:", err));
+      renderProducts(data);
+
+    })
+    .catch(err => console.error("❌ API錯誤:", err));
+
+});
+
 
 function renderProducts(products) {
   const list = document.getElementById("product-list");
 
-  if (!list) return;
+  if (!list) {
+    console.error("❌ 找不到 product-list");
+    return;
+  }
 
   list.innerHTML = "";
 
@@ -39,10 +50,12 @@ function renderProducts(products) {
   });
 }
 
-// ⭐ 一定要掛在 window
-window.addToCart = function(id) {
-  let cart = JSON.parse(localStorage.getItem("cart")) || {};
 
+// ⭐ 一定要掛在 window（讓按鈕能用）
+window.addToCart = function(id) {
+  console.log("加入購物車:", id);
+
+  let cart = JSON.parse(localStorage.getItem("cart")) || {};
   cart[id] = (cart[id] || 0) + 1;
 
   localStorage.setItem("cart", JSON.stringify(cart));
