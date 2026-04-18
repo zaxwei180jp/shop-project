@@ -1,3 +1,5 @@
+let allProducts = [];
+
 document.addEventListener("DOMContentLoaded", () => {
 
   console.log("JS OK");
@@ -5,6 +7,8 @@ document.addEventListener("DOMContentLoaded", () => {
   fetch("/api/products")
     .then(res => res.json())
     .then(data => {
+
+      allProducts = data;
 
       const title = document.querySelector("h1")?.innerText || "";
       const isHome = title.includes("新商品");
@@ -54,7 +58,21 @@ function renderProducts(products) {
 }
 
 
-// ⭐ 一定要在最外面（超重要）
+// ⭐ 分類功能
+window.filterCategory = function(category) {
+
+  if (category === "all") {
+    renderProducts(allProducts);
+    return;
+  }
+
+  const filtered = allProducts.filter(p => p.category === category);
+
+  renderProducts(filtered);
+};
+
+
+// ⭐ 購物車
 window.addToCart = function(id) {
   let cart = JSON.parse(localStorage.getItem("cart")) || {};
   cart[id] = (cart[id] || 0) + 1;
@@ -63,7 +81,7 @@ window.addToCart = function(id) {
 };
 
 
-// ⭐ 這個你剛剛很可能漏了
+// ⭐ 商品詳情頁跳轉
 window.goToProduct = function(id) {
   window.location.href = `/product.html?id=${id}`;
 };
