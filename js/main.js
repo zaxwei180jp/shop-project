@@ -2,21 +2,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const path = window.location.pathname;
 
-  fetch("/api/products")
-    .then(res => res.json())
-    .then(data => {
+const isHome = path === "/" || path.includes("index");
 
-      // ⭐ 判斷是不是首頁
-      if (path.includes("index")) {
-        data = data.slice(0, 3); // 首頁只顯示前3個（當新品）
-      }
+fetch("/api/products")
+  .then(res => res.json())
+  .then(data => {
 
-      renderProducts(data);
+    if (isHome) {
+      data = data.slice(0, 3);
+    }
 
-    })
-    .catch(err => console.error("API錯誤:", err));
+    renderProducts(data);
 
-});
+  })
+  .catch(err => console.error("API錯誤:", err));
 
 function renderProducts(products) {
   const list = document.getElementById("product-list");
