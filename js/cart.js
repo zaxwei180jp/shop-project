@@ -1,91 +1,50 @@
-// 商品資料
-const products = [
-  {
-    id: 1,
-    name: "好市多洋芋片",
-    price: 300,
-    image: "https://via.placeholder.com/100"
-  },
-  {
-    id: 2,
-    name: "日本零食",
-    price: 150,
-    image: "https://via.placeholder.com/100"
+document.addEventListener("DOMContentLoaded", () => {
+
+  const container = document.getElementById("cart-list");
+  if (!container) return;
+
+  const cart = JSON.parse(localStorage.getItem("cart")) || {};
+
+  if (Object.keys(cart).length === 0) {
+    container.innerHTML = "<p class='text-gray-500'>購物車是空的</p>";
+    return;
   }
-];
 
-// 讀取購物車（現在是物件）
-let cart = JSON.parse(localStorage.getItem("cart")) || {};
+  fetch("/api/products")
+    .then(res => res.json())
+    .then(products => {
 
-const container = document.getElementById("cart-items");
-const totalEl = document.getElementById("total");
+      let html = "";
+      let total = 0;
 
-// 渲染購物車
-function renderCart() {
-  container.innerHTML = "";
-  let total = 0;
+      products.forEach(p => {
+        if (cart[p.id]) {
+          const qty = cart[p.id];
+          const subtotal = p.price * qty;
+          total += subtotal;
 
-  Object.keys(cart).forEach(id => {
-    const p = products.find(p => p.id == id);
-    if (!p) return;
+          html += `
+            <div class="bg-white p-4 rounded-xl shadow mb-4 flex gap-4">
+              <img src="${p.image}" class="w-24 h-24 object-cover rounded">
+              <div>
+                <h3 class="font-bold">${p.name}</h3>
+                <p>單價：NT$${p.price}</p>
+                <p>數量：${qty}</p>
+                <p class="font-bold">小計：NT$${subtotal}</p>
+              </div>
+            </div>
+          `;
+        }
+      });
 
-    const qty = cart[id];
-    const subtotal = p.price * qty;
-
-    total += subtotal;
-
-    container.innerHTML += `
-      <div class="bg-white p-4 rounded-xl shadow flex justify-between items-center">
-        
-        <div class="flex items-center gap-4">
-          <img src="${p.image}" class="w-16 h-16 rounded">
-          <div>
-            <h3>${p.name}</h3>
-            <p>NT$${p.price}</p>
-          </div>
+      html += `
+        <div class="text-xl font-bold mt-6">
+          總金額：NT$${total}
         </div>
+      `;
 
-        <div class="flex items-center gap-2">
-          <button onclick="decrease(${id})" class="px-2 bg-gray-200">-</button>
-          <span>${qty}</span>
-          <button onclick="increase(${id})" class="px-2 bg-gray-200">+</button>
-          <button onclick="removeItem(${id})" class="text-red-500 ml-3">刪除</button>
-        </div>
+      container.innerHTML = html;
 
-      </div>
-    `;
-  });
+    });
 
-  totalEl.innerText = total;
-}
-
-// +1
-function increase(id) {
-  cart[id] += 1;
-  save();
-}
-
-// -1
-function decrease(id) {
-  if (cart[id] > 1) {
-    cart[id] -= 1;
-  } else {
-    delete cart[id];
-  }
-  save();
-}
-
-// 刪除
-function removeItem(id) {
-  delete cart[id];
-  save();
-}
-
-// 存檔＋刷新
-function save() {
-  localStorage.setItem("cart", JSON.stringify(cart));
-  renderCart();
-}
-
-// 初始化
-renderCart();
+});
