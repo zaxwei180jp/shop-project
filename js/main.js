@@ -1,8 +1,9 @@
 let allProducts = [];
+let currentCategory = "all";
+let currentKeyword = "";
+let currentSort = "default";
 
 document.addEventListener("DOMContentLoaded", () => {
-
-  console.log("JS OK");
 
   fetch("/api/products")
     .then(res => res.json())
@@ -10,22 +11,52 @@ document.addEventListener("DOMContentLoaded", () => {
 
       allProducts = data;
 
-      // ⭐ 建立分類
       renderCategories(allProducts);
+      renderProducts(allProducts);
 
-      const title = document.querySelector("h1")?.innerText || "";
-      const isHome = title.includes("新商品");
+    });
 
-      if (isHome) {
-        data = data.slice(0, 3);
-      }
+  // ⭐ 搜尋
+  document.getElementById("search-input").addEventListener("input", (e) => {
+    currentKeyword = e.target.value.toLowerCase();
+    applyFilters();
+  });
 
-      renderProducts(data);
-
-    })
-    .catch(err => console.error("API錯:", err));
+  // ⭐ 排序
+  document.getElementById("sort-select").addEventListener("change", (e) => {
+    currentSort = e.target.value;
+    applyFilters();
+  });
 
 });
+
+
+// ⭐ 核心：統一篩選 + 排序
+function applyFilters() {
+
+  let result = [...allProducts];
+
+  // 分類
+  if (currentCategory !== "all") {
+    result = result.filter(p => p.category === currentCategory);
+  }
+
+  // 搜尋
+  if (currentKeyword) {
+    result = result.filter(p =>
+      p.name.toLowerCase().includes(currentKeyword)
+    );
+  }
+
+  // 排序
+  if (currentSort === "price-asc") {
+    result.sort((a, b) => a.price - b.price);
+  } else if (currentSort === "price-desc") {
+    result.sort((a, b) => b.price - a.price);
+  }
+
+  renderProducts(result);
+}
 
 
 // ⭐ 商品顯示
@@ -61,9 +92,8 @@ function renderProducts(products) {
 }
 
 
-// ⭐ 動態分類產生
+// ⭐ 分類生成
 function renderCategories(products) {
-
   const container = document.getElementById("category-list");
   if (!container) return;
 
@@ -89,20 +119,14 @@ function renderCategories(products) {
 }
 
 
-// ⭐ 分類篩選
+// ⭐ 分類點擊
 window.filterCategory = function(category) {
-
-  if (category === "all") {
-    renderProducts(allProducts);
-    return;
-  }
-
-  const filtered = allProducts.filter(p => p.category === category);
-  renderProducts(filtered);
+  currentCategory = category;
+  applyFilters();
 };
 
 
-// ⭐ 加入購物車
+// ⭐ 購物車
 window.addToCart = function(id) {
   let cart = JSON.parse(localStorage.getItem("cart")) || {};
   cart[id] = (cart[id] || 0) + 1;
@@ -111,7 +135,7 @@ window.addToCart = function(id) {
 };
 
 
-// ⭐ 商品詳情頁跳轉
+// ⭐ 詳情頁
 window.goToProduct = function(id) {
   window.location.href = `/product.html?id=${id}`;
 };
