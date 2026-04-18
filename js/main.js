@@ -14,24 +14,32 @@ document.addEventListener("DOMContentLoaded", () => {
       renderCategories(allProducts);
       renderProducts(allProducts);
 
+    })
+    .catch(err => console.error("API錯:", err));
+
+
+  // ⭐ 等 DOM 存在再綁事件（修正重點）
+  const searchInput = document.getElementById("search-input");
+  const sortSelect = document.getElementById("sort-select");
+
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      currentKeyword = e.target.value.toLowerCase();
+      applyFilters();
     });
+  }
 
-  // ⭐ 搜尋
-  document.getElementById("search-input").addEventListener("input", (e) => {
-    currentKeyword = e.target.value.toLowerCase();
-    applyFilters();
-  });
-
-  // ⭐ 排序
-  document.getElementById("sort-select").addEventListener("change", (e) => {
-    currentSort = e.target.value;
-    applyFilters();
-  });
+  if (sortSelect) {
+    sortSelect.addEventListener("change", (e) => {
+      currentSort = e.target.value;
+      applyFilters();
+    });
+  }
 
 });
 
 
-// ⭐ 核心：統一篩選 + 排序
+// ⭐ 核心：分類 + 搜尋 + 排序
 function applyFilters() {
 
   let result = [...allProducts];
@@ -48,7 +56,7 @@ function applyFilters() {
     );
   }
 
-  // 排序
+  // ⭐ 排序（這裡已確認可用）
   if (currentSort === "price-asc") {
     result.sort((a, b) => a.price - b.price);
   } else if (currentSort === "price-desc") {
@@ -92,8 +100,9 @@ function renderProducts(products) {
 }
 
 
-// ⭐ 分類生成
+// ⭐ 分類生成（動態）
 function renderCategories(products) {
+
   const container = document.getElementById("category-list");
   if (!container) return;
 
@@ -135,7 +144,7 @@ window.addToCart = function(id) {
 };
 
 
-// ⭐ 詳情頁
+// ⭐ 商品詳情頁
 window.goToProduct = function(id) {
   window.location.href = `/product.html?id=${id}`;
 };
