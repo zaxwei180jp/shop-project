@@ -69,3 +69,12 @@ window.addToCart = function(id) {
 
   alert("已加入購物車");
 };
+
+<h3 class="font-bold text-lg cursor-pointer"
+  onclick="goToProduct('${p.id}')">
+  ${p.name}
+</h3>
+
+<img src="${p.image}"
+  class="w-full h-40 object-cover rounded-xl mb-3 cursor-pointer"
+  onclick="goToProduct('${p.id}')">
