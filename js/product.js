@@ -13,18 +13,20 @@ fetch("/api/products")
       return;
     }
 
-    // ⭐ 組圖片（主圖 + 多圖）
+    // ⭐ 圖片處理
     let images = product.images || [];
 
+    // 把主圖放第一張
     if (product.image && !images.includes(product.image)) {
       images.unshift(product.image);
     }
 
+    // fallback
     if (images.length === 0) {
       images = ["https://picsum.photos/500"];
     }
 
-    // ⭐ 縮圖（全部正方形）
+    // ⭐ 縮圖
     let thumbnails = images.map(img => `
       <img src="${img}"
         style="width:80px; aspect-ratio:1/1; object-fit:cover;"
@@ -32,10 +34,11 @@ fetch("/api/products")
         onclick="changeImage('${img}')">
     `).join("");
 
-    // ⭐ 主畫面（正方形）
+    // ⭐ 主畫面（RWD + 正方形）
     el.innerHTML = `
-      <div class="grid grid-cols-2 gap-10">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
 
+        <!-- 圖片區 -->
         <div>
           <img id="main-image"
             src="${images[0]}"
@@ -47,13 +50,14 @@ fetch("/api/products")
           </div>
         </div>
 
+        <!-- 資訊區 -->
         <div>
-          <h1 class="text-2xl font-bold mb-3">${product.name}</h1>
+          <h1 class="text-2xl md:text-3xl font-bold mb-3">${product.name}</h1>
           <p class="text-xl text-gray-600 mb-4">NT$${product.price}</p>
           <p class="mb-6 whitespace-pre-line">${product.description}</p>
 
           <button onclick="addToCart('${product.id}')"
-            class="bg-black text-white px-6 py-3 rounded-xl">
+            class="bg-black text-white px-6 py-3 rounded-xl w-full md:w-auto">
             加入購物車
           </button>
         </div>
@@ -63,13 +67,13 @@ fetch("/api/products")
   });
 
 
-// ⭐ 切換主圖
+// ⭐ 切換圖片
 window.changeImage = function(src) {
   document.getElementById("main-image").src = src;
 };
 
 
-// ⭐ 加入購物車
+// ⭐ 購物車
 window.addToCart = function(id) {
   let cart = JSON.parse(localStorage.getItem("cart")) || {};
   cart[id] = (cart[id] || 0) + 1;
