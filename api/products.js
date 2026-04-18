@@ -25,19 +25,17 @@ export default async function handler(req, res) {
 
     const props = page.properties;
 
-    // 🔥 Debug（看這裡輸出）
-    console.log("====== DEBUG START ======");
-    console.log("欄位名稱 keys:", Object.keys(props));
-    console.log("tprice內容:", JSON.stringify(props.tprice, null, 2));
-    console.log("====== DEBUG END ======");
-
-    // 🔥 最穩抓法（不管 number / string / 空值）
+    // 🔥 直接從 Rollup（tpric）抓數字（已修正）
     let price = 0;
 
-    if (props.tprice?.formula?.number !== undefined && props.tprice.formula.number !== null) {
-      price = props.tprice.formula.number;
-    } else if (props.tprice?.formula?.string) {
-      price = Number(props.tprice.formula.string) || 0;
+    if (props.tpric?.rollup?.array?.length > 0) {
+      const val = props.tpric.rollup.array[0];
+
+      if (val.type === "number") {
+        price = val.number;
+      } else if (val.type === "string") {
+        price = Number(val.string) || 0;
+      }
     }
 
     return {
@@ -45,6 +43,7 @@ export default async function handler(req, res) {
 
       name: props.tname?.title?.[0]?.plain_text || "",
 
+      // 🔥 修正後的價格
       price: price,
 
       image: props.image?.url || "",
