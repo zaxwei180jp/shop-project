@@ -21,7 +21,21 @@
 
   <h1 class="text-3xl font-bold mb-6">🛍️ 商品列表</h1>
 
-  <!-- ⭐ 動態分類 -->
+  <!-- ⭐ 搜尋 + 排序 -->
+  <div class="flex gap-4 mb-6">
+    <input id="search-input"
+      type="text"
+      placeholder="搜尋商品..."
+      class="px-4 py-2 border rounded w-60">
+
+    <select id="sort-select" class="px-4 py-2 border rounded">
+      <option value="default">排序</option>
+      <option value="price-asc">價格：低 → 高</option>
+      <option value="price-desc">價格：高 → 低</option>
+    </select>
+  </div>
+
+  <!-- ⭐ 分類 -->
   <div id="category-list" class="mb-6 flex gap-3 flex-wrap"></div>
 
   <!-- 商品 -->
@@ -29,7 +43,7 @@
 
 </div>
 
-<script src="./js/main.js?v=4"></script>
+<script src="./js/main.js?v=5"></script>
 
 </body>
 </html>
