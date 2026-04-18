@@ -25,14 +25,23 @@ export default async function handler(req, res) {
 
     const props = page.properties;
 
+    // 🔥 安全處理 tprice（不管是 number / string / 空值）
+    let price = 0;
+
+    if (props.tprice?.formula?.number !== undefined && props.tprice.formula.number !== null) {
+      price = props.tprice.formula.number;
+    } else if (props.tprice?.formula?.string) {
+      price = Number(props.tprice.formula.string) || 0;
+    }
+
     return {
       id: page.id,
 
       // 🔥 name → tname
       name: props.tname?.title?.[0]?.plain_text || "",
 
-      // 🔥 price → tprice
-      price: props.tprice?.formula.number || 0,
+      // 🔥 price → 已修正
+      price: price,
 
       image: props.image?.url || "",
 
