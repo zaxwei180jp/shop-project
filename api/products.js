@@ -1,40 +1,41 @@
 export default async function handler(req, res) {
-  try {
-    const NOTION_API_KEY = process.env.NOTION_API_KEY;
-    const DATABASE_ID = process.env.DATABASE_ID;
+  const NOTION_TOKEN = process.env.NOTION_TOKEN;
+  const DATABASE_ID = process.env.DATABASE_ID;
 
-    const response = await fetch(
-      `https://api.notion.com/v1/databases/${DATABASE_ID}/query`,
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${NOTION_API_KEY}`,
-          "Notion-Version": "2022-06-28",
-          "Content-Type": "application/json"
-        }
-      }
-    );
+  const response = await fetch(`https://api.notion.com/v1/databases/${DATABASE_ID}/query`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${NOTION_TOKEN}`,
+      "Notion-Version": "2022-06-28",
+      "Content-Type": "application/json"
+    }
+  });
 
-    const data = await response.json();
+  const data = await response.json();
 
-    // 👉 防爆處理（重點）
-    const products = (data.results || []).map(item => {
-      const props = item.properties || {};
+  const products = data.results.map(page => {
 
-      return {
-        id: item.id,
-        name: props.name?.title?.[0]?.plain_text || "未命名商品",
-        price: props.price?.number || 0,
-        image: props.image?.url || "https://picsum.photos/300",
-        category: props.category?.select?.name || "",
-        description: props.description?.rich_text?.[0]?.plain_text || ""
-      };
-    });
+    const props = page.properties;
 
-    res.status(200).json(products);
+    return {
+      id: page.id,
 
-  } catch (error) {
-    console.error("API ERROR:", error);
-    res.status(500).json({ error: error.message });
-  }
+      name: props.name?.title[0]?.plain_text || "",
+
+      price: props.price?.number || 0,
+
+      image: props.image?.url || "",
+
+      category: props.category?.select?.name || "",
+
+      description: props.description?.rich_text[0]?.plain_text || "",
+
+      // ⭐ 多圖（關鍵）
+      images: props.images?.rich_text[0]?.plain_text
+        ? props.images.rich_text[0].plain_text.split(",")
+        : []
+    };
+  });
+
+  res.status(200).json(products);
 }
