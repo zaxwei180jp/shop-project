@@ -1,70 +1,77 @@
 export default async function handler(req, res) {
+  try {
+    const { NOTION_TOKEN, DATABASE_ID } = process.env;
 
-  const NOTION_TOKEN = process.env.NOTION_TOKEN;
-  const DATABASE_ID = process.env.DATABASE_ID;
-
-  const response = await fetch(`https://api.notion.com/v1/databases/${DATABASE_ID}/query`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${NOTION_TOKEN}`,
-      "Notion-Version": "2022-06-28",
-      "Content-Type": "application/json"
+    if (!NOTION_TOKEN || !DATABASE_ID) {
+      return res.status(500).json({ error: "Missing environment variables" });
     }
-  });
 
-  const data = await response.json();
-
-  if (!data.results) {
-    return res.status(500).json({
-      error: "Notion API failed",
-      notionResponse: data
-    });
-  }
-
-  // 🔥 只保留有 tpric 的資料（關鍵修正）
-  const validResults = data.results.filter(page => {
-    return page.properties.tpric?.rollup?.array?.length > 0;
-  });
-
-  const products = validResults.map(page => {
-
-    const props = page.properties;
-
-    let price = 0;
-    const rollup = props.tpric?.rollup?.array;
-
-    if (rollup && rollup.length > 0) {
-      const val = rollup[0];
-
-      if (val.type === "number") {
-        price = val.number ?? 0;
-      } else if (val.type === "rich_text") {
-        const text = val.rich_text?.[0]?.plain_text;
-        price = Number(text) || 0;
-      } else if (val.type === "title") {
-        const text = val.title?.[0]?.plain_text;
-        price = Number(text) || 0;
-      } else if (val.type === "string") {
-        price = Number(val.string) || 0;
+    const notionRes = await fetch(
+      `https://api.notion.com/v1/databases/${DATABASE_ID}/query`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${NOTION_TOKEN}`,
+          "Notion-Version": "2022-06-28",
+          "Content-Type": "application/json",
+        },
       }
+    );
+
+    const data = await notionRes.json();
+
+    if (!data?.results) {
+      return res.status(500).json({
+        error: "Notion API failed",
+        notionResponse: data,
+      });
     }
 
-    return {
-      id: page.id,
-      name: props.tname?.title?.[0]?.plain_text || "",
-      price: price,
-      image: props.image?.url || "",
-      category: props.category?.select?.name || "",
-      description: props.description?.rich_text?.[0]?.plain_text || "",
-      isNew: props.isNew?.checkbox || false,
-      images: props.images?.rich_text?.[0]?.plain_text
-        ? props.images.rich_text[0].plain_text
-            .split(",")
-            .map(url => url.trim())
-            .filter(url => url !== "")
-        : []
-    };
-  });
+    const products = data.results.map(formatProduct);
 
-  res.status(200).json(products);
+    return res.status(200).json(products);
+
+  } catch (error) {
+    console.error("API ERROR:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
+/* ---------- Helper Functions ---------- */
+
+function formatProduct(page) {
+  const props = page.properties;
+
+  return {
+    id: page.id,
+    name: getText(props.tname),
+    price: getNumber(props.tprice),
+    image: props.image?.url || "",
+    category: props.category?.select?.name || "",
+    description: getRichText(props.description),
+    isNew: props.isNew?.checkbox || false,
+    images: parseImages(props.images),
+  };
+}
+
+function getText(field) {
+  return field?.title?.[0]?.plain_text || "";
+}
+
+function getRichText(field) {
+  return field?.rich_text?.[0]?.plain_text || "";
+}
+
+function getNumber(field) {
+  return field?.formula?.number || 0;
+}
+
+function parseImages(field) {
+  const raw = field?.rich_text?.[0]?.plain_text;
+  if (!raw) return [];
+
+  return raw
+    .split(",")
+    .map((url) => url.trim())
+    .filter(Boolean);
 }
