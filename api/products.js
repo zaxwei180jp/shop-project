@@ -25,7 +25,13 @@ export default async function handler(req, res) {
 
     const props = page.properties;
 
-    // 🔥 安全處理 tprice（不管是 number / string / 空值）
+    // 🔥 Debug（看這裡輸出）
+    console.log("====== DEBUG START ======");
+    console.log("欄位名稱 keys:", Object.keys(props));
+    console.log("tprice內容:", JSON.stringify(props.tprice, null, 2));
+    console.log("====== DEBUG END ======");
+
+    // 🔥 最穩抓法（不管 number / string / 空值）
     let price = 0;
 
     if (props.tprice?.formula?.number !== undefined && props.tprice.formula.number !== null) {
@@ -37,10 +43,8 @@ export default async function handler(req, res) {
     return {
       id: page.id,
 
-      // 🔥 name → tname
       name: props.tname?.title?.[0]?.plain_text || "",
 
-      // 🔥 price → 已修正
       price: price,
 
       image: props.image?.url || "",
