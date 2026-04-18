@@ -10,6 +10,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       allProducts = data;
 
+      // ⭐ 建立分類
+      renderCategories(allProducts);
+
       const title = document.querySelector("h1")?.innerText || "";
       const isHome = title.includes("新商品");
 
@@ -25,9 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
+// ⭐ 商品顯示
 function renderProducts(products) {
   const list = document.getElementById("product-list");
-
   if (!list) return;
 
   list.innerHTML = "";
@@ -58,7 +61,35 @@ function renderProducts(products) {
 }
 
 
-// ⭐ 分類功能
+// ⭐ 動態分類產生
+function renderCategories(products) {
+
+  const container = document.getElementById("category-list");
+  if (!container) return;
+
+  const categories = [...new Set(products.map(p => p.category))];
+
+  let html = `
+    <button onclick="filterCategory('all')"
+      class="px-4 py-2 bg-black text-white rounded">
+      全部
+    </button>
+  `;
+
+  categories.forEach(cat => {
+    html += `
+      <button onclick="filterCategory('${cat}')"
+        class="px-4 py-2 bg-gray-200 rounded">
+        ${cat}
+      </button>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+
+// ⭐ 分類篩選
 window.filterCategory = function(category) {
 
   if (category === "all") {
@@ -67,12 +98,11 @@ window.filterCategory = function(category) {
   }
 
   const filtered = allProducts.filter(p => p.category === category);
-
   renderProducts(filtered);
 };
 
 
-// ⭐ 購物車
+// ⭐ 加入購物車
 window.addToCart = function(id) {
   let cart = JSON.parse(localStorage.getItem("cart")) || {};
   cart[id] = (cart[id] || 0) + 1;
