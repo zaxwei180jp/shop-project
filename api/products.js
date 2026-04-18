@@ -32,7 +32,7 @@ export default async function handler(req, res) {
       name: props.tname?.title?.[0]?.plain_text || "",
 
       // 🔥 price → tprice
-      price: props.tprice?.number || 0,
+      price: props.tprice?.formula.number || 0,
 
       image: props.image?.url || "",
 
