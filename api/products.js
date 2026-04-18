@@ -25,28 +25,47 @@ export default async function handler(req, res) {
 
     const props = page.properties;
 
-    // 🔥 超通用抓價格（重點在這）
+    // 🔥 Debug：完整印出 tpric（關鍵）
+    console.log("====== DEBUG START ======");
+    console.log("完整 tpric:", JSON.stringify(props.tpric, null, 2));
+    console.log("====== DEBUG END ======");
+
+    // 🔥 最保險抓法（逐層拆）
     let price = 0;
 
-    const rollup = props.tpric?.rollup?.array;
+    const rollup = props.tpric?.rollup;
 
-    if (rollup && rollup.length > 0) {
-      const val = rollup[0];
+    if (rollup && rollup.array && rollup.array.length > 0) {
+      const val = rollup.array[0];
 
+      // 👉 情況1：number
       if (val.type === "number") {
-        price = val.number;
+        price = val.number ?? 0;
+      }
 
-      } else if (val.type === "rich_text") {
+      // 👉 情況2：rich_text
+      else if (val.type === "rich_text") {
         const text = val.rich_text?.[0]?.plain_text;
         price = Number(text) || 0;
+      }
 
-      } else if (val.type === "title") {
+      // 👉 情況3：title
+      else if (val.type === "title") {
         const text = val.title?.[0]?.plain_text;
         price = Number(text) || 0;
+      }
 
-      } else if (val.type === "string") {
+      // 👉 情況4：string
+      else if (val.type === "string") {
         price = Number(val.string) || 0;
       }
+
+      // 👉 情況5：其他（直接印出來）
+      else {
+        console.log("未知型別:", val);
+      }
+    } else {
+      console.log("⚠️ tpric 是空的（rollup 沒資料）");
     }
 
     return {
