@@ -25,14 +25,25 @@ export default async function handler(req, res) {
 
     const props = page.properties;
 
-    // 🔥 直接從 Rollup（tpric）抓數字（已修正）
+    // 🔥 超通用抓價格（重點在這）
     let price = 0;
 
-    if (props.tpric?.rollup?.array?.length > 0) {
-      const val = props.tpric.rollup.array[0];
+    const rollup = props.tpric?.rollup?.array;
+
+    if (rollup && rollup.length > 0) {
+      const val = rollup[0];
 
       if (val.type === "number") {
         price = val.number;
+
+      } else if (val.type === "rich_text") {
+        const text = val.rich_text?.[0]?.plain_text;
+        price = Number(text) || 0;
+
+      } else if (val.type === "title") {
+        const text = val.title?.[0]?.plain_text;
+        price = Number(text) || 0;
+
       } else if (val.type === "string") {
         price = Number(val.string) || 0;
       }
@@ -40,20 +51,12 @@ export default async function handler(req, res) {
 
     return {
       id: page.id,
-
       name: props.tname?.title?.[0]?.plain_text || "",
-
-      // 🔥 修正後的價格
       price: price,
-
       image: props.image?.url || "",
-
       category: props.category?.select?.name || "",
-
       description: props.description?.rich_text?.[0]?.plain_text || "",
-
       isNew: props.isNew?.checkbox || false,
-
       images: props.images?.rich_text?.[0]?.plain_text
         ? props.images.rich_text[0].plain_text
             .split(",")
