@@ -45,7 +45,7 @@ function formatProduct(page) {
   return {
     id: page.id,
     name: getText(props.tname),
-    price: props.tpric?.rollup?.number ?? 0
+    price: getNumber(props.tprice),
     image: props.image?.url || "",
     category: props.category?.select?.name || "",
     description: getRichText(props.description),
