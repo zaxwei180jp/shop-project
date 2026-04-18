@@ -1,3 +1,5 @@
+alert("NEW VERSION");alert("NEW VERSION");
+
 document.addEventListener("DOMContentLoaded", () => {
 
   console.log("✅ JS 已載入");
