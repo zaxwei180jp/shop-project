@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>商品詳情</title>
+  <title>商品頁</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -12,18 +12,27 @@
 <div class="w-60 bg-white h-screen p-5 shadow">
   <h2 class="text-xl font-bold mb-5">我的商店</h2>
   <a href="index.html" class="block mb-3">首頁</a>
-  <a href="products.html" class="block mb-3">商品</a>
+  <a href="products.html" class="block mb-3 font-bold">商品</a>
   <a href="cart.html" class="block">購物車</a>
 </div>
 
 <!-- 主內容 -->
 <div class="flex-1 p-10">
 
-  <div id="product-detail" class="bg-white p-6 rounded-2xl shadow"></div>
+  <h1 class="text-3xl font-bold mb-6">🛍️ 商品列表</h1>
+
+  <!-- ⭐ 分類按鈕 -->
+  <div class="mb-6 flex gap-3">
+    <button onclick="filterCategory('all')" class="px-4 py-2 bg-black text-white rounded">全部</button>
+    <button onclick="filterCategory('COSTCO')" class="px-4 py-2 bg-gray-200 rounded">COSTCO</button>
+  </div>
+
+  <!-- 商品 -->
+  <div id="product-list" class="grid grid-cols-3 gap-6"></div>
 
 </div>
 
-<script src="./js/product.js?v=1"></script>
+<script src="./js/main.js?v=3"></script>
 
 </body>
 </html>
