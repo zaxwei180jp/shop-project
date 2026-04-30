@@ -2,11 +2,7 @@ export default async function handler(req, res) {
   try {
     const { NOTION_TOKEN, DATABASE_ID } = process.env;
 
-    if (!NOTION_TOKEN || !DATABASE_ID) {
-      return res.status(500).json({ error: "Missing environment variables" });
-    }
-
-    const notionRes = await fetch(
+    const response = await fetch(
       `https://api.notion.com/v1/databases/${DATABASE_ID}/query`,
       {
         method: "POST",
@@ -18,60 +14,61 @@ export default async function handler(req, res) {
       }
     );
 
-    const data = await notionRes.json();
+    const data = await response.json();
 
-    if (!data?.results) {
-      return res.status(500).json({
-        error: "Notion API failed",
-        notionResponse: data,
-      });
-    }
+    const getText = (prop) =>
+      prop?.title?.[0]?.plain_text ||
+      prop?.rich_text?.[0]?.plain_text ||
+      "";
 
-    const products = data.results.map(formatProduct);
+    const getNumber = (prop) => {
+      if (!prop) return 0;
 
-    return res.status(200).json(products);
+      if (prop.type === "number") return prop.number || 0;
 
-  } catch (error) {
-    console.error("API ERROR:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+      if (prop.type === "formula") {
+        if (prop.formula.type === "number") return prop.formula.number || 0;
+      }
+
+      if (prop.type === "rollup") {
+        if (prop.rollup.type === "number") return prop.rollup.number || 0;
+
+        if (prop.rollup.type === "array") {
+          return prop.rollup.array.reduce((sum, item) => {
+            if (item.type === "number") return sum + (item.number || 0);
+            return sum;
+          }, 0);
+        }
+      }
+
+      return 0;
+    };
+
+    const getFiles = (prop) => {
+      if (!prop?.files) return [];
+      return prop.files.map((f) => f.file?.url || f.external?.url).filter(Boolean);
+    };
+
+    const products = data.results.map((page) => {
+      const props = page.properties;
+
+      const images = getFiles(props.images);
+      const cover = getFiles(props.image)[0] || images[0] || "";
+
+      return {
+        id: page.id,
+        name: getText(props.tname),
+        price: getNumber(props.tprice),
+        category: props.category?.select?.name || "",
+        description: getText(props.description),
+        image: cover,
+        images: images.length ? images : cover ? [cover] : [],
+        createdTime: page.created_time,
+      };
+    });
+
+    res.status(200).json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-}
-
-/* ---------- Helper Functions ---------- */
-
-function formatProduct(page) {
-  const props = page.properties;
-
-  return {
-    id: page.id,
-    name: getText(props.tname),
-    price: getNumber(props.tprice),
-    image: props.image?.url || "",
-    category: props.category?.select?.name || "",
-    description: getRichText(props.description),
-    isNew: props.isNew?.checkbox || false,
-    images: parseImages(props.images),
-  };
-}
-
-function getText(field) {
-  return field?.title?.[0]?.plain_text || "";
-}
-
-function getRichText(field) {
-  return field?.rich_text?.[0]?.plain_text || "";
-}
-
-function getNumber(field) {
-  return field?.number || 0;
-}
-
-function parseImages(field) {
-  const raw = field?.rich_text?.[0]?.plain_text;
-  if (!raw) return [];
-
-  return raw
-    .split(",")
-    .map((url) => url.trim())
-    .filter(Boolean);
 }
