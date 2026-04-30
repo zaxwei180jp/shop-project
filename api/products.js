@@ -32,37 +32,46 @@ export default async function handler(req, res) {
       return 0;
     };
 
-    // ⭐ 單一圖片（URL文字）
-    const getImage = (prop) => getText(prop);
+    const getCheckbox = (prop) => prop?.checkbox || false;
 
-    // ⭐ 多圖（逗號分隔）
+    const getImage = (prop) => {
+      if (!prop) return "";
+      if (prop.type === "url") return prop.url || "";
+      return (
+        prop?.title?.[0]?.plain_text ||
+        prop?.rich_text?.[0]?.plain_text ||
+        ""
+      );
+    };
+
     const getImages = (prop) => {
       const text = getText(prop);
       if (!text) return [];
-      return text.split(",").map((s) => s.trim()).filter(Boolean);
+      return text.split(",").map(s => s.trim()).filter(Boolean);
     };
 
-    const products = data.results.map((page) => {
+    const products = data.results.map(page => {
       const props = page.properties;
 
-      const image = getImage(props.image);   // ⭐ 主圖只吃這個
-      const images = getImages(props.images);
+      const isSale = getCheckbox(props.Sale);
+      const price = getNumber(props.tprice);
+      const sprice = getNumber(props.sprice);
 
       return {
         id: page.id,
         name: getText(props.tname),
-        price: getNumber(props.tprice),
         description: getText(props.description),
 
-        // ✅ 主圖 ONLY image（你要求的）
-        image: image || "",
+        // ⭐ 價格邏輯
+        price: isSale ? sprice || price : price,
+        originalPrice: price,
+        isSale,
 
-        // ✅ 縮圖（沒有就 fallback 主圖）
-        images: images.length
-          ? images
-          : image
-          ? [image]
-          : [],
+        // ⭐ 新商品
+        isNew: getCheckbox(props.isNew),
+
+        image: getImage(props.image),
+        images: getImages(props.images),
 
         createdTime: page.created_time,
       };
