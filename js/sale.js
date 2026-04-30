@@ -6,13 +6,8 @@ async function init() {
   const res = await fetch(API_URL);
   let data = await res.json();
 
-  // ⭐ 只顯示新商品
-  data = data.filter(p => p.isNew);
-
-  // ⭐ 排序
-  data.sort((a, b) =>
-    new Date(b.createdTime) - new Date(a.createdTime)
-  );
+  // ⭐ 只顯示特價
+  data = data.filter(p => p.isSale);
 
   render(data);
 }
@@ -27,12 +22,10 @@ function render(data) {
 
         <div class="mt-2 font-bold">${p.name}</div>
 
-        ${p.isSale
-          ? `<div class="text-red-500">¥${p.price}
-               <span class="line-through text-gray-400 text-sm">¥${p.originalPrice}</span>
-             </div>`
-          : `<div class="text-red-500">¥${p.price}</div>`
-        }
+        <div class="text-red-500">
+          ¥${p.price}
+          <span class="line-through text-gray-400 text-sm">¥${p.originalPrice}</span>
+        </div>
       </a>
     `;
   }).join("");
