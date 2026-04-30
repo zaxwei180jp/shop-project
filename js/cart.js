@@ -17,37 +17,27 @@ async function init() {
     const sub = p.price * qty;
     total += sub;
 
-    // ⭐ 圖片邏輯
     const img = p.image || p.images?.[0] || "https://via.placeholder.com/80";
 
     return `
       <div class="flex items-center gap-4 border-b py-3">
 
-        <!-- ⭐ 商品圖片 -->
-        <img src="${img}" class="w-16 h-16 object-cover rounded">
+        <img src="${img}" class="w-16 aspect-square object-cover rounded">
 
-        <!-- 商品資訊 -->
         <div class="flex-1">
           <div class="font-bold">${p.name}</div>
           <div class="text-sm text-gray-500">¥${p.price}</div>
         </div>
 
-        <!-- ⭐ 數量控制 -->
         <div class="flex items-center gap-2">
           <button onclick="updateQty('${id}', -1)" class="px-2 border">-</button>
           <span>${qty}</span>
           <button onclick="updateQty('${id}', 1)" class="px-2 border">+</button>
         </div>
 
-        <!-- 小計 -->
-        <div class="w-24 text-right">
-          ¥${sub}
-        </div>
+        <div class="w-24 text-right">¥${sub}</div>
 
-        <!-- 刪除 -->
-        <button onclick="removeItem('${id}')" class="text-red-500">
-          ✕
-        </button>
+        <button onclick="removeItem('${id}')" class="text-red-500">✕</button>
 
       </div>
     `;
@@ -61,7 +51,6 @@ async function init() {
   `;
 }
 
-// ⭐ 更新數量
 window.updateQty = (id, change) => {
   const cart = JSON.parse(localStorage.getItem("cart") || "{}");
 
@@ -73,7 +62,6 @@ window.updateQty = (id, change) => {
   init();
 };
 
-// ⭐ 刪除
 window.removeItem = (id) => {
   const cart = JSON.parse(localStorage.getItem("cart") || "{}");
   delete cart[id];

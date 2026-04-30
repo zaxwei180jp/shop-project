@@ -6,10 +6,8 @@ async function init() {
   const res = await fetch(API_URL);
   let data = await res.json();
 
-  // ⭐ 只顯示新商品
   data = data.filter(p => p.isNew);
 
-  // ⭐ 排序
   data.sort((a, b) =>
     new Date(b.createdTime) - new Date(a.createdTime)
   );
@@ -23,12 +21,13 @@ function render(data) {
 
     return `
       <a href="product.html?id=${p.id}" class="block border p-2">
-        <img src="${img}" class="w-full h-40 object-cover">
+        <img src="${img}" class="w-full aspect-square object-cover">
 
         <div class="mt-2 font-bold">${p.name}</div>
 
         ${p.isSale
-          ? `<div class="text-red-500">¥${p.price}
+          ? `<div class="text-red-500">
+               ¥${p.price}
                <span class="line-through text-gray-400 text-sm">¥${p.originalPrice}</span>
              </div>`
           : `<div class="text-red-500">¥${p.price}</div>`

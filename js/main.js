@@ -13,9 +13,17 @@ async function init() {
 
     return `
       <a href="product.html?id=${p.id}" class="block border p-2 hover:shadow">
-        <img src="${img}" class="w-full h-40 object-cover">
+        <img src="${img}" class="w-full aspect-square object-cover">
+
         <div class="mt-2 font-bold">${p.name}</div>
-        <div class="text-red-500">¥${p.price}</div>
+
+        ${p.isSale
+          ? `<div class="text-red-500">
+               ¥${p.price}
+               <span class="line-through text-gray-400 text-sm">¥${p.originalPrice}</span>
+             </div>`
+          : `<div class="text-red-500">¥${p.price}</div>`
+        }
       </a>
     `;
   }).join("");

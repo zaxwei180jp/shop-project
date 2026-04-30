@@ -13,25 +13,33 @@ async function init() {
 
   el.innerHTML = `
     <div class="grid md:grid-cols-2 gap-6">
+
       <div>
-        <img id="mainImg" src="${mainImg}" class="w-full">
+        <img id="mainImg" src="${mainImg}" class="w-full aspect-square object-cover">
 
         <div class="flex gap-2 mt-2">
           ${p.images.map(img => `
-            <img src="${img}" class="w-16 h-16 cursor-pointer thumb">
+            <img src="${img}" class="w-16 aspect-square object-cover cursor-pointer thumb">
           `).join("")}
         </div>
       </div>
 
       <div>
         <h1 class="text-2xl font-bold">${p.name}</h1>
-        <p class="text-red-500 mt-2">¥${p.price}</p>
 
-        <!-- ⭐ 數量控制 -->
+        ${p.isSale
+          ? `<p class="text-red-500 mt-2 text-xl">
+               ¥${p.price}
+               <span class="line-through text-gray-400 text-sm">¥${p.originalPrice}</span>
+             </p>`
+          : `<p class="text-red-500 mt-2 text-xl">¥${p.price}</p>`
+        }
+
+        <!-- 數量 -->
         <div class="flex items-center gap-3 mt-4">
-          <button id="minus" class="px-3 py-1 border">-</button>
+          <button id="minus" class="px-3 border">-</button>
           <span id="qty">1</span>
-          <button id="plus" class="px-3 py-1 border">+</button>
+          <button id="plus" class="px-3 border">+</button>
         </div>
 
         <button id="addBtn"
@@ -41,6 +49,7 @@ async function init() {
 
         <p class="mt-4">${p.description || ""}</p>
       </div>
+
     </div>
   `;
 
@@ -64,13 +73,13 @@ async function init() {
     qtyEl.innerText = qty;
   };
 
-  // 加入購物車（帶數量）
+  // 加入購物車
   document.getElementById("addBtn").onclick = () => {
     const cart = JSON.parse(localStorage.getItem("cart") || "{}");
     cart[p.id] = (cart[p.id] || 0) + qty;
     localStorage.setItem("cart", JSON.stringify(cart));
     alert("已加入購物車");
-    location.reload(); // 更新 cartCount
+    location.reload();
   };
 }
 

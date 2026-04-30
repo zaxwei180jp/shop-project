@@ -6,7 +6,6 @@ async function init() {
   const res = await fetch(API_URL);
   let data = await res.json();
 
-  // ⭐ 只顯示特價
   data = data.filter(p => p.isSale);
 
   render(data);
@@ -18,7 +17,7 @@ function render(data) {
 
     return `
       <a href="product.html?id=${p.id}" class="block border p-2">
-        <img src="${img}" class="w-full h-40 object-cover">
+        <img src="${img}" class="w-full aspect-square object-cover">
 
         <div class="mt-2 font-bold">${p.name}</div>
 
