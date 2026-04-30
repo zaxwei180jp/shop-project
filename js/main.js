@@ -9,11 +9,11 @@ async function init() {
     const res = await fetch(API_URL);
     const data = await res.json();
 
-    console.log("products:", data);
-
     el.innerHTML = data.map(p => `
       <a href="product.html?id=${p.id}" class="block border p-2 hover:shadow">
-        <img src="${p.image}" class="w-full h-40 object-cover">
+        <img src="${p.image || 'https://picsum.photos/400'}"
+             class="w-full h-40 object-cover">
+
         <div class="mt-2 font-bold">${p.name}</div>
         <div class="text-red-500">¥${p.price}</div>
       </a>

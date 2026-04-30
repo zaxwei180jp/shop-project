@@ -28,15 +28,18 @@ async function init() {
 }
 
 function render(p) {
+  const mainImage = p.image || p.images[0] || "https://picsum.photos/400";
+
   el.innerHTML = `
     <div class="grid md:grid-cols-2 gap-6">
       
       <div>
-        <img id="mainImg" src="${p.image}" class="w-full rounded">
+        <img id="mainImg" src="${mainImage}" class="w-full rounded">
 
         <div class="flex gap-2 mt-2">
           ${p.images.map(img => `
-            <img src="${img}" class="w-16 h-16 object-cover cursor-pointer thumb">
+            <img src="${img}"
+                 class="w-16 h-16 object-cover cursor-pointer thumb">
           `).join("")}
         </div>
       </div>
@@ -45,7 +48,8 @@ function render(p) {
         <h1 class="text-2xl font-bold">${p.name}</h1>
         <p class="text-xl text-red-500 mt-2">¥${p.price}</p>
 
-        <button id="addBtn" class="mt-4 px-4 py-2 bg-black text-white rounded">
+        <button id="addBtn"
+          class="mt-4 px-4 py-2 bg-black text-white rounded">
           加入購物車
         </button>
 
