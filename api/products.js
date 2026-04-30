@@ -23,7 +23,6 @@ export default async function handler(req, res) {
 
     const getNumber = (prop) => {
       if (!prop) return 0;
-
       if (prop.type === "number") return prop.number || 0;
 
       if (prop.type === "formula") {
@@ -33,12 +32,10 @@ export default async function handler(req, res) {
       return 0;
     };
 
-    // ⭐ 解析單一圖片 URL
-    const getImage = (prop) => {
-      return getText(prop); // 因為是 URL（文字）
-    };
+    // ⭐ 單一圖片（URL文字）
+    const getImage = (prop) => getText(prop);
 
-    // ⭐ 解析多圖（用逗號分隔）
+    // ⭐ 多圖（逗號分隔）
     const getImages = (prop) => {
       const text = getText(prop);
       if (!text) return [];
@@ -48,7 +45,7 @@ export default async function handler(req, res) {
     const products = data.results.map((page) => {
       const props = page.properties;
 
-      const image = getImage(props.image);
+      const image = getImage(props.image);   // ⭐ 主圖只吃這個
       const images = getImages(props.images);
 
       return {
@@ -56,8 +53,17 @@ export default async function handler(req, res) {
         name: getText(props.tname),
         price: getNumber(props.tprice),
         description: getText(props.description),
-        image: image || images[0] || "",
-        images: images.length ? images : image ? [image] : [],
+
+        // ✅ 主圖 ONLY image（你要求的）
+        image: image || "",
+
+        // ✅ 縮圖（沒有就 fallback 主圖）
+        images: images.length
+          ? images
+          : image
+          ? [image]
+          : [],
+
         createdTime: page.created_time,
       };
     });
