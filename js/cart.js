@@ -17,9 +17,16 @@ async function init() {
     const sub = p.price * qty;
     total += sub;
 
+    // ⭐ 圖片邏輯
+    const img = p.image || p.images?.[0] || "https://via.placeholder.com/80";
+
     return `
-      <div class="flex justify-between items-center border-b py-3">
-        
+      <div class="flex items-center gap-4 border-b py-3">
+
+        <!-- ⭐ 商品圖片 -->
+        <img src="${img}" class="w-16 h-16 object-cover rounded">
+
+        <!-- 商品資訊 -->
         <div class="flex-1">
           <div class="font-bold">${p.name}</div>
           <div class="text-sm text-gray-500">¥${p.price}</div>
@@ -32,11 +39,13 @@ async function init() {
           <button onclick="updateQty('${id}', 1)" class="px-2 border">+</button>
         </div>
 
+        <!-- 小計 -->
         <div class="w-24 text-right">
           ¥${sub}
         </div>
 
-        <button onclick="removeItem('${id}')" class="ml-3 text-red-500">
+        <!-- 刪除 -->
+        <button onclick="removeItem('${id}')" class="text-red-500">
           ✕
         </button>
 
@@ -52,7 +61,7 @@ async function init() {
   `;
 }
 
-// ⭐ 增減數量
+// ⭐ 更新數量
 window.updateQty = (id, change) => {
   const cart = JSON.parse(localStorage.getItem("cart") || "{}");
 
