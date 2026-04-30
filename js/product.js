@@ -1,68 +1,47 @@
 const API_URL = "https://shop-project-azure.vercel.app/api/products";
 
-const params = new URLSearchParams(location.search);
-const id = params.get("id");
-
+const id = new URLSearchParams(location.search).get("id");
 const el = document.getElementById("product");
 
 async function init() {
   el.innerHTML = "Loading...";
 
-  try {
-    const res = await fetch(API_URL);
-    const data = await res.json();
+  const res = await fetch(API_URL);
+  const data = await res.json();
 
-    const p = data.find(x => x.id === id);
+  const p = data.find(x => x.id === id);
 
-    if (!p) {
-      el.innerHTML = "找不到商品";
-      return;
-    }
-
-    render(p);
-
-  } catch (err) {
-    console.error(err);
-    el.innerHTML = "載入失敗";
-  }
-}
-
-function render(p) {
-  const mainImage = p.image || p.images[0] || "https://picsum.photos/400";
+  const mainImg = p.image || p.images[0] || "https://via.placeholder.com/400";
 
   el.innerHTML = `
     <div class="grid md:grid-cols-2 gap-6">
-      
       <div>
-        <img id="mainImg" src="${mainImage}" class="w-full rounded">
+        <img id="mainImg" src="${mainImg}" class="w-full">
 
         <div class="flex gap-2 mt-2">
           ${p.images.map(img => `
-            <img src="${img}"
-                 class="w-16 h-16 object-cover cursor-pointer thumb">
+            <img src="${img}" class="w-16 h-16 cursor-pointer thumb">
           `).join("")}
         </div>
       </div>
 
       <div>
         <h1 class="text-2xl font-bold">${p.name}</h1>
-        <p class="text-xl text-red-500 mt-2">¥${p.price}</p>
+        <p class="text-red-500 mt-2">¥${p.price}</p>
 
         <button id="addBtn"
-          class="mt-4 px-4 py-2 bg-black text-white rounded">
+          class="mt-4 px-4 py-2 bg-black text-white">
           加入購物車
         </button>
 
-        <p class="mt-4 text-gray-600">${p.description || ""}</p>
+        <p class="mt-4">${p.description || ""}</p>
       </div>
-
     </div>
   `;
 
   document.querySelectorAll(".thumb").forEach(img => {
-    img.onclick = () => {
+    img.onclick = () =>
       document.getElementById("mainImg").src = img.src;
-    };
   });
 
   document.getElementById("addBtn").onclick = () => {

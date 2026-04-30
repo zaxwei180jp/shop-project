@@ -3,8 +3,6 @@ const API_URL = "https://shop-project-azure.vercel.app/api/products";
 const el = document.getElementById("cart");
 
 async function init() {
-  el.innerHTML = "Loading...";
-
   const cart = JSON.parse(localStorage.getItem("cart") || "{}");
 
   const res = await fetch(API_URL);
@@ -16,13 +14,13 @@ async function init() {
     const p = products.find(x => x.id === id);
     if (!p) return "";
 
-    const subtotal = p.price * qty;
-    total += subtotal;
+    const sub = p.price * qty;
+    total += sub;
 
     return `
       <div class="flex justify-between border-b py-2">
         <div>${p.name} x ${qty}</div>
-        <div>¥${subtotal}</div>
+        <div>¥${sub}</div>
       </div>
     `;
   }).join("");
