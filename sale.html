@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sale</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-6">
+
+<div class="flex justify-between mb-4">
+  <div>
+    <a href="index.html">🏠 首頁</a>
+    <button onclick="history.back()">⬅️ 上一頁</button>
+  </div>
+  <a href="cart.html">🛒 <span id="cartCount">0</span></a>
+</div>
+
+<h1 class="text-2xl font-bold mb-4">🔥 特價商品</h1>
+
+<div id="list" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+
+<script type="module" src="./js/sale.js"></script>
+<script src="./js/cartCount.js"></script>
+
+</body>
+</html>
