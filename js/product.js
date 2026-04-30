@@ -14,6 +14,7 @@ async function init() {
   el.innerHTML = `
     <div class="grid md:grid-cols-2 gap-6">
 
+      <!-- 圖片 -->
       <div>
         <img id="mainImg" src="${mainImg}" class="w-full aspect-square object-cover">
 
@@ -24,6 +25,7 @@ async function init() {
         </div>
       </div>
 
+      <!-- 商品資訊 -->
       <div>
         <h1 class="text-2xl font-bold">${p.name}</h1>
 
@@ -47,7 +49,10 @@ async function init() {
           加入購物車
         </button>
 
-        <p class="mt-4">${p.description || ""}</p>
+        <!-- ⭐ 進階描述 -->
+        <div class="mt-6">
+          ${renderDescriptionAdvanced(p.description)}
+        </div>
       </div>
 
     </div>
@@ -81,6 +86,82 @@ async function init() {
     alert("已加入購物車");
     location.reload();
   };
+}
+
+//
+// ⭐🔥 超進階描述解析
+//
+function renderDescriptionAdvanced(text) {
+  if (!text) return "";
+
+  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+
+  let html = "";
+  let list = [];
+  let table = [];
+
+  const flushList = () => {
+    if (list.length) {
+      html += `
+        <ul class="list-disc pl-5 space-y-1 text-gray-700 mb-4">
+          ${list.map(i => `<li>✔ ${i}</li>`).join("")}
+        </ul>
+      `;
+      list = [];
+    }
+  };
+
+  const flushTable = () => {
+    if (table.length) {
+      html += `
+        <div class="overflow-x-auto mb-4">
+          <table class="w-full border text-sm">
+            ${table.map(([k, v]) => `
+              <tr class="border">
+                <td class="bg-gray-100 p-2 w-1/3 font-medium">${k}</td>
+                <td class="p-2">${v}</td>
+              </tr>
+            `).join("")}
+          </table>
+        </div>
+      `;
+      table = [];
+    }
+  };
+
+  lines.forEach(line => {
+
+    // ⭐ 條列
+    if (line.startsWith("•") || line.startsWith("-")) {
+      flushTable();
+      list.push(line.replace(/^[-•]\s*/, ""));
+      return;
+    }
+
+    // ⭐ 規格（key: value）
+    if (line.includes("：") || line.includes(":")) {
+      flushList();
+      const [k, v] = line.split(/[:：]/);
+      table.push([k.trim(), v.trim()]);
+      return;
+    }
+
+    // ⭐ 標題 / 段落
+    flushList();
+    flushTable();
+
+    if (line.length < 20) {
+      html += `<h3 class="font-bold text-lg mt-4 mb-2">${line}</h3>`;
+    } else {
+      html += `<p class="text-gray-700 mb-2 leading-relaxed">${line}</p>`;
+    }
+
+  });
+
+  flushList();
+  flushTable();
+
+  return html;
 }
 
 init();
