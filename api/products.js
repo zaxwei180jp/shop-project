@@ -30,39 +30,34 @@ export default async function handler(req, res) {
         if (prop.formula.type === "number") return prop.formula.number || 0;
       }
 
-      if (prop.type === "rollup") {
-        if (prop.rollup.type === "number") return prop.rollup.number || 0;
-
-        if (prop.rollup.type === "array") {
-          return prop.rollup.array.reduce((sum, item) => {
-            if (item.type === "number") return sum + (item.number || 0);
-            return sum;
-          }, 0);
-        }
-      }
-
       return 0;
     };
 
-    const getFiles = (prop) => {
-      if (!prop?.files) return [];
-      return prop.files.map((f) => f.file?.url || f.external?.url).filter(Boolean);
+    // ⭐ 解析單一圖片 URL
+    const getImage = (prop) => {
+      return getText(prop); // 因為是 URL（文字）
+    };
+
+    // ⭐ 解析多圖（用逗號分隔）
+    const getImages = (prop) => {
+      const text = getText(prop);
+      if (!text) return [];
+      return text.split(",").map((s) => s.trim()).filter(Boolean);
     };
 
     const products = data.results.map((page) => {
       const props = page.properties;
 
-      const images = getFiles(props.images);
-      const cover = getFiles(props.image)[0] || images[0] || "";
+      const image = getImage(props.image);
+      const images = getImages(props.images);
 
       return {
         id: page.id,
         name: getText(props.tname),
         price: getNumber(props.tprice),
-        category: props.category?.select?.name || "",
         description: getText(props.description),
-        image: cover,
-        images: images.length ? images : cover ? [cover] : [],
+        image: image || images[0] || "",
+        images: images.length ? images : image ? [image] : [],
         createdTime: page.created_time,
       };
     });
