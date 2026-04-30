@@ -7,10 +7,26 @@
 </head>
 <body class="p-6">
 
-  <h1 class="text-2xl font-bold mb-4">商品列表</h1>
+<!-- Navbar -->
+<div class="flex justify-between items-center mb-6 border-b pb-3">
+  <div class="flex gap-3">
+    <a href="index.html">🏠 首頁</a>
+    <a href="new.html">🆕 新商品</a>
+  </div>
 
-  <div id="list" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+  <a href="cart.html" class="relative">
+    🛒
+    <span id="cartCount"
+      class="ml-1 text-sm bg-red-500 text-white px-2 rounded-full">0</span>
+  </a>
+</div>
 
-  <script type="module" src="./js/main.js"></script>
+<h1 class="text-2xl font-bold mb-4">商品列表</h1>
+
+<div id="list" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+
+<script type="module" src="./js/main.js"></script>
+<script src="./js/cartCount.js"></script>
+
 </body>
 </html>
