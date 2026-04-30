@@ -16,16 +16,14 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // ⭐ 修正：抓完整文字（支援多段 rich_text）
+    // ⭐ 文字（完整 rich_text）
     const getText = (prop) => {
       if (!prop) return "";
 
-      // title
       if (prop.title) {
         return prop.title.map(t => t.plain_text).join("");
       }
 
-      // rich_text（重點）
       if (prop.rich_text) {
         return prop.rich_text.map(t => t.plain_text).join("\n");
       }
@@ -33,6 +31,7 @@ export default async function handler(req, res) {
       return "";
     };
 
+    // ⭐ 數字
     const getNumber = (prop) => {
       if (!prop) return 0;
 
@@ -47,9 +46,16 @@ export default async function handler(req, res) {
       return 0;
     };
 
+    // ⭐ checkbox
     const getCheckbox = (prop) => prop?.checkbox || false;
 
-    // ⭐ 單圖（支援 URL / rich_text）
+    // ⭐ 日期（update）
+    const getDate = (prop) => {
+      if (!prop || prop.type !== "date") return null;
+      return prop.date?.start || null;
+    };
+
+    // ⭐ 單圖
     const getImage = (prop) => {
       if (!prop) return "";
 
@@ -62,7 +68,7 @@ export default async function handler(req, res) {
       );
     };
 
-    // ⭐ 多圖（逗號分隔）
+    // ⭐ 多圖
     const getImages = (prop) => {
       const text = getText(prop);
       if (!text) return [];
@@ -79,22 +85,21 @@ export default async function handler(req, res) {
       return {
         id: page.id,
         name: getText(props.tname),
-
-        // ⭐ description（現在會完整顯示）
         description: getText(props.description),
 
-        // ⭐ 價格邏輯
         price: isSale ? sprice || price : price,
         originalPrice: price,
         isSale,
 
-        // ⭐ 新商品
         isNew: getCheckbox(props.isNew),
 
         image: getImage(props.image),
         images: getImages(props.images),
 
         createdTime: page.created_time,
+
+        // ⭐ 用來排序
+        update: getDate(props.update)
       };
     });
 
