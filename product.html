@@ -1,38 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <title>商品詳細</title>
+  <meta charset="UTF-8" />
+  <title>Product</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
+<body class="p-6">
 
-<body class="bg-gray-100">
+  <div id="product"></div>
 
-<!-- ⭐ 手機導覽 -->
-<div class="bg-white p-4 shadow md:hidden flex justify-between">
-  <h2 class="font-bold">我的商店</h2>
-  <div class="flex gap-4">
-    <a href="index.html">首頁</a>
-    <a href="products.html">商品</a>
-    <a href="cart.html">購物車</a>
-  </div>
-</div>
-
-<div class="flex">
-
-  <!-- ⭐ 側邊欄（桌機） -->
-  <div class="hidden md:block w-60 bg-white h-screen p-5 shadow">
-    <h2 class="text-xl font-bold mb-5">我的商店</h2>
-    <a href="index.html" class="block mb-3">首頁</a>
-    <a href="products.html" class="block mb-3">商品</a>
-    <a href="cart.html" class="block">購物車</a>
-  </div>
-
-  <!-- ⭐ 主內容 -->
-  <div id="product-detail" class="flex-1 p-5 md:p-10"></div>
-
-</div>
-
-<script src="js/product.js"></script>
+  <script type="module" src="./js/product.js"></script>
 </body>
 </html>
