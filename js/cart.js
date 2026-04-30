@@ -18,19 +18,58 @@ async function init() {
     total += sub;
 
     return `
-      <div class="flex justify-between border-b py-2">
-        <div>${p.name} x ${qty}</div>
-        <div>¥${sub}</div>
+      <div class="flex justify-between items-center border-b py-3">
+        
+        <div class="flex-1">
+          <div class="font-bold">${p.name}</div>
+          <div class="text-sm text-gray-500">¥${p.price}</div>
+        </div>
+
+        <!-- ⭐ 數量控制 -->
+        <div class="flex items-center gap-2">
+          <button onclick="updateQty('${id}', -1)" class="px-2 border">-</button>
+          <span>${qty}</span>
+          <button onclick="updateQty('${id}', 1)" class="px-2 border">+</button>
+        </div>
+
+        <div class="w-24 text-right">
+          ¥${sub}
+        </div>
+
+        <button onclick="removeItem('${id}')" class="ml-3 text-red-500">
+          ✕
+        </button>
+
       </div>
     `;
   }).join("");
 
   el.innerHTML = `
     ${html || "購物車是空的"}
-    <div class="text-right mt-4 font-bold">
+    <div class="text-right mt-4 font-bold text-xl">
       Total: ¥${total}
     </div>
   `;
 }
+
+// ⭐ 增減數量
+window.updateQty = (id, change) => {
+  const cart = JSON.parse(localStorage.getItem("cart") || "{}");
+
+  cart[id] = (cart[id] || 0) + change;
+
+  if (cart[id] <= 0) delete cart[id];
+
+  localStorage.setItem("cart", JSON.stringify(cart));
+  init();
+};
+
+// ⭐ 刪除
+window.removeItem = (id) => {
+  const cart = JSON.parse(localStorage.getItem("cart") || "{}");
+  delete cart[id];
+  localStorage.setItem("cart", JSON.stringify(cart));
+  init();
+};
 
 init();
