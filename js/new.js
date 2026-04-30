@@ -9,7 +9,8 @@ async function init() {
   data = data.filter(p => p.isNew);
 
   data.sort((a, b) =>
-    new Date(b.createdTime) - new Date(a.createdTime)
+    new Date(b.update || b.createdTime) -
+    new Date(a.update || a.createdTime)
   );
 
   render(data);

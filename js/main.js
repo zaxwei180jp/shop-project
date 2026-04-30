@@ -6,8 +6,18 @@ async function init() {
   el.innerHTML = "Loading...";
 
   const res = await fetch(API_URL);
-  const data = await res.json();
+  let data = await res.json();
 
+  // ⭐ 排序（最新更新在前）
+  data.sort((a, b) =>
+    new Date(b.update || b.createdTime) -
+    new Date(a.update || a.createdTime)
+  );
+
+  render(data);
+}
+
+function render(data) {
   el.innerHTML = data.map(p => {
     const img = p.image || p.images?.[0] || "https://via.placeholder.com/400";
 

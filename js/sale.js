@@ -8,6 +8,11 @@ async function init() {
 
   data = data.filter(p => p.isSale);
 
+  data.sort((a, b) =>
+    new Date(b.update || b.createdTime) -
+    new Date(a.update || a.createdTime)
+  );
+
   render(data);
 }
 
