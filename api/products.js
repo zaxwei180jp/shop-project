@@ -19,23 +19,43 @@ export default async function handler(req, res) {
     const products = data.results.map((page) => {
       const props = page.properties;
 
-      // ⭐ 安全圖片處理
-      const cover =
-        page.cover?.external?.url ||
-        page.cover?.file?.url ||
-        "";
+      // ⭐ 圖片來源（全部兼容）
+      let image = "";
 
-      const images =
+      // 1️⃣ cover
+      if (page.cover) {
+        image =
+          page.cover.external?.url ||
+          page.cover.file?.url ||
+          "";
+      }
+
+      // 2️⃣ files
+      const files =
         props.images?.files?.map(f =>
           f.external?.url || f.file?.url
         ) || [];
 
+      // 3️⃣ rich_text（貼網址）
+      const textImg =
+        props.image?.rich_text?.[0]?.plain_text || "";
+
+      // 4️⃣ url 欄位
+      const urlImg =
+        props.image?.url || "";
+
+      // ⭐ 最終圖片
+      const finalImage =
+        files[0] ||
+        image ||
+        textImg ||
+        urlImg ||
+        "https://via.placeholder.com/400";
+
       const finalImages =
-        images.length > 0
-          ? images
-          : cover
-            ? [cover]
-            : ["https://via.placeholder.com/400"];
+        files.length > 0
+          ? files
+          : [finalImage];
 
       return {
         id: page.id,
@@ -52,14 +72,13 @@ export default async function handler(req, res) {
 
         isSale: props.isSale?.checkbox || false,
 
-        // ⭐🔥 熱賣（容錯）
         hot:
           props.hot?.checkbox ??
           props.Hot?.checkbox ??
           props.isHot?.checkbox ??
           false,
 
-        image: finalImages[0],
+        image: finalImage,
         images: finalImages,
 
         description:
