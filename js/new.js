@@ -1,5 +1,6 @@
-const API_URL = "https://shop-project-azure.vercel.app/api/products";
+import { formatPrice } from "./utils.js";
 
+const API_URL = "https://shop-project-azure.vercel.app/api/products";
 const el = document.getElementById("list");
 
 async function init() {
@@ -28,10 +29,10 @@ function render(data) {
 
         ${p.isSale
           ? `<div class="text-red-500">
-               ¥${p.price}
-               <span class="line-through text-gray-400 text-sm">¥${p.originalPrice}</span>
+               ${formatPrice(p.price)}
+               <span class="line-through text-gray-400 text-sm">${formatPrice(p.originalPrice)}</span>
              </div>`
-          : `<div class="text-red-500">¥${p.price}</div>`
+          : `<div class="text-red-500">${formatPrice(p.price)}</div>`
         }
       </a>
     `;

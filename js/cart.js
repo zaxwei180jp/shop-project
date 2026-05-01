@@ -1,5 +1,6 @@
-const API_URL = "https://shop-project-azure.vercel.app/api/products";
+import { formatPrice } from "./utils.js";
 
+const API_URL = "https://shop-project-azure.vercel.app/api/products";
 const el = document.getElementById("cart");
 
 async function init() {
@@ -26,7 +27,7 @@ async function init() {
 
         <div class="flex-1">
           <div class="font-bold">${p.name}</div>
-          <div class="text-sm text-gray-500">¥${p.price}</div>
+          <div class="text-sm text-gray-500">${formatPrice(p.price)}</div>
         </div>
 
         <div class="flex items-center gap-2">
@@ -35,7 +36,7 @@ async function init() {
           <button onclick="updateQty('${id}', 1)" class="px-2 border">+</button>
         </div>
 
-        <div class="w-24 text-right">¥${sub}</div>
+        <div class="w-24 text-right">${formatPrice(sub)}</div>
 
         <button onclick="removeItem('${id}')" class="text-red-500">✕</button>
 
@@ -46,7 +47,7 @@ async function init() {
   el.innerHTML = `
     ${html || "購物車是空的"}
     <div class="text-right mt-4 font-bold text-xl">
-      Total: ¥${total}
+      Total: ${formatPrice(total)}
     </div>
   `;
 }

@@ -1,3 +1,5 @@
+import { formatPrice } from "./utils.js";
+
 const API_URL = "https://shop-project-azure.vercel.app/api/products";
 
 const id = new URLSearchParams(location.search).get("id");
@@ -14,7 +16,6 @@ async function init() {
   el.innerHTML = `
     <div class="grid md:grid-cols-2 gap-6">
 
-      <!-- 圖片 -->
       <div>
         <img id="mainImg" src="${mainImg}" class="w-full aspect-square object-cover">
 
@@ -25,31 +26,27 @@ async function init() {
         </div>
       </div>
 
-      <!-- 商品資訊 -->
       <div>
         <h1 class="text-2xl font-bold">${p.name}</h1>
 
         ${p.isSale
           ? `<p class="text-red-500 mt-2 text-xl">
-               ¥${p.price}
-               <span class="line-through text-gray-400 text-sm">¥${p.originalPrice}</span>
+               ${formatPrice(p.price)}
+               <span class="line-through text-gray-400 text-sm">${formatPrice(p.originalPrice)}</span>
              </p>`
-          : `<p class="text-red-500 mt-2 text-xl">¥${p.price}</p>`
+          : `<p class="text-red-500 mt-2 text-xl">${formatPrice(p.price)}</p>`
         }
 
-        <!-- 數量 -->
         <div class="flex items-center gap-3 mt-4">
           <button id="minus" class="px-3 border">-</button>
           <span id="qty">1</span>
           <button id="plus" class="px-3 border">+</button>
         </div>
 
-        <button id="addBtn"
-          class="mt-4 px-4 py-2 bg-black text-white">
+        <button id="addBtn" class="mt-4 px-4 py-2 bg-black text-white">
           加入購物車
         </button>
 
-        <!-- ⭐ 進階描述 -->
         <div class="mt-6">
           ${renderDescriptionAdvanced(p.description)}
         </div>
@@ -58,13 +55,11 @@ async function init() {
     </div>
   `;
 
-  // 切圖
   document.querySelectorAll(".thumb").forEach(img => {
     img.onclick = () =>
       document.getElementById("mainImg").src = img.src;
   });
 
-  // 數量控制
   let qty = 1;
   const qtyEl = document.getElementById("qty");
 
@@ -78,7 +73,6 @@ async function init() {
     qtyEl.innerText = qty;
   };
 
-  // 加入購物車
   document.getElementById("addBtn").onclick = () => {
     const cart = JSON.parse(localStorage.getItem("cart") || "{}");
     cart[p.id] = (cart[p.id] || 0) + qty;
@@ -86,82 +80,6 @@ async function init() {
     alert("已加入購物車");
     location.reload();
   };
-}
-
-//
-// ⭐🔥 超進階描述解析
-//
-function renderDescriptionAdvanced(text) {
-  if (!text) return "";
-
-  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-
-  let html = "";
-  let list = [];
-  let table = [];
-
-  const flushList = () => {
-    if (list.length) {
-      html += `
-        <ul class="list-disc pl-5 space-y-1 text-gray-700 mb-4">
-          ${list.map(i => `<li>✔ ${i}</li>`).join("")}
-        </ul>
-      `;
-      list = [];
-    }
-  };
-
-  const flushTable = () => {
-    if (table.length) {
-      html += `
-        <div class="overflow-x-auto mb-4">
-          <table class="w-full border text-sm">
-            ${table.map(([k, v]) => `
-              <tr class="border">
-                <td class="bg-gray-100 p-2 w-1/3 font-medium">${k}</td>
-                <td class="p-2">${v}</td>
-              </tr>
-            `).join("")}
-          </table>
-        </div>
-      `;
-      table = [];
-    }
-  };
-
-  lines.forEach(line => {
-
-    // ⭐ 條列
-    if (line.startsWith("•") || line.startsWith("-")) {
-      flushTable();
-      list.push(line.replace(/^[-•]\s*/, ""));
-      return;
-    }
-
-    // ⭐ 規格（key: value）
-    if (line.includes("：") || line.includes(":")) {
-      flushList();
-      const [k, v] = line.split(/[:：]/);
-      table.push([k.trim(), v.trim()]);
-      return;
-    }
-
-    // ⭐ 標題 / 段落
-    flushList();
-    flushTable();
-
-    if (line.length < 20) {
-      html += `<h3 class="font-bold text-lg mt-4 mb-2">${line}</h3>`;
-    } else {
-      html += `<p class="text-gray-700 mb-2 leading-relaxed">${line}</p>`;
-    }
-
-  });
-
-  flushList();
-  flushTable();
-
-  return html;
 }
 
 init();

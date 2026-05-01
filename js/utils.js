@@ -1,20 +1,23 @@
-export const formatPrice = (n) => {
-  const num = Number(n || 0);
-
-  return new Intl.NumberFormat("zh-TW", {
+export const formatPrice = (n) =>
+  new Intl.NumberFormat("zh-TW", {
     style: "currency",
     currency: "TWD",
     minimumFractionDigits: 0,
-  }).format(num);
-};
+  }).format(Number(n || 0));
 
-export const getCart = () => {
-  try {
-    return JSON.parse(localStorage.getItem("cart") || "{}");
-  } catch {
-    return {};
-  }
-};
+export const getCart = () =>
+  JSON.parse(localStorage.getItem("cart") || "{}");
 
 export const saveCart = (cart) =>
   localStorage.setItem("cart", JSON.stringify(cart));
+
+export const addToCart = (id) => {
+  const cart = getCart();
+  cart[id] = (cart[id] || 0) + 1;
+  saveCart(cart);
+};
+
+export const getTotalQty = () => {
+  const cart = getCart();
+  return Object.values(cart).reduce((a, b) => a + b, 0);
+};
