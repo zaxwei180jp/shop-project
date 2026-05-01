@@ -7,13 +7,8 @@ async function init() {
   const res = await fetch(API_URL);
   let data = await res.json();
 
-  // ⭐ 熱賣
-  data = data.filter(p => p.hot === true);
-
-  data.sort((a, b) =>
-    new Date(b.update || b.createdTime) -
-    new Date(a.update || a.createdTime)
-  );
+  // ⭐ 強制轉 boolean
+  data = data.filter(p => Boolean(p.hot));
 
   if (!data.length) {
     el.innerHTML = "<p>目前沒有熱賣商品</p>";
@@ -21,7 +16,7 @@ async function init() {
   }
 
   el.innerHTML = data.map(p => {
-    const img = p.image || p.images?.[0] || "https://via.placeholder.com/400";
+    const img = p.image || "https://via.placeholder.com/400";
 
     return `
       <a href="product.html?id=${p.id}" class="block border p-2">
@@ -29,15 +24,9 @@ async function init() {
 
         <div class="mt-2 font-bold">${p.name}</div>
 
-        ${p.isSale
-          ? `<div class="text-red-500">
-               ${formatPrice(p.price)}
-               <span class="line-through text-gray-400 text-sm">
-                 ${formatPrice(p.originalPrice)}
-               </span>
-             </div>`
-          : `<div class="text-red-500">${formatPrice(p.price)}</div>`
-        }
+        <div class="text-red-500">
+          ${formatPrice(p.price)}
+        </div>
       </a>
     `;
   }).join("");
