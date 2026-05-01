@@ -2,7 +2,7 @@ export default async function handler(req, res) {
   try {
     const { NOTION_TOKEN, DATABASE_ID } = process.env;
 
-    const notionRes = await fetch(
+    const response = await fetch(
       `https://api.notion.com/v1/databases/${DATABASE_ID}/query`,
       {
         method: "POST",
@@ -14,85 +14,98 @@ export default async function handler(req, res) {
       }
     );
 
-    const data = await notionRes.json();
+    const data = await response.json();
+
+    // ⭐ 文字（完整 rich_text）
+    const getText = (prop) => {
+      if (!prop) return "";
+
+      if (prop.title) {
+        return prop.title.map(t => t.plain_text).join("");
+      }
+
+      if (prop.rich_text) {
+        return prop.rich_text.map(t => t.plain_text).join("\n");
+      }
+
+      return "";
+    };
+
+    // ⭐ 數字
+    const getNumber = (prop) => {
+      if (!prop) return 0;
+
+      if (prop.type === "number") return prop.number || 0;
+
+      if (prop.type === "formula") {
+        if (prop.formula.type === "number") {
+          return prop.formula.number || 0;
+        }
+      }
+
+      return 0;
+    };
+
+    // ⭐ checkbox
+    const getCheckbox = (prop) => prop?.checkbox || false;
+
+    // ⭐ 日期（update）
+    const getDate = (prop) => {
+      if (!prop || prop.type !== "date") return null;
+      return prop.date?.start || null;
+    };
+
+    // ⭐ 單圖
+    const getImage = (prop) => {
+      if (!prop) return "";
+
+      if (prop.type === "url") return prop.url || "";
+
+      return (
+        prop?.title?.map(t => t.plain_text).join("") ||
+        prop?.rich_text?.map(t => t.plain_text).join("") ||
+        ""
+      );
+    };
+
+    // ⭐ 多圖
+    const getImages = (prop) => {
+      const text = getText(prop);
+      if (!text) return [];
+      return text.split(",").map(s => s.trim()).filter(Boolean);
+    };
 
     const products = data.results.map((page) => {
       const props = page.properties;
 
-      // ⭐ 圖片來源（全部兼容）
-      let image = "";
-
-      // 1️⃣ cover
-      if (page.cover) {
-        image =
-          page.cover.external?.url ||
-          page.cover.file?.url ||
-          "";
-      }
-
-      // 2️⃣ files
-      const files =
-        props.images?.files?.map(f =>
-          f.external?.url || f.file?.url
-        ) || [];
-
-      // 3️⃣ rich_text（貼網址）
-      const textImg =
-        props.image?.rich_text?.[0]?.plain_text || "";
-
-      // 4️⃣ url 欄位
-      const urlImg =
-        props.image?.url || "";
-
-      // ⭐ 最終圖片
-      const finalImage =
-        files[0] ||
-        image ||
-        textImg ||
-        urlImg ||
-        "https://via.placeholder.com/400";
-
-      const finalImages =
-        files.length > 0
-          ? files
-          : [finalImage];
+      const isSale = getCheckbox(props.Sale);
+      const price = getNumber(props.tprice);
+      const sprice = getNumber(props.sprice);
 
       return {
         id: page.id,
+        name: getText(props.tname),
+        description: getText(props.description),
 
-        name: props.tname?.title?.[0]?.plain_text || "無名稱",
+        price: isSale ? sprice || price : price,
+        originalPrice: price,
+        isSale,
 
-        price: props.tprice?.number || 0,
+        isNew: getCheckbox(props.isNew),
 
-        originalPrice: props.originalPrice?.number || 0,
-
-        category: props.category?.select?.name || "",
-
-        isNew: props.isNew?.checkbox || false,
-
-        isSale: props.isSale?.checkbox || false,
-
-        hot:
-          props.hot?.checkbox ??
-          props.Hot?.checkbox ??
-          props.isHot?.checkbox ??
-          false,
-
-        image: finalImage,
-        images: finalImages,
-
-        description:
-          props.description?.rich_text?.[0]?.plain_text || "",
+        image: getImage(props.image),
+        images: getImages(props.images),
 
         createdTime: page.created_time,
-        update: props.update?.date?.start || page.created_time,
+
+        // ⭐ 用來排序
+        update: getDate(props.update)
       };
     });
 
     res.status(200).json(products);
 
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: err.message });
   }
 }
