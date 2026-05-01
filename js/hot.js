@@ -1,25 +1,20 @@
 import { formatPrice } from "./utils.js";
 
-const API_URL = "https://shop-project-azure.vercel.app/api/products";
+const API_URL = "/api/products";
 const el = document.getElementById("list");
 
 async function init() {
   const res = await fetch(API_URL);
   let data = await res.json();
 
-  // ⭐ 只顯示 hot 勾選的
-  data = data.filter(p => p.hot);
+  // ⭐ 熱賣
+  data = data.filter(p => p.hot === true);
 
-  // 排序（最新）
   data.sort((a, b) =>
     new Date(b.update || b.createdTime) -
     new Date(a.update || a.createdTime)
   );
 
-  render(data);
-}
-
-function render(data) {
   if (!data.length) {
     el.innerHTML = "<p>目前沒有熱賣商品</p>";
     return;
