@@ -18,7 +18,7 @@ export default async function handler(req, res) {
 
     // ===== 工具區 =====
 
-    // ⭐ 文字（title / rich_text / rollup）
+    // ⭐ 文字（title / rich_text / rollup 全支援）
     const getText = (prop) => {
       if (!prop) return "";
 
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
         return prop.rich_text.map(t => t.plain_text).join("\n");
       }
 
-      // ⭐ rollup（文字）
+      // ⭐ rollup
       if (prop.type === "rollup") {
         if (prop.rollup.type === "array") {
           return prop.rollup.array
@@ -41,16 +41,23 @@ export default async function handler(req, res) {
               if (item.type === "rich_text") {
                 return item.rich_text.map(t => t.plain_text).join("");
               }
+              if (item.type === "number") {
+                return item.number;
+              }
               return "";
             })
             .join(", ");
+        }
+
+        if (prop.rollup.type === "number") {
+          return String(prop.rollup.number || "");
         }
       }
 
       return "";
     };
 
-    // ⭐ 數字（number / formula / rollup）
+    // ⭐ 數字（number / formula / rollup 全支援）
     const getNumber = (prop) => {
       if (!prop) return 0;
 
@@ -62,7 +69,7 @@ export default async function handler(req, res) {
         }
       }
 
-      // ⭐ rollup（數字）
+      // ⭐ rollup
       if (prop.type === "rollup") {
         if (prop.rollup.type === "number") {
           return prop.rollup.number || 0;
@@ -70,7 +77,15 @@ export default async function handler(req, res) {
 
         if (prop.rollup.type === "array") {
           const first = prop.rollup.array[0];
-          if (first?.type === "number") return first.number || 0;
+
+          if (!first) return 0;
+
+          if (first.type === "number") return first.number || 0;
+
+          if (first.type === "rich_text") {
+            const text = first.rich_text.map(t => t.plain_text).join("");
+            return Number(text) || 0;
+          }
         }
       }
 
@@ -86,11 +101,11 @@ export default async function handler(req, res) {
       return prop.date?.start || null;
     };
 
-    // ⭐ 圖片（files / url / rollup）
+    // ⭐ 圖片（files / url / rollup 全支援）
     const getImage = (prop) => {
       if (!prop) return "";
 
-      // files（Notion 上傳圖片）
+      // files（Notion 上傳）
       if (prop.type === "files") {
         const file = prop.files[0];
         if (!file) return "";
@@ -102,11 +117,10 @@ export default async function handler(req, res) {
       // url
       if (prop.type === "url") return prop.url || "";
 
-      // ⭐ rollup（圖片）
+      // ⭐ rollup
       if (prop.type === "rollup") {
         if (prop.rollup.type === "array") {
           const first = prop.rollup.array[0];
-
           if (!first) return "";
 
           if (first.type === "files") {
@@ -118,20 +132,24 @@ export default async function handler(req, res) {
           }
 
           if (first.type === "url") return first.url || "";
+
+          if (first.type === "rich_text") {
+            return first.rich_text.map(t => t.plain_text).join("");
+          }
         }
       }
 
       return "";
     };
 
-    // ⭐ 多圖（用逗號分隔）
+    // ⭐ 多圖（逗號分隔）
     const getImages = (prop) => {
       const text = getText(prop);
       if (!text) return [];
       return text.split(",").map(s => s.trim()).filter(Boolean);
     };
 
-    // ===== 資料整理 =====
+    // ===== 主資料處理 =====
 
     const products = data.results.map((page) => {
       const props = page.properties;
