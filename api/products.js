@@ -155,7 +155,7 @@ export default async function handler(req, res) {
       const props = page.properties;
 
       const isSale = getCheckbox(props.Sale);
-      const pric = getNumber(props.tprice);
+      const price = getNumber(props.tpric);
       const sprice = getNumber(props.sprice);
 
       return {
