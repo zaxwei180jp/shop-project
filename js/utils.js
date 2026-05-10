@@ -1,23 +1,75 @@
+const API_URL = "/api/products";
+
+const CACHE_TIME = 1000 * 60 * 10;
+
 export const formatPrice = (n) =>
   new Intl.NumberFormat("zh-TW", {
     style: "currency",
     currency: "TWD",
-    minimumFractionDigits: 0,
-  }).format(Number(n || 0));
+  }).format(n);
 
+export async function getProducts() {
+  const cache = localStorage.getItem("products");
+  const time = localStorage.getItem("products_time");
+
+  if (cache && time && Date.now() - time < CACHE_TIME) {
+    return JSON.parse(cache);
+  }
+
+  const res = await fetch(API_URL);
+  const data = await res.json();
+
+  localStorage.setItem("products", JSON.stringify(data));
+  localStorage.setItem("products_time", Date.now());
+
+  return data;
+}
+
+/* 🛒 CART */
 export const getCart = () =>
   JSON.parse(localStorage.getItem("cart") || "{}");
 
 export const saveCart = (cart) =>
   localStorage.setItem("cart", JSON.stringify(cart));
 
-export const addToCart = (id) => {
+export function addToCart(id) {
   const cart = getCart();
   cart[id] = (cart[id] || 0) + 1;
   saveCart(cart);
-};
+  updateCartCount();
+  toast("已加入購物車");
+}
 
-export const getTotalQty = () => {
+export function updateQty(id, delta) {
   const cart = getCart();
-  return Object.values(cart).reduce((a, b) => a + b, 0);
-};
+  cart[id] = (cart[id] || 0) + delta;
+  if (cart[id] <= 0) delete cart[id];
+  saveCart(cart);
+}
+
+export function removeItem(id) {
+  const cart = getCart();
+  delete cart[id];
+  saveCart(cart);
+}
+
+export function clearCart() {
+  localStorage.removeItem("cart");
+}
+
+/* UI */
+export function updateCartCount() {
+  const cart = getCart();
+  const total = Object.values(cart).reduce((a, b) => a + b, 0);
+  const el = document.getElementById("cart-count");
+  if (el) el.textContent = total;
+}
+
+export function toast(msg) {
+  const div = document.createElement("div");
+  div.className =
+    "fixed bottom-5 right-5 bg-black text-white px-4 py-2 rounded";
+  div.innerText = msg;
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 1500);
+}
