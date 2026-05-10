@@ -1,40 +1,72 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+const API_URL = "/api/products";
 
-  <title>熱賣商品</title>
+const productList = document.getElementById("product-list");
 
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
+async function loadSaleProducts() {
+  try {
+    const res = await fetch(API_URL);
+    const data = await res.json();
 
-<body class="bg-gray-100">
+    console.log("SALE DATA:", data);
 
-  <!-- Header -->
-  <header class="bg-white shadow">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+    // 特價商品
+    const saleProducts = data.filter((p) => p.isSale === true);
 
-      <a href="index.html" class="text-2xl font-bold">
-        SHOP
-      </a>
+    renderProducts(saleProducts);
 
-      <nav class="flex gap-6">
-        <a href="index.html" class="hover:text-blue-500">
-          全部商品
-        </a>
+  } catch (err) {
+    console.error(err);
 
-        <a href="hot.html" class="text-red-500 font-bold">
-          熱賣商品
-        </a>
+    productList.innerHTML = `
+      <p class="text-red-500">
+        無法載入特價商品
+      </p>
+    `;
+  }
+}
 
-        <a href="sale.html" class="hover:text-blue-500">
-          特價商品
-        </a>
+function renderProducts(products) {
 
-        <a href="cart.html" class="hover:text-blue-500">
-          購物車
-        </a>
+  if (!products.length) {
+    productList.innerHTML = `
+      <p class="text-gray-500 col-span-full">
+        目前沒有特價商品
+      </p>
+    `;
+    return;
+  }
+
+  productList.innerHTML = products.map((p) => `
+    <a
+      href="product.html?id=${p.id}"
+      class="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden block"
+    >
+      <img
+        src="${p.image}"
+        alt="${p.name}"
+        class="w-full aspect-square object-cover"
+      />
+
+      <div class="p-4">
+        <h3 class="font-bold mb-2">
+          ${p.name}
+        </h3>
+
+        <div class="flex items-center gap-2">
+          <span class="text-red-500 font-bold text-xl">
+            NT$ ${p.salePrice}
+          </span>
+
+          <span class="text-gray-400 line-through text-sm">
+            NT$ ${p.price}
+          </span>
+        </div>
+      </div>
+    </a>
+  `).join("");
+}
+
+loadSaleProducts();        </a>
       </nav>
     </div>
   </header>
