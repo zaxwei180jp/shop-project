@@ -1,12 +1,10 @@
-// api/products.js
-
 export default async function handler(req, res) {
   try {
     const NOTION_TOKEN = process.env.NOTION_TOKEN;
     const DATABASE_ID = process.env.DATABASE_ID;
 
     // =========================
-    // Notion API Query
+    // Query Notion Database
     // =========================
 
     const response = await fetch(
@@ -24,7 +22,7 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     // =========================
-    // Notion API Error Handling
+    // Error Handling
     // =========================
 
     if (!response.ok) {
@@ -36,7 +34,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // 防止 results 不存在
     if (!data.results || !Array.isArray(data.results)) {
       return res.status(500).json({
         error: "Invalid Notion response",
@@ -100,14 +97,14 @@ export default async function handler(req, res) {
       return prop.date.start;
     }
 
-    // 單張圖片
+    // 單圖
     function getImage(prop) {
       const text = getText(prop);
 
       return text || "";
     }
 
-    // 多張圖片
+    // 多圖
     function getImages(prop) {
       const text = getText(prop);
 
@@ -120,7 +117,7 @@ export default async function handler(req, res) {
     }
 
     // =========================
-    // Data Mapping
+    // Mapping Data
     // =========================
 
     const products = data.results.map((page) => {
@@ -147,6 +144,9 @@ export default async function handler(req, res) {
         // 是否新品
         isNew: getCheckbox(props.isNew),
 
+        // 是否熱賣
+        isHot: getCheckbox(props.isHot),
+
         // 主圖
         image: getImage(props.indexPic),
 
@@ -162,7 +162,7 @@ export default async function handler(req, res) {
     });
 
     // =========================
-    // Sort by update desc
+    // Sort by update
     // =========================
 
     products.sort((a, b) => {
@@ -173,10 +173,11 @@ export default async function handler(req, res) {
     });
 
     // =========================
-    // Success Response
+    // Response
     // =========================
 
     return res.status(200).json(products);
+
   } catch (error) {
     console.error("Server Error:", error);
 
