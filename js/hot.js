@@ -1,40 +1,63 @@
-const API_URL = "/api/products";
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-const productList = document.getElementById("product-list");
+  <title>熱賣商品</title>
 
-async function loadHotProducts() {
-  try {
-    const res = await fetch(API_URL);
-    const data = await res.json();
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
 
-    // 熱賣商品
-    const hotProducts = data.filter((p) => p.isHot === true);
+<body class="bg-gray-100">
 
-    renderProducts(hotProducts);
+  <!-- Header -->
+  <header class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
 
-  } catch (err) {
-    console.error(err);
+      <a href="index.html" class="text-2xl font-bold">
+        SHOP
+      </a>
 
-    productList.innerHTML = `
-      <p class="text-center text-red-500">
-        無法載入熱賣商品
-      </p>
-    `;
-  }
-}
+      <nav class="flex gap-6">
+        <a href="index.html" class="hover:text-blue-500">
+          全部商品
+        </a>
 
-function renderProducts(products) {
-  if (!products.length) {
-    productList.innerHTML = `
-      <p class="text-center text-gray-500 col-span-full">
-        目前沒有熱賣商品
-      </p>
-    `;
-    return;
-  }
+        <a href="hot.html" class="text-red-500 font-bold">
+          熱賣商品
+        </a>
 
-  productList.innerHTML = products.map((p) => `
-    <a href="product.html?id=${p.id}" 
+        <a href="sale.html" class="hover:text-blue-500">
+          特價商品
+        </a>
+
+        <a href="cart.html" class="hover:text-blue-500">
+          購物車
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Title -->
+  <section class="max-w-7xl mx-auto px-4 pt-10">
+    <h1 class="text-3xl font-bold mb-8">
+      熱賣商品
+    </h1>
+  </section>
+
+  <!-- Product List -->
+  <section class="max-w-7xl mx-auto px-4 pb-16">
+    <div
+      id="product-list"
+      class="grid grid-cols-2 md:grid-cols-4 gap-6"
+    ></div>
+  </section>
+
+  <script type="module" src="./js/hot.js"></script>
+
+</body>
+</html>    <a href="product.html?id=${p.id}" 
        class="block bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
 
       <img
