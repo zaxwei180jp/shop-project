@@ -9,9 +9,6 @@
 <h1 class="text-2xl mb-4">商品列表</h1>
 
 <input id="search" placeholder="搜尋..." class="border p-2 mb-3 w-full"/>
-<select id="category" class="border p-2 mb-3">
-  <option value="">全部分類</option>
-</select>
 
 <div id="list" class="grid grid-cols-2 gap-4"></div>
 
@@ -20,7 +17,6 @@ import { getProducts, formatPrice, addToCart } from "./utils.js";
 
 const list = document.getElementById("list");
 const search = document.getElementById("search");
-const category = document.getElementById("category");
 
 let products = [];
 
@@ -34,24 +30,14 @@ async function init() {
     return;
   }
 
-  [...new Set(products.map(p => p.category))].forEach(c=>{
-    if (!c) return;
-    const op = document.createElement("option");
-    op.value = c;
-    op.textContent = c;
-    category.appendChild(op);
-  });
-
   render();
 }
 
 function render() {
   const s = search.value.toLowerCase();
-  const c = category.value;
 
   const filtered = products.filter(p =>
-    p.name.toLowerCase().includes(s) &&
-    (!c || p.category === c)
+    (p.name || "").toLowerCase().includes(s)
   );
 
   list.innerHTML = filtered.map(p => `
@@ -68,7 +54,7 @@ function render() {
   `).join("");
 }
 
-/* 關鍵：事件代理 */
+/* ✅ 事件代理（避免 Safari 爆） */
 document.addEventListener("click", (e) => {
   if (e.target.classList.contains("add-btn")) {
     addToCart(e.target.dataset.id);
@@ -76,7 +62,6 @@ document.addEventListener("click", (e) => {
 });
 
 search.oninput = render;
-category.onchange = render;
 </script>
 
 </body>
