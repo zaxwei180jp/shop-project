@@ -7,6 +7,8 @@ async function loadSaleProducts() {
     const res = await fetch(API_URL);
     const data = await res.json();
 
+    console.log("SALE DATA:", data);
+
     // 特價商品
     const saleProducts = data.filter((p) => p.isSale === true);
 
@@ -16,7 +18,7 @@ async function loadSaleProducts() {
     console.error(err);
 
     productList.innerHTML = `
-      <p class="text-center text-red-500">
+      <p class="text-red-500">
         無法載入特價商品
       </p>
     `;
@@ -24,9 +26,10 @@ async function loadSaleProducts() {
 }
 
 function renderProducts(products) {
+
   if (!products.length) {
     productList.innerHTML = `
-      <p class="text-center text-gray-500 col-span-full">
+      <p class="text-gray-500 col-span-full">
         目前沒有特價商品
       </p>
     `;
@@ -34,7 +37,36 @@ function renderProducts(products) {
   }
 
   productList.innerHTML = products.map((p) => `
-    <a href="product.html?id=${p.id}" 
+    <a
+      href="product.html?id=${p.id}"
+      class="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden block"
+    >
+      <img
+        src="${p.image}"
+        alt="${p.name}"
+        class="w-full aspect-square object-cover"
+      />
+
+      <div class="p-4">
+        <h3 class="font-bold mb-2">
+          ${p.name}
+        </h3>
+
+        <div class="flex items-center gap-2">
+          <span class="text-red-500 font-bold text-xl">
+            NT$ ${p.salePrice}
+          </span>
+
+          <span class="text-gray-400 line-through text-sm">
+            NT$ ${p.price}
+          </span>
+        </div>
+      </div>
+    </a>
+  `).join("");
+}
+
+loadSaleProducts();    <a href="product.html?id=${p.id}" 
        class="block bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
 
       <img
