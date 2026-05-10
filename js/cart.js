@@ -45,7 +45,7 @@ async function init() {
   }).join("");
 
   el.innerHTML = `
-    ${html || "購物車是空a的"}
+    ${html || "購物車是空的"}
     <div class="text-right mt-4 font-bold text-xl">
       Total: ${formatPrice(total)}
     </div>
