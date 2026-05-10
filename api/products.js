@@ -1,8 +1,7 @@
 export default async function handler(req, res) {
   try {
     const { NOTION_TOKEN, DATABASE_ID } = process.env;
-console.log("TOKEN =", process.env.NOTION_TOKEN);
-console.log("DB =", process.env.DATABASE_ID);
+
     const response = await fetch(
       `https://api.notion.com/v1/databases/${DATABASE_ID}/query`,
       {
