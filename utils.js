@@ -25,7 +25,6 @@ export async function getProducts() {
     return data;
   } catch (e) {
     console.error(e);
-    document.body.innerHTML = "資料載入失敗";
     return [];
   }
 }
@@ -41,7 +40,7 @@ export function addToCart(id) {
   const cart = getCart();
   cart[id] = (cart[id] || 0) + 1;
   saveCart(cart);
-  toast("已加入購物車");
+  updateCartCount();
 }
 
 export function updateQty(id, delta) {
@@ -62,11 +61,9 @@ export function clearCart() {
 }
 
 /* UI */
-export function toast(msg) {
-  const div = document.createElement("div");
-  div.className =
-    "fixed bottom-5 right-5 bg-black text-white px-4 py-2 rounded";
-  div.innerText = msg;
-  document.body.appendChild(div);
-  setTimeout(() => div.remove(), 1500);
+export function updateCartCount() {
+  const cart = getCart();
+  const total = Object.values(cart).reduce((a, b) => a + b, 0);
+  const el = document.getElementById("cart-count");
+  if (el) el.textContent = total;
 }

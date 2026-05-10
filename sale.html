@@ -1,38 +1,87 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sale</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gray-50">
 
-<div class="sticky top-0 z-50 bg-white border-b">
-  <div class="flex justify-between items-center p-4">
-    <div class="flex gap-4">
-      <a href="index.html">🏠 首頁</a>
-      <a href="hot.html">🔥 熱賣商品</a>
-      <a href="sale.html" class="font-bold">🈹 特價</a>
+<!-- Navbar -->
+<div class="bg-white shadow sticky top-0 z-50">
+  <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+    <div class="flex items-center gap-3">
+      <button onclick="history.back()">← 返回</button>
+      <a href="index.html">🛒 商店</a>
     </div>
 
-    <div class="flex items-center gap-4">
-      <button onclick="history.back()">⬅️ 上一頁</button>
-      <a href="cart.html">
-        🛒 <span id="cartCount" class="bg-red-500 text-white px-2 rounded-full">0</span>
+    <div class="flex gap-4 overflow-x-auto whitespace-nowrap">
+      <a href="index.html">首頁</a>
+      <a href="new.html">新品</a>
+      <a href="hot.html">熱賣</a>
+      <a href="sale.html" class="font-bold">特價</a>
+      <a href="cart.html" class="relative">
+        🛒<span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1 rounded-full">0</span>
       </a>
     </div>
   </div>
 </div>
 
-<div class="p-6">
-  <h1 class="text-2xl font-bold mb-4">🈹 特價</h1>
-  <div id="list" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+<div class="max-w-5xl mx-auto p-4">
+<h1 class="text-xl font-bold mb-4">特價商品</h1>
+<div id="list" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
 </div>
 
-<script type="module" src="./js/sale.js"></script>
-<script src="./js/cartCount.js"></script>
+<script type="module">
+import { getProducts, formatPrice, addToCart, updateCartCount } from "/utils.js";
+
+const list = document.getElementById("list");
+
+let products = [];
+
+init();
+
+async function init(){
+  products = await getProducts();
+  updateCartCount();
+  render();
+}
+
+function render(){
+  const filtered = products.filter(p => p.isSale);
+
+  if(!filtered.length){
+    list.innerHTML = "目前沒有特價商品";
+    return;
+  }
+
+  list.innerHTML = filtered.map(p=>`
+    <div class="bg-white rounded shadow">
+      <a href="product.html?id=${p.id}">
+        <div class="aspect-square">
+          <img src="${p.image}" class="w-full h-full object-cover"/>
+        </div>
+      </a>
+
+      <div class="p-2">
+        <h2>${p.name}</h2>
+        <p class="text-red-500">${formatPrice(p.price)}</p>
+        <button data-id="${p.id}" class="add-btn w-full bg-black text-white mt-2">
+          加入
+        </button>
+      </div>
+    </div>
+  `).join("");
+}
+
+document.addEventListener("click", e=>{
+  if(e.target.classList.contains("add-btn")){
+    addToCart(e.target.dataset.id);
+    updateCartCount();
+  }
+});
+</script>
 
 </body>
 </html>

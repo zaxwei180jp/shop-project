@@ -8,10 +8,23 @@
 
 <body class="p-4 max-w-xl mx-auto">
 
-<div id="app">Loading...</div>
+<!-- Navbar -->
+<div class="bg-white shadow sticky top-0 z-50">
+  <div class="px-4 py-3 flex justify-between items-center">
+    <div class="flex items-center gap-3">
+      <button onclick="history.back()">←</button>
+      <a href="index.html">商店</a>
+    </div>
+    <a href="cart.html" class="relative">
+      🛒<span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1 rounded-full">0</span>
+    </a>
+  </div>
+</div>
+
+<div id="app"></div>
 
 <script type="module">
-import { getProducts, formatPrice, addToCart } from "/utils.js";
+import { getProducts, formatPrice, addToCart, updateCartCount } from "/utils.js";
 
 const id = new URLSearchParams(location.search).get("id");
 
@@ -22,63 +35,45 @@ init();
 
 async function init() {
   const products = await getProducts();
+  updateCartCount();
   p = products.find(x => x.id === id);
 
-  if (!p) {
-    document.body.innerHTML = "商品不存在";
-    return;
-  }
+  if (!p) return;
 
   render();
 }
 
 function render() {
   document.getElementById("app").innerHTML = `
-    
-    <!-- 主圖（正方形） -->
-    <div class="w-full aspect-square overflow-hidden rounded-lg bg-gray-100">
-      <img src="${(p.images && p.images[current]) || p.image}" 
-           class="w-full h-full object-cover"/>
+    <div class="aspect-square">
+      <img src="${(p.images && p.images[current]) || p.image}" class="w-full h-full object-cover"/>
     </div>
 
-    <!-- 小圖 -->
-    <div class="flex gap-2 mt-3 overflow-x-auto">
+    <div class="flex gap-2 mt-2">
       ${(p.images || []).map((img,i)=>`
-        <img src="${img}" 
-             data-i="${i}" 
-             class="thumb w-16 h-16 object-cover border rounded cursor-pointer"/>
+        <img src="${img}" data-i="${i}" class="thumb w-16 h-16 object-cover"/>
       `).join("")}
     </div>
 
-    <!-- 商品資訊 -->
-    <h1 class="text-xl md:text-2xl font-bold mt-4">${p.name}</h1>
+    <h1 class="text-xl mt-3">${p.name}</h1>
+    <p>${formatPrice(p.price)}</p>
 
-    <p class="text-lg md:text-xl text-red-500 mt-2">
-      ${formatPrice(p.price)}
-    </p>
+    <div class="whitespace-pre-line mt-3">${p.description || ""}</div>
 
-    <!-- 商品敘述（關鍵修正） -->
-    <div class="mt-4 text-sm md:text-base leading-relaxed whitespace-pre-line text-gray-700">
-      ${p.description || ""}
-    </div>
-
-    <!-- 按鈕 -->
-    <button data-id="${p.id}" 
-      class="add-btn w-full bg-black text-white py-3 rounded-lg mt-6 text-lg">
+    <button data-id="${p.id}" class="add-btn w-full bg-black text-white py-3 mt-4">
       加入購物車
     </button>
   `;
 }
 
-/* 事件 */
-document.addEventListener("click", (e) => {
-  if (e.target.classList.contains("thumb")) {
-    current = Number(e.target.dataset.i);
+document.addEventListener("click", e=>{
+  if(e.target.classList.contains("thumb")){
+    current = e.target.dataset.i;
     render();
   }
-
-  if (e.target.classList.contains("add-btn")) {
+  if(e.target.classList.contains("add-btn")){
     addToCart(e.target.dataset.id);
+    updateCartCount();
   }
 });
 </script>
