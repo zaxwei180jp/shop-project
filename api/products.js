@@ -1,131 +1,111 @@
-import { Client } from "@notionhq/client";
-
-const notion = new Client({
-  auth: process.env.NOTION_TOKEN,
-});
-
-const databaseId = process.env.NOTION_DATABASE_ID;
-
-/* ---------------- helpers ---------------- */
-
-function getText(field) {
-  try {
-    if (!field) return "";
-
-    // rich_text
-    if (field.type === "rich_text") {
-      return field.rich_text?.map(t => t.plain_text).join("") || "";
-    }
-
-    // title
-    if (field.type === "title") {
-      return field.title?.map(t => t.plain_text).join("") || "";
-    }
-
-    return "";
-  } catch {
-    return "";
-  }
-}
-
-function getCheckbox(field) {
-  try {
-    return field?.checkbox || false;
-  } catch {
-    return false;
-  }
-}
-
-function getNumber(field) {
-  try {
-    if (!field) return 0;
-
-    // formula
-    if (field.type === "formula") {
-      return field.formula?.number || 0;
-    }
-
-    // number
-    if (field.type === "number") {
-      return field.number || 0;
-    }
-
-    return 0;
-  } catch {
-    return 0;
-  }
-}
-
-function getImages(field) {
-  try {
-    const text = getText(field);
-
-    if (!text) return [];
-
-    return text
-      .split(",")
-      .map(v => v.trim())
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
-}
-
-/* ---------------- api ---------------- */
-
 export default async function handler(req, res) {
   try {
-    const response = await notion.databases.query({
-      database_id: databaseId,
-    });
+    const { NOTION_TOKEN, DATABASE_ID } = process.env;
 
-    const products = response.results.map((page) => {
-      const props = page.properties || {};
+    const response = await fetch(
+      `https://api.notion.com/v1/databases/${DATABASE_ID}/query`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${NOTION_TOKEN}`,
+          "Notion-Version": "2022-06-28",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    // ⭐ 文字（完整 rich_text）
+    const getText = (prop) => {
+      if (!prop) return "";
+
+      if (prop.title) {
+        return prop.title.map(t => t.plain_text).join("");
+      }
+
+      if (prop.rich_text) {
+        return prop.rich_text.map(t => t.plain_text).join("\n");
+      }
+
+      return "";
+    };
+
+    // ⭐ 數字
+    const getNumber = (prop) => {
+      if (!prop) return 0;
+
+      if (prop.type === "number") return prop.number || 0;
+
+      if (prop.type === "formula") {
+        if (prop.formula.type === "number") {
+          return prop.formula.number || 0;
+        }
+      }
+
+      return 0;
+    };
+
+    // ⭐ checkbox
+    const getCheckbox = (prop) => prop?.checkbox || false;
+
+    // ⭐ 日期（update）
+    const getDate = (prop) => {
+      if (!prop || prop.type !== "date") return null;
+      return prop.date?.start || null;
+    };
+
+    // ⭐ 單圖
+    const getImage = (prop) => {
+      if (!prop) return "";
+
+      if (prop.type === "url") return prop.url || "";
+
+      return (
+        prop?.title?.map(t => t.plain_text).join("") ||
+        prop?.rich_text?.map(t => t.plain_text).join("") ||
+        ""
+      );
+    };
+
+    // ⭐ 多圖
+    const getImages = (prop) => {
+      const text = getText(prop);
+      if (!text) return [];
+      return text.split(",").map(s => s.trim()).filter(Boolean);
+    };
+
+    const products = data.results.map((page) => {
+      const props = page.properties;
+
+      const isSale = getCheckbox(props.Sale);
+      const price = getNumber(props.tpric);
+      const sprice = getNumber(props.sprice);
 
       return {
-        id: page.id || "",
-
-        // 商品名稱
+        id: page.id,
         name: getText(props.tname),
-
-        // 商品描述
         description: getText(props.description),
 
-        // 價格
-        price: getNumber(props.tprice),
+        price: isSale ? sprice || price : price,
+        originalPrice: price,
+        isSale,
 
-        // 原價
-        originalPrice: getNumber(props.tprice),
-
-        // 是否特價
-        isSale: getCheckbox(props.isSale),
-
-        // 是否新品
         isNew: getCheckbox(props.isNew),
 
-        // 首圖
-        image: getText(props.indexPic),
+        image: getImage(props.image),
+        images: getImages(props.images),
 
-        // 商品圖
-        images: getImages(props.goodsPic),
+        createdTime: page.created_time,
 
-        // 建立時間
-        createdTime: page.created_time || null,
-
-        // 更新時間
-        update: props.update?.date?.start || null,
+        // ⭐ 用來排序
+        update: getDate(props.update)
       };
     });
 
-    return res.status(200).json(products);
+    res.status(200).json(products);
 
-  } catch (error) {
-    console.error("API ERROR:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "API Failed",
-      error: error.message,
-    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 }
