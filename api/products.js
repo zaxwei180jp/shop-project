@@ -87,7 +87,7 @@ export default async function handler(req, res) {
     function getCheckbox(prop) {
       if (!prop) return false;
 
-      return !!prop.checkbox;
+      return prop.checkbox === true;
     }
 
     // date
@@ -127,34 +127,34 @@ export default async function handler(req, res) {
         id: page.id,
 
         // 商品名稱
-        name: getText(props.tname),
+        name: getText(props["tname"]),
 
         // 商品描述
-        description: getText(props.description),
+        description: getText(props["description"]),
 
-        // 原價 (formula)
-        price: getNumber(props.tprice),
+        // 原價
+        price: getNumber(props["tprice"]),
 
         // 特價
-        salePrice: getNumber(props.sprice),
+        salePrice: getNumber(props["sprice"]),
 
         // 是否特價
-        isSale: getCheckbox(props.isSale),
+        isSale: getCheckbox(props["isSale"]),
 
         // 是否新品
-        isNew: getCheckbox(props.isNew),
+        isNew: getCheckbox(props["isNew"]),
 
         // 是否熱賣
-        isHot: getCheckbox(props.isHot),
+        isHot: getCheckbox(props["isHot"]),
 
         // 主圖
-        image: getImage(props.indexPic),
+        image: getImage(props["indexPic"]),
 
         // 多圖
-        images: getImages(props.goodsPic),
+        images: getImages(props["goodsPic"]),
 
         // 更新日期
-        update: getDate(props.update),
+        update: getDate(props["update"]),
 
         // 建立時間
         createdTime: page.created_time,
@@ -162,7 +162,7 @@ export default async function handler(req, res) {
     });
 
     // =========================
-    // Sort by update
+    // Sort by update desc
     // =========================
 
     products.sort((a, b) => {
