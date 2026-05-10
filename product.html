@@ -2,16 +2,17 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="p-5">
+
+<body class="p-4 max-w-xl mx-auto">
 
 <div id="app">Loading...</div>
 
 <script type="module">
 import { getProducts, formatPrice, addToCart } from "/utils.js";
 
-/* 取得 id */
 const id = new URLSearchParams(location.search).get("id");
 
 let current = 0;
@@ -33,26 +34,43 @@ async function init() {
 
 function render() {
   document.getElementById("app").innerHTML = `
-    <div>
-      <img src="${(p.images && p.images[current]) || p.image}" class="w-full h-60 object-cover"/>
-
-      <div class="flex gap-2 mt-2">
-        ${(p.images || []).map((img,i)=>`
-          <img src="${img}" data-i="${i}" class="thumb w-16 h-16 border cursor-pointer"/>
-        `).join("")}
-      </div>
-
-      <h1 class="text-xl mt-3">${p.name}</h1>
-      <p class="text-lg">${formatPrice(p.price)}</p>
-
-      <button data-id="${p.id}" class="add-btn bg-black text-white px-4 py-2 mt-3">
-        加入購物車
-      </button>
+    
+    <!-- 主圖（正方形） -->
+    <div class="w-full aspect-square overflow-hidden rounded-lg bg-gray-100">
+      <img src="${(p.images && p.images[current]) || p.image}" 
+           class="w-full h-full object-cover"/>
     </div>
+
+    <!-- 小圖 -->
+    <div class="flex gap-2 mt-3 overflow-x-auto">
+      ${(p.images || []).map((img,i)=>`
+        <img src="${img}" 
+             data-i="${i}" 
+             class="thumb w-16 h-16 object-cover border rounded cursor-pointer"/>
+      `).join("")}
+    </div>
+
+    <!-- 商品資訊 -->
+    <h1 class="text-xl md:text-2xl font-bold mt-4">${p.name}</h1>
+
+    <p class="text-lg md:text-xl text-red-500 mt-2">
+      ${formatPrice(p.price)}
+    </p>
+
+    <!-- 商品敘述（關鍵修正） -->
+    <div class="mt-4 text-sm md:text-base leading-relaxed whitespace-pre-line text-gray-700">
+      ${p.description || ""}
+    </div>
+
+    <!-- 按鈕 -->
+    <button data-id="${p.id}" 
+      class="add-btn w-full bg-black text-white py-3 rounded-lg mt-6 text-lg">
+      加入購物車
+    </button>
   `;
 }
 
-/* 事件代理（避免 Safari 問題） */
+/* 事件 */
 document.addEventListener("click", (e) => {
   if (e.target.classList.contains("thumb")) {
     current = Number(e.target.dataset.i);
