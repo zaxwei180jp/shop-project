@@ -79,7 +79,7 @@ export default async function handler(req, res) {
       const props = page.properties;
 
       const isSale = getCheckbox(props.Sale);
-      const price = getNumber(props.tpric);
+      const price = getNumber(props.tprice);
       const sprice = getNumber(props.sprice);
 
       return {
