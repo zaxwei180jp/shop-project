@@ -77,9 +77,9 @@ export default async function handler(req, res) {
 
     const products = data.results.map((page) => {
       const props = page.properties;
-
-      const isSale = getCheckbox(props.Sale);
-      const price = getNumber(props.tpric);
+console.log(JSON.stringify(props, null, 2));
+      const isSale = getCheckbox(props.isSale);
+      const price = getNumber(props.tprice);
       const sprice = getNumber(props.sprice);
 
       return {
