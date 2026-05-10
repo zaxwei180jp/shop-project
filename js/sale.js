@@ -1,39 +1,65 @@
-import { formatPrice } from "./utils.js";
+const API_URL = "/api/products";
 
-const API_URL = "https://shop-project-azure.vercel.app/api/products";
-const el = document.getElementById("list");
+const productList = document.getElementById("product-list");
 
-async function init() {
-  const res = await fetch(API_URL);
-  let data = await res.json();
+async function loadSaleProducts() {
+  try {
+    const res = await fetch(API_URL);
+    const data = await res.json();
 
-  data = data.filter(p => p.isSale);
+    // 只顯示 isSale = true
+    const saleProducts = data.filter((p) => p.isSale === true);
 
-  data.sort((a, b) =>
-    new Date(b.update || b.createdTime) -
-    new Date(a.update || a.createdTime)
-  );
+    renderProducts(saleProducts);
 
-  render(data);
-}
+  } catch (err) {
+    console.error(err);
 
-function render(data) {
-  el.innerHTML = data.map(p => {
-    const img = p.image || p.images?.[0] || "https://via.placeholder.com/400";
-
-    return `
-      <a href="product.html?id=${p.id}" class="block border p-2">
-        <img src="${img}" class="w-full aspect-square object-cover">
-
-        <div class="mt-2 font-bold">${p.name}</div>
-
-        <div class="text-red-500">
-          ${formatPrice(p.price)}
-          <span class="line-through text-gray-400 text-sm">${formatPrice(p.originalPrice)}</span>
-        </div>
-      </a>
+    productList.innerHTML = `
+      <p class="text-center text-red-500">
+        無法載入特價商品
+      </p>
     `;
-  }).join("");
+  }
 }
 
-init();
+function renderProducts(products) {
+  if (!products.length) {
+    productList.innerHTML = `
+      <p class="text-center text-gray-500 col-span-full">
+        目前沒有特價商品
+      </p>
+    `;
+    return;
+  }
+
+  productList.innerHTML = products.map((p) => `
+    <a href="product.html?id=${p.id}" 
+       class="block bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
+
+      <img
+        src="${p.image || 'https://placehold.co/600x600?text=No+Image'}"
+        alt="${p.name}"
+        class="w-full aspect-square object-cover"
+      >
+
+      <div class="p-4">
+        <h3 class="font-bold text-lg mb-2">
+          ${p.name}
+        </h3>
+
+        <div class="flex items-center gap-2">
+          <span class="text-red-500 font-bold text-xl">
+            NT$ ${p.salePrice}
+          </span>
+
+          <span class="text-gray-400 line-through text-sm">
+            NT$ ${p.price}
+          </span>
+        </div>
+      </div>
+    </a>
+  `).join("");
+}
+
+loadSaleProducts();
