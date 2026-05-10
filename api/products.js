@@ -91,7 +91,7 @@ export default async function handler(req, res) {
         originalPrice: price,
         isSale,
 
-        isNew: getCheckbox(props.isNew),
+        isHot: getCheckbox(props.isHot),
 
         image: getImage(props.image),
         images: getImages(props.images),
