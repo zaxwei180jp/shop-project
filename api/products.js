@@ -9,50 +9,66 @@ const databaseId = process.env.NOTION_DATABASE_ID;
 /* ---------------- helpers ---------------- */
 
 function getText(field) {
-  if (!field) return "";
+  try {
+    if (!field) return "";
 
-  // rich_text
-  if (field.type === "rich_text") {
-    return field.rich_text.map((t) => t.plain_text).join("");
+    // rich_text
+    if (field.type === "rich_text") {
+      return field.rich_text?.map(t => t.plain_text).join("") || "";
+    }
+
+    // title
+    if (field.type === "title") {
+      return field.title?.map(t => t.plain_text).join("") || "";
+    }
+
+    return "";
+  } catch {
+    return "";
   }
-
-  // title
-  if (field.type === "title") {
-    return field.title.map((t) => t.plain_text).join("");
-  }
-
-  return "";
 }
 
 function getCheckbox(field) {
-  return field?.checkbox || false;
+  try {
+    return field?.checkbox || false;
+  } catch {
+    return false;
+  }
 }
 
 function getNumber(field) {
-  if (!field) return 0;
+  try {
+    if (!field) return 0;
 
-  // number
-  if (field.type === "number") {
-    return field.number || 0;
+    // formula
+    if (field.type === "formula") {
+      return field.formula?.number || 0;
+    }
+
+    // number
+    if (field.type === "number") {
+      return field.number || 0;
+    }
+
+    return 0;
+  } catch {
+    return 0;
   }
-
-  // formula
-  if (field.type === "formula") {
-    return field.formula?.number || 0;
-  }
-
-  return 0;
 }
 
 function getImages(field) {
-  const text = getText(field);
+  try {
+    const text = getText(field);
 
-  if (!text) return [];
+    if (!text) return [];
 
-  return text
-    .split(",")
-    .map((v) => v.trim())
-    .filter(Boolean);
+    return text
+      .split(",")
+      .map(v => v.trim())
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
 }
 
 /* ---------------- api ---------------- */
@@ -64,10 +80,10 @@ export default async function handler(req, res) {
     });
 
     const products = response.results.map((page) => {
-      const props = page.properties;
+      const props = page.properties || {};
 
       return {
-        id: page.id,
+        id: page.id || "",
 
         // 商品名稱
         name: getText(props.tname),
@@ -84,30 +100,32 @@ export default async function handler(req, res) {
         // 是否特價
         isSale: getCheckbox(props.isSale),
 
-        // 是否新品 / 熱賣
+        // 是否新品
         isNew: getCheckbox(props.isNew),
 
         // 首圖
         image: getText(props.indexPic),
 
-        // 商品圖陣列
+        // 商品圖
         images: getImages(props.goodsPic),
 
         // 建立時間
-        createdTime: page.created_time,
+        createdTime: page.created_time || null,
 
         // 更新時間
         update: props.update?.date?.start || null,
       };
     });
 
-    res.status(200).json(products);
-  } catch (error) {
-    console.error("Notion API Error:", error);
+    return res.status(200).json(products);
 
-    res.status(500).json({
-      error: "Failed to fetch products",
-      details: error.message,
+  } catch (error) {
+    console.error("API ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "API Failed",
+      error: error.message,
     });
   }
 }
