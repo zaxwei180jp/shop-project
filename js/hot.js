@@ -28,7 +28,7 @@ async function init() {
 
 function render(data) {
   if (!data.length) {
-    el.innerHTML = "<div>目前沒有新商品</div>";
+    el.innerHTML = "<div>目前沒有熱賣商品</div>";
     return;
   }
 
@@ -44,14 +44,28 @@ function render(data) {
 
         <div class="mt-2 font-bold">${p.name}</div>
 
-        <div class="text-red-500">
-          ${formatPrice(p.price)}
-
-          <span class="line-through text-gray-400 text-sm">
-            ${formatPrice(p.originalPrice)}
-          </span>
-        </div>
+        ${
+          p.isSale
+            ? `
+              <div class="text-red-500">
+                ${formatPrice(p.price)}
+                <span class="line-through text-gray-400 text-sm">
+                  ${formatPrice(p.originalPrice)}
+                </span>
+              </div>
+            `
+            : `
+              <div class="text-red-500">
+                ${formatPrice(p.price)}
+              </div>
+            `
+        }
       </a>
+    `;
+  }).join("");
+}
+
+init();      </a>
     `;
   }).join("");
 }
