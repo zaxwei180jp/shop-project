@@ -1,28 +1,35 @@
 const API_URL = "/api/products";
-
 const CACHE_TIME = 1000 * 60 * 10;
 
+/* 價格 */
 export const formatPrice = (n) =>
   new Intl.NumberFormat("zh-TW", {
     style: "currency",
     currency: "TWD",
   }).format(n);
 
+/* API */
 export async function getProducts() {
-  const cache = localStorage.getItem("products");
-  const time = localStorage.getItem("products_time");
+  try {
+    const cache = localStorage.getItem("products");
+    const time = localStorage.getItem("products_time");
 
-  if (cache && time && Date.now() - time < CACHE_TIME) {
-    return JSON.parse(cache);
+    if (cache && time && Date.now() - time < CACHE_TIME) {
+      return JSON.parse(cache);
+    }
+
+    const res = await fetch(API_URL);
+    const data = await res.json();
+
+    localStorage.setItem("products", JSON.stringify(data));
+    localStorage.setItem("products_time", Date.now());
+
+    return data;
+  } catch (e) {
+    console.error(e);
+    document.body.innerHTML = "資料載入失敗";
+    return [];
   }
-
-  const res = await fetch(API_URL);
-  const data = await res.json();
-
-  localStorage.setItem("products", JSON.stringify(data));
-  localStorage.setItem("products_time", Date.now());
-
-  return data;
 }
 
 /* 🛒 CART */
