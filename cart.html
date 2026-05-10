@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="p-5">
@@ -8,7 +9,7 @@
 <h1 class="text-xl mb-4">購物車</h1>
 <div id="cart"></div>
 
-<button onclick="clear()" class="mt-4 bg-red-500 text-white px-3 py-2">
+<button id="clear" class="mt-4 bg-red-500 text-white px-3 py-2">
 清空購物車
 </button>
 
@@ -22,11 +23,12 @@ const products = await getProducts();
 
 function render() {
   const cart = getCart();
-
   let total = 0;
 
   const html = Object.entries(cart).map(([id, qty]) => {
     const p = products.find(x=>x.id===id);
+    if (!p) return "";
+
     const sub = p.price * qty;
     total += sub;
 
@@ -38,26 +40,39 @@ function render() {
         </div>
 
         <div>
-          <button onclick="dec('${id}')">-</button>
+          <button data-id="${id}" data-act="dec">-</button>
           ${qty}
-          <button onclick="inc('${id}')">+</button>
-          <button onclick="del('${id}')" class="text-red-500">刪</button>
+          <button data-id="${id}" data-act="inc">+</button>
+          <button data-id="${id}" data-act="del" class="text-red-500">刪</button>
         </div>
       </div>
     `;
   }).join("");
 
-  document.getElementById("cart").innerHTML = html + `
-    <h2 class="mt-4 text-xl">總計：${formatPrice(total)}</h2>
-  `;
+  document.getElementById("cart").innerHTML =
+    html + `<h2 class="mt-4 text-xl">總計：${formatPrice(total)}</h2>`;
 }
 
-window.inc = (id)=>{ updateQty(id,1); render(); }
-window.dec = (id)=>{ updateQty(id,-1); render(); }
-window.del = (id)=>{ removeItem(id); render(); }
-window.clear = ()=>{ clearCart(); render(); }
+document.addEventListener("click", (e) => {
+  const id = e.target.dataset.id;
+  const act = e.target.dataset.act;
+
+  if (!id) return;
+
+  if (act === "inc") updateQty(id, 1);
+  if (act === "dec") updateQty(id, -1);
+  if (act === "del") removeItem(id);
+
+  render();
+});
+
+document.getElementById("clear").onclick = () => {
+  clearCart();
+  render();
+};
 
 render();
 </script>
+
 </body>
 </html>
