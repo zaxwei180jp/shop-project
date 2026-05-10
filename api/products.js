@@ -77,7 +77,7 @@ export default async function handler(req, res) {
 
     const products = data.results.map((page) => {
       const props = page.properties;
-
+      const isHot = getCheckbox(props.isHot);
       const isSale = getCheckbox(props.isSale);
       const price = getNumber(props.tprice);
       const sprice = getNumber(props.sprice);
@@ -92,7 +92,7 @@ export default async function handler(req, res) {
         isSale,
 
         isHot: getCheckbox(props.isHot),
-
+        
         image: getImage(props.image),
         images: getImages(props.images),
 
