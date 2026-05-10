@@ -1,38 +1,61 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>New</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>熱賣商品</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-50">
+<body class="bg-gray-100">
 
-<div class="sticky top-0 z-50 bg-white border-b">
-  <div class="flex justify-between items-center p-4">
-    <div class="flex gap-4">
-      <a href="index.html">🏠 首頁</a>
-      <a href="hot.html" class="font-bold">🔥 熱賣商品</a>
-      <a href="sale.html">🈹 特價</a>
-    </div>
+  <!-- Header -->
+  <header class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
 
-    <div class="flex items-center gap-4">
-      <button onclick="history.back()">⬅️ 上一頁</button>
-      <a href="cart.html">
-        🛒 <span id="cartCount" class="bg-red-500 text-white px-2 rounded-full">0</span>
+      <a href="index.html" class="text-2xl font-bold">
+        SHOP
       </a>
+
+      <nav class="flex gap-6">
+        <a href="index.html" class="hover:text-blue-500">
+          全部商品
+        </a>
+
+        <a href="hot.html" class="text-red-500 font-bold">
+          熱賣商品
+        </a>
+
+        <a href="sale.html" class="hover:text-blue-500">
+          特價商品
+        </a>
+
+        <a href="cart.html" class="hover:text-blue-500">
+          購物車
+        </a>
+      </nav>
     </div>
-  </div>
-</div>
+  </header>
 
-<div class="p-6">
-  <h1 class="text-2xl font-bold mb-4">🔥 熱賣商品</h1>
-  <div id="list" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
-</div>
+  <!-- Title -->
+  <section class="max-w-7xl mx-auto px-4 pt-10">
+    <h1 class="text-3xl font-bold mb-8">
+      熱賣商品
+    </h1>
+  </section>
 
-<script type="module" src="./js/new.js"></script>
-<script src="./js/cartCount.js"></script>
+  <!-- Product List -->
+  <section class="max-w-7xl mx-auto px-4 pb-16">
+    <div
+      id="product-list"
+      class="grid grid-cols-2 md:grid-cols-4 gap-6"
+    ></div>
+  </section>
+
+  <script type="module" src="./js/hot.js"></script>
 
 </body>
+</html></body>
 </html>
