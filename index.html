@@ -2,19 +2,31 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="p-5">
 
-<h1 class="text-2xl mb-4">商品列表</h1>
+<body class="bg-gray-50">
 
-<input id="search" placeholder="搜尋..." class="border p-2 mb-3 w-full"/>
+<div class="max-w-5xl mx-auto p-4">
 
-<div id="list" class="grid grid-cols-2 gap-4"></div>
+  <!-- 標題 -->
+  <h1 class="text-2xl md:text-3xl font-bold mb-4">商品列表</h1>
+
+  <!-- 搜尋 -->
+  <input 
+    id="search" 
+    placeholder="搜尋商品..." 
+    class="w-full border rounded-lg p-3 mb-4 text-base"
+  />
+
+  <!-- 商品列表 -->
+  <div id="list" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+
+</div>
 
 <script type="module">
 import { getProducts, formatPrice, addToCart } from "/utils.js";
-/* ⚠️ 注意這裡是 /utils.js（不是 ./） */
 
 const list = document.getElementById("list");
 const search = document.getElementById("search");
@@ -27,7 +39,7 @@ async function init() {
   products = await getProducts();
 
   if (!products.length) {
-    list.innerHTML = "沒有資料";
+    list.innerHTML = "沒有商品";
     return;
   }
 
@@ -42,19 +54,41 @@ function render() {
   );
 
   list.innerHTML = filtered.map(p => `
-    <div class="border p-2">
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+
+      <!-- 圖片（正方形） -->
       <a href="product.html?id=${p.id}">
-        <img src="${p.image}" class="h-40 w-full object-cover"/>
-        <h2>${p.name}</h2>
+        <div class="aspect-square bg-gray-100">
+          <img src="${p.image}" class="w-full h-full object-cover"/>
+        </div>
       </a>
-      <p>${formatPrice(p.price)}</p>
-      <button data-id="${p.id}" class="add-btn bg-black text-white px-2 py-1 mt-2">
-        加入
-      </button>
+
+      <!-- 內容 -->
+      <div class="p-3">
+
+        <a href="product.html?id=${p.id}">
+          <h2 class="text-sm md:text-base font-medium line-clamp-2">
+            ${p.name}
+          </h2>
+        </a>
+
+        <p class="text-red-500 text-base md:text-lg font-semibold mt-1">
+          ${formatPrice(p.price)}
+        </p>
+
+        <button 
+          data-id="${p.id}" 
+          class="add-btn w-full bg-black text-white py-2 rounded-lg mt-2 text-sm md:text-base">
+          加入購物車
+        </button>
+
+      </div>
+
     </div>
   `).join("");
 }
 
+/* 加入購物車 */
 document.addEventListener("click", (e) => {
   if (e.target.classList.contains("add-btn")) {
     addToCart(e.target.dataset.id);
