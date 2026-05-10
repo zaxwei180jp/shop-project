@@ -7,7 +7,7 @@ async function loadHotProducts() {
     const res = await fetch(API_URL);
     const data = await res.json();
 
-    // 只顯示 isHot = true
+    // 熱賣商品
     const hotProducts = data.filter((p) => p.isHot === true);
 
     renderProducts(hotProducts);
@@ -35,6 +35,44 @@ function renderProducts(products) {
 
   productList.innerHTML = products.map((p) => `
     <a href="product.html?id=${p.id}" 
+       class="block bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
+
+      <img
+        src="${p.image || 'https://placehold.co/600x600?text=No+Image'}"
+        alt="${p.name}"
+        class="w-full aspect-square object-cover"
+      >
+
+      <div class="p-4">
+        <h3 class="font-bold text-lg mb-2">
+          ${p.name}
+        </h3>
+
+        <div class="flex items-center gap-2">
+          ${
+            p.isSale
+              ? `
+                <span class="text-red-500 font-bold text-xl">
+                  NT$ ${p.salePrice}
+                </span>
+
+                <span class="text-gray-400 line-through text-sm">
+                  NT$ ${p.price}
+                </span>
+              `
+              : `
+                <span class="font-bold text-xl">
+                  NT$ ${p.price}
+                </span>
+              `
+          }
+        </div>
+      </div>
+    </a>
+  `).join("");
+}
+
+loadHotProducts();    <a href="product.html?id=${p.id}" 
        class="block bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
 
       <img
