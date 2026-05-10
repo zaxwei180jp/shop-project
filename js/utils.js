@@ -43,7 +43,6 @@ export function addToCart(id) {
   const cart = getCart();
   cart[id] = (cart[id] || 0) + 1;
   saveCart(cart);
-  updateCartCount();
   toast("已加入購物車");
 }
 
@@ -65,13 +64,6 @@ export function clearCart() {
 }
 
 /* UI */
-export function updateCartCount() {
-  const cart = getCart();
-  const total = Object.values(cart).reduce((a, b) => a + b, 0);
-  const el = document.getElementById("cart-count");
-  if (el) el.textContent = total;
-}
-
 export function toast(msg) {
   const div = document.createElement("div");
   div.className =
