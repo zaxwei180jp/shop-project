@@ -6,52 +6,63 @@
 </head>
 <body class="p-5">
 
-<div id="app"></div>
+<div id="app">Loading...</div>
 
 <script type="module">
-import { getProducts, formatPrice, addToCart } from "./utils.js";
+import { getProducts, formatPrice, addToCart } from "/utils.js";
 
+/* 取得 id */
 const id = new URLSearchParams(location.search).get("id");
-const products = await getProducts();
-const p = products.find(x => x.id === id);
-
-if (!p) {
-  document.body.innerHTML = "商品不存在";
-  throw new Error("product not found");
-}
 
 let current = 0;
+let p = null;
+
+init();
+
+async function init() {
+  const products = await getProducts();
+  p = products.find(x => x.id === id);
+
+  if (!p) {
+    document.body.innerHTML = "商品不存在";
+    return;
+  }
+
+  render();
+}
 
 function render() {
   document.getElementById("app").innerHTML = `
-    <img src="${(p.images && p.images[current]) || p.image}" class="w-full h-60 object-cover"/>
+    <div>
+      <img src="${(p.images && p.images[current]) || p.image}" class="w-full h-60 object-cover"/>
 
-    <div class="flex gap-2 mt-2">
-      ${(p.images || []).map((img,i)=>`
-        <img src="${img}" data-i="${i}" class="thumb w-16 h-16 border cursor-pointer"/>
-      `).join("")}
+      <div class="flex gap-2 mt-2">
+        ${(p.images || []).map((img,i)=>`
+          <img src="${img}" data-i="${i}" class="thumb w-16 h-16 border cursor-pointer"/>
+        `).join("")}
+      </div>
+
+      <h1 class="text-xl mt-3">${p.name}</h1>
+      <p class="text-lg">${formatPrice(p.price)}</p>
+
+      <button data-id="${p.id}" class="add-btn bg-black text-white px-4 py-2 mt-3">
+        加入購物車
+      </button>
     </div>
-
-    <h1 class="text-xl mt-3">${p.name}</h1>
-    <p>${formatPrice(p.price)}</p>
-
-    <button data-id="${p.id}" class="add-btn bg-black text-white px-4 py-2 mt-3">
-      加入購物車
-    </button>
   `;
 }
 
+/* 事件代理（避免 Safari 問題） */
 document.addEventListener("click", (e) => {
   if (e.target.classList.contains("thumb")) {
     current = Number(e.target.dataset.i);
     render();
   }
+
   if (e.target.classList.contains("add-btn")) {
     addToCart(e.target.dataset.id);
   }
 });
-
-render();
 </script>
 
 </body>
