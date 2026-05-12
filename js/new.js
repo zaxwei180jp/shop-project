@@ -4,23 +4,31 @@ const API_URL = "https://shop-project-azure.vercel.app/api/products";
 const el = document.getElementById("list");
 
 async function init() {
-  const res = await fetch(API_URL);
-  let data = await res.json();
+  try {
+    const res = await fetch(API_URL);
+    let data = await res.json();
 
-  console.log("全部商品：", data);
+    console.log("全部商品：", data);
 
-  // ⭐ 篩選 isNew
-  data = data.filter(p => p.isNew === true);
+    // ⭐ 檢查 isNew 狀態
+    console.log("isNew狀態：", data.map(p => p.isNew));
 
-  console.log("新商品：", data);
+    // ⭐ 篩選新商品
+    data = data.filter(p => p.isNew === true);
 
-  // ⭐ 排序
-  data.sort((a, b) =>
-    new Date(b.update || b.createdTime) -
-    new Date(a.update || a.createdTime)
-  );
+    console.log("新商品：", data);
 
-  render(data);
+    // ⭐ 排序（新到舊）
+    data.sort((a, b) =>
+      new Date(b.update || b.createdTime) -
+      new Date(a.update || a.createdTime)
+    );
+
+    render(data);
+  } catch (err) {
+    console.error("錯誤：", err);
+    el.innerHTML = `<div class="text-red-500">載入失敗</div>`;
+  }
 }
 
 function render(data) {
