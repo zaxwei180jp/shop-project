@@ -1,3 +1,4 @@
+console.log("🔥 new.js 有跑");
 import { formatPrice } from "./utils.js";
 
 const API_URL = "https://shop-project-azure.vercel.app/api/products";
