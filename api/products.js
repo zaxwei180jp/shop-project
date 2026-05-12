@@ -28,7 +28,7 @@ export default async function handler(req, res) {
         return prop.rich_text.map(t => t.plain_text).join("\n");
       }
 
-      return "";
+      return "無";
     };
 
     // ⭐ 數字
