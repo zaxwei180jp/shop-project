@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Product</title>
+  <title>New</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -13,7 +13,7 @@
   <div class="flex justify-between items-center p-4">
     <div class="flex gap-4">
       <a href="index.html">🏠 首頁</a>
-      <a href="index.html">🆕 新商品</a>
+      <a href="index.html"class="font-bold">🆕 新商品</a>
       <a href="hot.html">🔥 熱賣商品</a>
       <a href="sale.html">🈹 特價</a>
     </div>
@@ -27,9 +27,12 @@
   </div>
 </div>
 
-<div id="product" class="p-6"></div>
+<div class="p-6">
+  <h1 class="text-2xl font-bold mb-4">🆕 新商品</h1>
+  <div id="list" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+</div>
 
-<script type="module" src="./js/product.js"></script>
+<script type="module" src="./js/new.js"></script>
 <script src="./js/cartCount.js"></script>
 
 </body>
