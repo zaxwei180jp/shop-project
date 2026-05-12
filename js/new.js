@@ -9,7 +9,7 @@ async function init() {
 
   console.log("API資料：", data); // ⭐ 先確認資料
 
-  // ⭐ 只保留 isHot
+  // ⭐ 只保留 isNew
   data = data.filter(p => p.isNew);
 
   console.log("Hot商品：", data); // ⭐ 看這裡是不是空
@@ -25,7 +25,7 @@ async function init() {
 
 function render(data) {
   if (!data.length) {
-    el.innerHTML = `<div class="text-gray-500">沒有熱賣商品</div>`;
+    el.innerHTML = `<div class="text-gray-500">沒有新商品</div>`;
     return;
   }
 
