@@ -2,6 +2,8 @@ export default async function handler(req, res) {
   try {
     const { NOTION_TOKEN, DATABASE_ID } = process.env;
 
+    const { type } = req.query; // ⭐ 取得 ?type=xxx
+
     const response = await fetch(
       `https://api.notion.com/v1/databases/${DATABASE_ID}/query`,
       {
@@ -16,51 +18,33 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // ⭐ 文字
+    // ===== 工具 =====
     const getText = (prop) => {
       if (!prop) return "";
-
-      if (prop.title) {
-        return prop.title.map(t => t.plain_text).join("");
-      }
-
-      if (prop.rich_text) {
-        return prop.rich_text.map(t => t.plain_text).join("\n");
-      }
-
+      if (prop.title) return prop.title.map(t => t.plain_text).join("");
+      if (prop.rich_text) return prop.rich_text.map(t => t.plain_text).join("\n");
       return "";
     };
 
-    // ⭐ 數字
     const getNumber = (prop) => {
       if (!prop) return 0;
-
       if (prop.type === "number") return prop.number || 0;
-
-      if (prop.type === "formula") {
-        if (prop.formula.type === "number") {
-          return prop.formula.number || 0;
-        }
+      if (prop.type === "formula" && prop.formula.type === "number") {
+        return prop.formula.number || 0;
       }
-
       return 0;
     };
 
-    // ⭐ checkbox
     const getCheckbox = (prop) => prop?.checkbox || false;
 
-    // ⭐ 日期
     const getDate = (prop) => {
       if (!prop || prop.type !== "date") return null;
       return prop.date?.start || null;
     };
 
-    // ⭐ 單圖
     const getImage = (prop) => {
       if (!prop) return "";
-
       if (prop.type === "url") return prop.url || "";
-
       return (
         prop?.title?.map(t => t.plain_text).join("") ||
         prop?.rich_text?.map(t => t.plain_text).join("") ||
@@ -68,19 +52,19 @@ export default async function handler(req, res) {
       );
     };
 
-    // ⭐ 多圖
     const getImages = (prop) => {
       const text = getText(prop);
       if (!text) return [];
       return text.split(",").map(s => s.trim()).filter(Boolean);
     };
 
-    const products = data.results.map((page) => {
+    // ===== 整理資料 =====
+    let products = data.results.map((page) => {
       const props = page.properties;
 
       const isHot = getCheckbox(props.isHot);
       const isSale = getCheckbox(props.isSale);
-      const isNew = getCheckbox(props.isNew); // ⭐ 新增這行
+      const isNew = getCheckbox(props.isNew);
 
       const price = getNumber(props.tprice);
       const sprice = getNumber(props.sprice);
@@ -92,10 +76,10 @@ export default async function handler(req, res) {
 
         price: isSale ? sprice || price : price,
         originalPrice: price,
-        isSale,
 
         isHot,
-        isNew, // ⭐ 一定要回傳
+        isSale,
+        isNew,
 
         image: getImage(props.image),
         images: getImages(props.images),
@@ -104,6 +88,25 @@ export default async function handler(req, res) {
         update: getDate(props.update),
       };
     });
+
+    // ===== ⭐ 分類（關鍵）=====
+    if (type === "hot") {
+      products = products.filter(p => p.isHot);
+    }
+
+    if (type === "new") {
+      products = products.filter(p => p.isNew);
+    }
+
+    if (type === "sale") {
+      products = products.filter(p => p.isSale);
+    }
+
+    // ===== 排序 =====
+    products.sort((a, b) =>
+      new Date(b.update || b.createdTime) -
+      new Date(a.update || a.createdTime)
+    );
 
     res.status(200).json(products);
 
