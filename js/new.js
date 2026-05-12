@@ -7,12 +7,12 @@ async function init() {
   const res = await fetch(API_URL);
   let data = await res.json();
 
-  console.log("API資料：", data); // ⭐ 先確認資料
+  console.log("API資料：", data);
 
-  // ⭐ 只保留 isNew
+  // ⭐ 篩選 isNew
   data = data.filter(p => p.isNew);
 
-  console.log("Hot商品：", data); // ⭐ 看這裡是不是空
+  console.log("新商品：", data);
 
   // ⭐ 排序
   data.sort((a, b) =>
@@ -52,11 +52,6 @@ function render(data) {
           }
         </div>
       </a>
-    `;
-  }).join("");
-}
-
-init();      </a>
     `;
   }).join("");
 }
