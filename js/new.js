@@ -7,10 +7,10 @@ async function init() {
   const res = await fetch(API_URL);
   let data = await res.json();
 
-  console.log("API資料：", data);
+  console.log("全部商品：", data);
 
   // ⭐ 篩選 isNew
-  data = data.filter(p => p.isNew);
+  data = data.filter(p => p.isNew === true);
 
   console.log("新商品：", data);
 
