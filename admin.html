@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>後台 · 新增商品</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+<!-- Header -->
+<div class="sticky top-0 z-50 bg-white border-b shadow-sm">
+  <div class="flex justify-between items-center px-4 py-3 max-w-2xl mx-auto">
+    <h1 class="font-bold text-base">🛠 後台 · 新增商品</h1>
+    <a href="index.html" class="text-xs text-gray-400 hover:text-black">← 前往前台</a>
+  </div>
+</div>
+
+<div class="px-4 py-5 max-w-2xl mx-auto space-y-4">
+
+  <!-- ① 照片上傳 -->
+  <div class="bg-white rounded-2xl p-4 shadow-sm">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="w-6 h-6 bg-black text-white rounded-full text-xs flex items-center justify-center font-bold">1</span>
+      <h2 class="font-semibold text-sm">上傳照片</h2>
+    </div>
+
+    <!-- 上傳區 -->
+    <label id="uploadArea"
+      class="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-xl py-8 cursor-pointer hover:border-gray-400 transition mb-3">
+      <span class="text-3xl mb-2">📷</span>
+      <span class="text-sm text-gray-500">點擊選擇照片（可多選）</span>
+      <span class="text-xs text-gray-400 mt-1">第一張自動設為主圖</span>
+      <input id="fileInput" type="file" accept="image/*" multiple class="hidden">
+    </label>
+
+    <!-- 預覽 + 進度 -->
+    <div id="previewArea" class="grid grid-cols-3 sm:grid-cols-4 gap-2"></div>
+  </div>
+
+  <!-- ② 基本資料 -->
+  <div class="bg-white rounded-2xl p-4 shadow-sm">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="w-6 h-6 bg-black text-white rounded-full text-xs flex items-center justify-center font-bold">2</span>
+      <h2 class="font-semibold text-sm">基本資料</h2>
+    </div>
+    <div class="space-y-3">
+
+      <div>
+        <label class="text-xs text-gray-500 mb-1 block">商品名稱 <span class="text-red-500">*</span></label>
+        <input id="tname" type="text" placeholder="請輸入商品名稱"
+          class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-gray-500 mb-1 block">原價 <span class="text-red-500">*</span></label>
+          <input id="tprice" type="number" placeholder="0"
+            class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+        </div>
+        <div>
+          <label class="text-xs text-gray-500 mb-1 block">特價（選填）</label>
+          <input id="sprice" type="number" placeholder="0"
+            class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-gray-500 mb-1 block">大分類</label>
+          <input id="mainCategory" type="text" placeholder="例：日本好市多"
+            class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+        </div>
+        <div>
+          <label class="text-xs text-gray-500 mb-1 block">小分類</label>
+          <input id="category" type="text" placeholder="例：食品"
+            class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ③ 商品描述 -->
+  <div class="bg-white rounded-2xl p-4 shadow-sm">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="w-6 h-6 bg-black text-white rounded-full text-xs flex items-center justify-center font-bold">3</span>
+      <h2 class="font-semibold text-sm">商品描述</h2>
+    </div>
+    <textarea id="description" rows="6"
+      placeholder="商品內容跟特點
+• 特點一
+• 特點二
+重量：1kg
+產地：日本"
+      class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black resize-none leading-relaxed"></textarea>
+    <p class="text-xs text-gray-400 mt-1.5">• 開頭 → 清單　｜　key：value → 規格表　｜　其餘 → 段落</p>
+  </div>
+
+  <!-- ④ 標籤設定 -->
+  <div class="bg-white rounded-2xl p-4 shadow-sm">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="w-6 h-6 bg-black text-white rounded-full text-xs flex items-center justify-center font-bold">4</span>
+      <h2 class="font-semibold text-sm">標籤設定</h2>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+
+      <label class="flex items-center gap-3 border rounded-xl px-3 py-3 cursor-pointer hover:bg-gray-50">
+        <input id="isView" type="checkbox" checked class="w-4 h-4 accent-black">
+        <div>
+          <div class="text-sm font-medium">上架</div>
+          <div class="text-xs text-gray-400">isView</div>
+        </div>
+      </label>
+
+      <label class="flex items-center gap-3 border rounded-xl px-3 py-3 cursor-pointer hover:bg-gray-50">
+        <input id="isNew" type="checkbox" class="w-4 h-4 accent-black">
+        <div>
+          <div class="text-sm font-medium">🆕 新品</div>
+          <div class="text-xs text-gray-400">isNew</div>
+        </div>
+      </label>
+
+      <label class="flex items-center gap-3 border rounded-xl px-3 py-3 cursor-pointer hover:bg-gray-50">
+        <input id="isHot" type="checkbox" class="w-4 h-4 accent-black">
+        <div>
+          <div class="text-sm font-medium">🔥 熱賣</div>
+          <div class="text-xs text-gray-400">isHot</div>
+        </div>
+      </label>
+
+      <label class="flex items-center gap-3 border rounded-xl px-3 py-3 cursor-pointer hover:bg-gray-50">
+        <input id="isSale" type="checkbox" class="w-4 h-4 accent-black">
+        <div>
+          <div class="text-sm font-medium">🈹 特價</div>
+          <div class="text-xs text-gray-400">isSale</div>
+        </div>
+      </label>
+
+    </div>
+  </div>
+
+  <!-- 送出 -->
+  <button id="submitBtn" onclick="submitProduct()"
+    class="w-full py-4 bg-black text-white font-semibold rounded-2xl active:bg-gray-800 transition text-base shadow-sm">
+    ＋ 新增商品
+  </button>
+
+  <div class="pb-8"></div>
+
+</div>
+
+<!-- 成功畫面 -->
+<div id="successScreen" class="hidden fixed inset-0 bg-white z-50 flex flex-col items-center justify-center px-6">
+  <div class="text-6xl mb-4">🎉</div>
+  <h2 class="text-2xl font-bold mb-2">商品已新增！</h2>
+  <p class="text-gray-400 text-sm mb-8">商品已成功寫入 Notion，稍後將出現在網站上</p>
+  <button onclick="resetForm()"
+    class="w-full max-w-xs py-3 bg-black text-white font-medium rounded-xl active:bg-gray-800 mb-3">
+    繼續新增商品
+  </button>
+  <a href="index.html" class="text-sm text-gray-400 underline">前往前台查看</a>
+</div>
+
+<script>
+const CLOUD_NAME   = "doue38blc";
+const UPLOAD_PRESET = "shop_upload";
+const ADD_API      = "https://shop-project-azure.vercel.app/api/add-product";
+
+let uploadedUrls = []; // 所有上傳成功的圖片網址
+
+// ── 照片選取 & 上傳 ──────────────────────────────────
+document.getElementById("fileInput").addEventListener("change", async (e) => {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+
+  for (const file of files) {
+    await uploadOne(file);
+  }
+  // 清空 input 讓同樣的檔案可以重新選
+  e.target.value = "";
+});
+
+async function uploadOne(file) {
+  const previewArea = document.getElementById("previewArea");
+
+  // 建立預覽卡（loading 狀態）
+  const card = document.createElement("div");
+  card.className = "relative aspect-square rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center";
+  card.innerHTML = `
+    <div class="absolute inset-0 flex items-center justify-center bg-gray-100">
+      <div class="text-xs text-gray-400 text-center">
+        <div class="animate-spin text-2xl mb-1">⏳</div>
+        上傳中
+      </div>
+    </div>`;
+  previewArea.appendChild(card);
+
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET);
+
+    const res  = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+      method: "POST",
+      body: formData,
+    });
+    const data = await res.json();
+
+    if (!data.secure_url) throw new Error("上傳失敗");
+
+    const url = data.secure_url;
+    uploadedUrls.push(url);
+
+    const idx = uploadedUrls.length - 1;
+
+    // 更新成功狀態
+    card.innerHTML = `
+      <img src="${url}" class="w-full h-full object-cover">
+      ${idx === 0 ? `<span class="absolute top-1 left-1 bg-black text-white text-xs px-1.5 py-0.5 rounded-md">主圖</span>` : ""}
+      <button onclick="removePhoto(${idx}, this)"
+        class="absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">✕</button>`;
+
+  } catch (err) {
+    card.innerHTML = `
+      <div class="text-xs text-red-400 text-center p-2">
+        <div class="text-xl mb-1">❌</div>
+        上傳失敗
+      </div>`;
+    setTimeout(() => card.remove(), 2000);
+  }
+}
+
+function removePhoto(idx, btn) {
+  uploadedUrls.splice(idx, 1);
+  btn.closest("div.relative").remove();
+  // 重新標記主圖
+  refreshMainBadge();
+}
+
+function refreshMainBadge() {
+  const cards = document.querySelectorAll("#previewArea .relative");
+  cards.forEach((card, i) => {
+    const existing = card.querySelector(".main-badge");
+    if (existing) existing.remove();
+    if (i === 0 && uploadedUrls.length > 0) {
+      const badge = document.createElement("span");
+      badge.className = "main-badge absolute top-1 left-1 bg-black text-white text-xs px-1.5 py-0.5 rounded-md";
+      badge.textContent = "主圖";
+      card.appendChild(badge);
+    }
+  });
+}
+
+// ── 送出商品 ──────────────────────────────────────────
+async function submitProduct() {
+  const tname = document.getElementById("tname").value.trim();
+  const tprice = document.getElementById("tprice").value.trim();
+
+  if (!tname)  { alert("請填寫商品名稱"); return; }
+  if (!tprice) { alert("請填寫原價");     return; }
+
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true;
+  btn.textContent = "送出中...";
+
+  try {
+    const payload = {
+      tname,
+      tprice:       Number(tprice),
+      sprice:       Number(document.getElementById("sprice").value) || 0,
+      mainCategory: document.getElementById("mainCategory").value.trim(),
+      category:     document.getElementById("category").value.trim(),
+      description:  document.getElementById("description").value.trim(),
+      image:        uploadedUrls[0] || "",
+      images:       uploadedUrls.slice(1).join(","),
+      isView:       document.getElementById("isView").checked,
+      isNew:        document.getElementById("isNew").checked,
+      isHot:        document.getElementById("isHot").checked,
+      isSale:       document.getElementById("isSale").checked,
+    };
+
+    const res  = await fetch(ADD_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+
+    if (!data.success) throw new Error(data.error || "新增失敗");
+
+    document.getElementById("successScreen").classList.remove("hidden");
+
+  } catch (err) {
+    alert("新增失敗：" + err.message);
+    btn.disabled = false;
+    btn.textContent = "＋ 新增商品";
+  }
+}
+
+// ── 重置表單 ──────────────────────────────────────────
+function resetForm() {
+  document.getElementById("successScreen").classList.add("hidden");
+  document.getElementById("tname").value = "";
+  document.getElementById("tprice").value = "";
+  document.getElementById("sprice").value = "";
+  document.getElementById("mainCategory").value = "";
+  document.getElementById("category").value = "";
+  document.getElementById("description").value = "";
+  document.getElementById("isView").checked = true;
+  document.getElementById("isNew").checked  = false;
+  document.getElementById("isHot").checked  = false;
+  document.getElementById("isSale").checked = false;
+  document.getElementById("previewArea").innerHTML = "";
+  uploadedUrls = [];
+  document.getElementById("submitBtn").disabled = false;
+  document.getElementById("submitBtn").textContent = "＋ 新增商品";
+}
+</script>
+
+</body>
+</html>
