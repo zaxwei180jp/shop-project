@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   try {
     const { NOTION_TOKEN, DATABASE_ID } = process.env;
     const {
-      tname, jprice, jsprice,
+      tname, jprice, jsprice, idnumber,
       mainCategory, category,
       description,
       image, images,
@@ -55,6 +55,7 @@ export default async function handler(req, res) {
           weight: {
             number: Number(weight) || 0,
           },
+          idnumber: idnumber ? { number: Number(idnumber) } : { number: null },
           isView:  { checkbox: !!isView },
           isHot:   { checkbox: !!isHot  },
           isSale:  { checkbox: !!isSale },
