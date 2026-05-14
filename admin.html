@@ -73,6 +73,15 @@
           class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
       </div>
 
+      <div>
+        <label class="text-xs text-gray-500 mb-1 block">商品編號 <span class="text-gray-400">（選填）</span></label>
+        <div class="relative">
+          <input id="idnumber" type="number" placeholder="請輸入商品編號"
+            class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black pr-24">
+          <div id="idnumberStatus" class="absolute right-3 top-2.5 text-xs"></div>
+        </div>
+      </div>
+
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="text-xs text-gray-500 mb-1 block">原價 <span class="text-red-500">*</span></label>
@@ -180,6 +189,7 @@
 const CLOUD_NAME    = "doue38blc";
 const UPLOAD_PRESET = "shop_upload";
 const ADD_API       = "https://shop-project-azure.vercel.app/api/add-product";
+const CHECK_ID_API  = "https://shop-project-azure.vercel.app/api/check-idnumber";
 const PRODUCTS_API  = "https://shop-project-azure.vercel.app/api/products";
 
 let mainImgUrl     = "";
@@ -198,6 +208,41 @@ let allProductData = [];
       '<span class="text-xs text-gray-300">載入失敗</span>';
   }
   addDetailSlot(); // 預設一個詳細圖 slot
+
+  // 商品編號即時檢查
+  let idCheckTimer = null;
+  document.getElementById("idnumber").addEventListener("input", (e) => {
+    const val = e.target.value.trim();
+    const statusEl = document.getElementById("idnumberStatus");
+
+    clearTimeout(idCheckTimer);
+
+    if (!val) { statusEl.textContent = ""; return; }
+
+    statusEl.textContent = "⏳ 檢查中";
+    statusEl.className = "absolute right-3 top-2.5 text-xs text-gray-400";
+
+    idCheckTimer = setTimeout(async () => {
+      try {
+        const res  = await fetch(`${CHECK_ID_API}?idnumber=${encodeURIComponent(val)}`);
+        const data = await res.json();
+        if (data.exists) {
+          statusEl.textContent = "⚠️ 編號已存在";
+          statusEl.className = "absolute right-3 top-2.5 text-xs text-orange-500 font-medium";
+          document.getElementById("idnumber").classList.add("border-orange-400");
+          document.getElementById("idnumber").classList.remove("border-green-400");
+        } else {
+          statusEl.textContent = "✅ 可使用";
+          statusEl.className = "absolute right-3 top-2.5 text-xs text-green-500 font-medium";
+          document.getElementById("idnumber").classList.add("border-green-400");
+          document.getElementById("idnumber").classList.remove("border-orange-400");
+        }
+      } catch {
+        statusEl.textContent = "無法檢查";
+        statusEl.className = "absolute right-3 top-2.5 text-xs text-gray-400";
+      }
+    }, 600); // 停止輸入 600ms 後才送出檢查
+  });
 
   document.getElementById("mainImgInput").addEventListener("change", async (e) => {
     const file = e.target.files[0];
@@ -389,6 +434,7 @@ async function submitProduct() {
       category:     document.getElementById("category").value.trim(),
       description:  document.getElementById("description").value.trim(),
       weight:       Number(document.getElementById("weight").value) || 0,
+      idnumber:     document.getElementById("idnumber").value.trim() || null,
       image:        mainImgUrl,
       images:       allImages.join(","),
       isView:       document.getElementById("isView").checked,
@@ -411,8 +457,10 @@ async function submitProduct() {
 // ── 重置 ──────────────────────────────────────────────
 function resetForm() {
   document.getElementById("successScreen").classList.add("hidden");
-  ["tname","tprice","sprice","weight","mainCategory","category","description"]
+  ["tname","idnumber","tprice","sprice","weight","mainCategory","category","description"]
     .forEach(id => document.getElementById(id).value = "");
+  document.getElementById("idnumberStatus").textContent = "";
+  document.getElementById("idnumber").classList.remove("border-orange-400","border-green-400");
   document.getElementById("isView").checked = true;
   ["isNew","isHot","isSale"].forEach(id => document.getElementById(id).checked = false);
 
