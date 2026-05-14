@@ -10,38 +10,13 @@ async function init() {
     const res = await fetch(API_URL);
     const data = await res.json();
 
-    // ⭐ 依照首頁相同排序（update 或 createdTime 由新到舊）
-    data.sort((a, b) =>
-      new Date(b.update || b.createdTime) -
-      new Date(a.update || a.createdTime)
-    );
-
-    const idx = data.findIndex(x => x.id === id);
-    const p = data[idx];
+    const p = data.find(x => x.id === id);
 
     // ✅ 防呆：找不到商品
     if (!p) {
       el.innerHTML = "<p class='text-red-500'>找不到商品</p>";
       return;
     }
-
-    // ⭐ 上一個 / 下一個
-    const prevProduct = idx > 0 ? data[idx - 1] : null;
-    const nextProduct = idx < data.length - 1 ? data[idx + 1] : null;
-
-    const prevBtn = prevProduct
-      ? `<a href="product.html?id=${prevProduct.id}"
-            class="flex items-center gap-2 px-4 py-2 border rounded hover:bg-gray-100 transition">
-           ← <span class="text-sm">${prevProduct.name}</span>
-         </a>`
-      : `<span class="px-4 py-2 text-gray-300 border rounded cursor-not-allowed">← 已是第一件</span>`;
-
-    const nextBtn = nextProduct
-      ? `<a href="product.html?id=${nextProduct.id}"
-            class="flex items-center gap-2 px-4 py-2 border rounded hover:bg-gray-100 transition">
-           <span class="text-sm">${nextProduct.name}</span> →
-         </a>`
-      : `<span class="px-4 py-2 text-gray-300 border rounded cursor-not-allowed">已是最後一件 →</span>`;
 
     // ✅ 防呆：圖片安全寫法
     const mainImg =
@@ -50,13 +25,6 @@ async function init() {
       "https://via.placeholder.com/400";
 
     el.innerHTML = `
-      <!-- ⭐ 上一個 / 下一個 導覽列（頂部）-->
-      <div class="flex justify-between items-center mb-6 pb-4 border-b">
-        ${prevBtn}
-        <span class="text-sm text-gray-400">${idx + 1} / ${data.length}</span>
-        ${nextBtn}
-      </div>
-
       <div class="grid md:grid-cols-2 gap-6">
 
         <!-- 圖片 -->
@@ -105,13 +73,6 @@ async function init() {
           </div>
         </div>
 
-      </div>
-
-      <!-- ⭐ 上一個 / 下一個 導覽列 -->
-      <div class="flex justify-between items-center mt-10 pt-6 border-t">
-        ${prevBtn}
-        <span class="text-sm text-gray-400">${idx + 1} / ${data.length}</span>
-        ${nextBtn}
       </div>
     `;
 
