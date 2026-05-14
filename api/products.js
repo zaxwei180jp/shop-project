@@ -19,34 +19,22 @@ export default async function handler(req, res) {
     // ⭐ 文字
     const getText = (prop) => {
       if (!prop) return "";
-
-      if (prop.title) {
-        return prop.title.map(t => t.plain_text).join("");
-      }
-
-      if (prop.rich_text) {
-        return prop.rich_text.map(t => t.plain_text).join("\n");
-      }
-
+      if (prop.title) return prop.title.map(t => t.plain_text).join("");
+      if (prop.rich_text) return prop.rich_text.map(t => t.plain_text).join("\n");
       return "";
     };
 
     // ⭐ 數字
     const getNumber = (prop) => {
       if (!prop) return 0;
-
       if (prop.type === "number") return prop.number || 0;
-
       if (prop.type === "formula") {
-        if (prop.formula.type === "number") {
-          return prop.formula.number || 0;
-        }
+        if (prop.formula.type === "number") return prop.formula.number || 0;
       }
-
       return 0;
     };
 
-    // ⭐ checkbox
+    // ⭐ Checkbox
     const getCheckbox = (prop) => prop?.checkbox || false;
 
     // ⭐ 日期
@@ -58,9 +46,7 @@ export default async function handler(req, res) {
     // ⭐ 單圖
     const getImage = (prop) => {
       if (!prop) return "";
-
       if (prop.type === "url") return prop.url || "";
-
       return (
         prop?.title?.map(t => t.plain_text).join("") ||
         prop?.rich_text?.map(t => t.plain_text).join("") ||
@@ -78,12 +64,12 @@ export default async function handler(req, res) {
     const products = data.results.map((page) => {
       const props = page.properties;
 
-      const isView = getCheckbox(props.isView); // ⭐ 控制是否上架
-      const isHot = getCheckbox(props.isHot);
+      const isView = getCheckbox(props.isView); // ⭐ 上架控制
+      const isHot  = getCheckbox(props.isHot);
       const isSale = getCheckbox(props.isSale);
-      const isNew = getCheckbox(props.isNew);
+      const isNew  = getCheckbox(props.isNew);
 
-      const price = getNumber(props.tprice);
+      const price  = getNumber(props.tprice);
       const sprice = getNumber(props.sprice);
 
       return {
@@ -97,7 +83,7 @@ export default async function handler(req, res) {
 
         isHot,
         isNew,
-        isView, // ⭐ 上架狀態
+        isView,
 
         image: getImage(props.image),
         images: getImages(props.images),
