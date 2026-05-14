@@ -9,24 +9,24 @@
 <body class="bg-gray-50">
 
 <div class="sticky top-0 z-50 bg-white border-b shadow-sm">
-  <div class="flex justify-between items-center px-3 py-2">
-    <div class="flex gap-1 text-sm">
-      <a href="index.html" class="font-bold px-2 py-1.5 rounded-lg hover:bg-gray-100">🏠</a>
-      <a href="new.html"   class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-xs">🆕 新品</a>
-      <a href="hot.html"   class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-xs">🔥 熱賣</a>
-      <a href="sale.html"  class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-xs">🈹 特價</a>
+  <div class="flex justify-between items-center px-4 py-2 max-w-7xl mx-auto">
+    <div class="flex items-center gap-1">
+      <a href="index.html" class="font-bold px-2 py-1.5 rounded-lg hover:bg-gray-100 text-sm">🏠 <span class="hidden lg:inline">首頁</span></a>
+      <a href="new.html"   class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-xs lg:text-sm">🆕 <span class="hidden sm:inline">新品</span></a>
+      <a href="hot.html"   class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-xs lg:text-sm">🔥 <span class="hidden sm:inline">熱賣</span></a>
+      <a href="sale.html"  class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-xs lg:text-sm">🈹 <span class="hidden sm:inline">特價</span></a>
     </div>
     <div class="flex items-center gap-1">
-      <a href="order-status.html" class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-xs">📋 訂單查詢</a>
-      <button onclick="history.back()" class="text-sm px-2 py-1.5 rounded-lg hover:bg-gray-100">⬅️</button>
-      <a href="cart.html" class="px-2 py-1.5 rounded-lg hover:bg-gray-100">
+      <a href="order-status.html" class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-xs lg:text-sm">📋 <span class="hidden sm:inline">訂單查詢</span></a>
+      <button onclick="history.back()" class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-sm">⬅️</button>
+      <a href="cart.html" class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-sm">
         🛒 <span id="cartCount" class="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">0</span>
       </a>
     </div>
   </div>
 </div>
 
-<div id="product" class="px-4 py-4 max-w-2xl mx-auto"></div>
+<div id="product" class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-6xl mx-auto"></div>
 
 <script type="module" src="./js/product.js"></script>
 <script src="./js/cartCount.js"></script>
