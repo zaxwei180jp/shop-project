@@ -54,6 +54,9 @@ export default async function handler(req, res) {
       );
     };
 
+    // ⭐ Select 單選（分類）
+    const getSelect = (prop) => prop?.select?.name || "";
+
     // ⭐ 多圖
     const getImages = (prop) => {
       const text = getText(prop);
@@ -84,6 +87,8 @@ export default async function handler(req, res) {
         isHot,
         isNew,
         isView,
+
+        category: getSelect(props.category), // ⭐ 分類
 
         image: getImage(props.image),
         images: getImages(props.images),
