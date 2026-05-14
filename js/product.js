@@ -64,25 +64,25 @@ async function init() {
       <div class="border-b mb-4">${navBar}</div>
 
       <!-- 商品主體：手機單欄、桌機雙欄 -->
-      <div class="md:grid md:grid-cols-2 md:gap-8">
+      <div class="lg:grid lg:grid-cols-2 lg:gap-12">
 
         <!-- 圖片區 -->
         <div>
           <img id="mainImg" src="${mainImg}"
-               class="w-full aspect-square object-cover rounded-xl">
+               class="w-full aspect-square object-cover rounded-xl sm:rounded-2xl">
 
           ${(p.images || []).length > 0 ? `
           <div class="flex gap-2 mt-3 overflow-x-auto pb-1">
             ${(p.images || []).map(img => `
               <img src="${img}"
-                   class="w-16 h-16 shrink-0 object-cover rounded-lg cursor-pointer thumb
+                   class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 object-cover rounded-lg cursor-pointer thumb
                           border-2 border-transparent hover:border-black transition">
             `).join("")}
           </div>` : ""}
         </div>
 
         <!-- 商品資訊 -->
-        <div class="mt-5 md:mt-0">
+        <div class="mt-5 lg:mt-0">
 
           <!-- 標籤 -->
           <div class="flex gap-2 mb-2 flex-wrap">
@@ -92,16 +92,16 @@ async function init() {
           </div>
 
           <!-- 商品名稱 -->
-          <h1 class="text-xl font-bold leading-snug text-gray-900">${p.name}</h1>
+          <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold leading-snug text-gray-900">${p.name}</h1>
 
           <!-- 價格 -->
           ${p.isSale
             ? `<div class="mt-2 flex items-baseline gap-2">
-                 <span class="text-2xl font-bold text-red-500">${formatPrice(p.price)}</span>
-                 <span class="text-sm line-through text-gray-400">${formatPrice(p.originalPrice)}</span>
+                 <span class="text-2xl sm:text-3xl font-bold text-red-500">${formatPrice(p.price)}</span>
+                 <span class="text-sm sm:text-base line-through text-gray-400">${formatPrice(p.originalPrice)}</span>
                </div>`
             : `<div class="mt-2">
-                 <span class="text-2xl font-bold text-red-500">${formatPrice(p.price)}</span>
+                 <span class="text-2xl sm:text-3xl font-bold text-red-500">${formatPrice(p.price)}</span>
                </div>`
           }
 

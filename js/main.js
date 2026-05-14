@@ -32,7 +32,7 @@ function renderTabs() {
     <button
       onclick="setCategory('${cat}')"
       data-cat="${cat}"
-      class="shrink-0 px-4 py-1.5 rounded-full text-sm border transition
+      class="shrink-0 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm border transition
              ${cat === activeCategory
                ? "bg-black text-white border-black"
                : "bg-white text-gray-600 border-gray-300 active:bg-gray-100"

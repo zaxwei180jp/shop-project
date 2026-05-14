@@ -33,10 +33,10 @@ async function init() {
 
     return `
       <div class="flex items-center gap-3 py-4 border-b">
-        <img src="${img}" class="w-20 h-20 shrink-0 object-cover rounded-xl">
+        <img src="${img}" class="w-20 h-20 sm:w-24 sm:h-24 shrink-0 object-cover rounded-xl">
 
         <div class="flex-1 min-w-0">
-          <div class="text-sm font-semibold leading-snug line-clamp-2 text-gray-800">${p.name}</div>
+          <div class="text-sm sm:text-base font-semibold leading-snug line-clamp-2 text-gray-800">${p.name}</div>
           <div class="text-red-500 text-sm mt-1 font-medium">${formatPrice(p.price)}</div>
 
           <div class="flex items-center mt-2 border rounded-lg overflow-hidden w-fit">
@@ -61,7 +61,7 @@ async function init() {
     <div class="sticky bottom-0 bg-white pt-4 pb-2 border-t mt-2">
       <div class="flex justify-between items-center mb-3">
         <span class="text-gray-500 text-sm">合計</span>
-        <span class="text-xl font-bold">${formatPrice(total)}</span>
+        <span class="text-xl sm:text-2xl font-bold">${formatPrice(total)}</span>
       </div>
       <a href="checkout.html"
          class="block w-full py-3 bg-black text-white font-medium rounded-xl active:bg-gray-800 transition text-center">
