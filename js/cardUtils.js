@@ -17,7 +17,10 @@ export function renderCard(p) {
         ${badges ? `<div class="absolute top-2 left-2 flex gap-1 flex-wrap">${badges}</div>` : ""}
       </div>
       <div class="p-2.5 sm:p-3 lg:p-4">
-        ${p.category ? `<div class="text-xs text-gray-400 mb-1">${p.category}</div>` : ""}
+        ${(p.mainCategory || p.category) ? `
+        <div class="text-xs text-gray-400 mb-1 truncate">
+          ${p.mainCategory || ""}${p.mainCategory && p.category ? " · " : ""}${p.category || ""}
+        </div>` : ""}
         <div class="text-xs sm:text-sm font-semibold leading-snug line-clamp-2 text-gray-800">${p.name}</div>
         <div class="mt-1.5 flex items-baseline gap-1.5 flex-wrap">
           <span class="text-red-500 font-bold text-sm sm:text-base">${formatPrice(p.price)}</span>

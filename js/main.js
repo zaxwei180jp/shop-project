@@ -1,71 +1,98 @@
 import { renderCard } from "./cardUtils.js";
 
 const API_URL = "https://shop-project-azure.vercel.app/api/products";
-const el = document.getElementById("list");
-const tabsEl = document.getElementById("tabs");
+const el        = document.getElementById("list");
+const mainTabs  = document.getElementById("mainTabs");
+const subTabs   = document.getElementById("subTabs");
+const subWrap   = document.getElementById("subTabsWrap");
 
-let allData = [];
-let activeCategory = "全部";
+let allData        = [];
+let activeMain     = "全部";
+let activeSub      = "全部";
 
 async function init() {
   el.innerHTML = `<div class="col-span-2 text-center text-gray-400 py-10">載入中...</div>`;
 
-  const res = await fetch(API_URL);
-  allData = await res.json();
+  const res  = await fetch(API_URL);
+  allData    = await res.json();
 
   allData.sort((a, b) =>
     new Date(b.update || b.createdTime) -
     new Date(a.update || a.createdTime)
   );
 
-  renderTabs();
+  renderMainTabs();
+  renderSubTabs();
   renderList();
 }
 
-function renderTabs() {
-  // 動態抓取所有分類（有填才算）
-  const categories = ["全部", ...new Set(
-    allData.map(p => p.category).filter(Boolean)
+// ── 大分類 Tab ────────────────────────────────────────
+function renderMainTabs() {
+  const mains = ["全部", ...new Set(
+    allData.map(p => p.mainCategory).filter(Boolean)
   )];
 
-  tabsEl.innerHTML = categories.map(cat => `
-    <button
-      onclick="setCategory('${cat}')"
-      data-cat="${cat}"
-      class="shrink-0 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm border transition
-             ${cat === activeCategory
-               ? "bg-black text-white border-black"
-               : "bg-white text-gray-600 border-gray-300 active:bg-gray-100"
-             }">
-      ${cat}
-    </button>
-  `).join("");
+  mainTabs.innerHTML = mains.map(cat => tabBtn(cat, cat === activeMain, () => {
+    activeMain = cat;
+    activeSub  = "全部";
+    renderMainTabs();
+    renderSubTabs();
+    renderList();
+  })).join("");
 }
 
-function renderList() {
-  const filtered = activeCategory === "全部"
+// ── 小分類 Tab（根據大分類動態篩選）────────────────────
+function renderSubTabs() {
+  const pool = activeMain === "全部"
     ? allData
-    : allData.filter(p => p.category === activeCategory);
+    : allData.filter(p => p.mainCategory === activeMain);
 
-  el.innerHTML = filtered.length
-    ? filtered.map(renderCard).join("")
+  const subs = ["全部", ...new Set(
+    pool.map(p => p.category).filter(Boolean)
+  )];
+
+  // 沒有小分類就隱藏整列
+  if (subs.length <= 1) {
+    subWrap.classList.add("hidden");
+    return;
+  }
+
+  subWrap.classList.remove("hidden");
+  subTabs.innerHTML = subs.map(cat => tabBtn(cat, cat === activeSub, () => {
+    activeSub = cat;
+    renderSubTabs();
+    renderList();
+  }, true)).join("");
+}
+
+// ── 商品列表 ──────────────────────────────────────────
+function renderList() {
+  let data = allData;
+
+  if (activeMain !== "全部")
+    data = data.filter(p => p.mainCategory === activeMain);
+
+  if (activeSub !== "全部")
+    data = data.filter(p => p.category === activeSub);
+
+  el.innerHTML = data.length
+    ? data.map(renderCard).join("")
     : `<div class="col-span-2 text-center text-gray-400 py-10">此分類沒有商品</div>`;
 }
 
-window.setCategory = (cat) => {
-  activeCategory = cat;
-
-  // 更新 Tab 樣式
-  document.querySelectorAll("[data-cat]").forEach(btn => {
-    const isActive = btn.dataset.cat === cat;
-    btn.className = `shrink-0 px-4 py-1.5 rounded-full text-sm border transition ${
-      isActive
-        ? "bg-black text-white border-black"
-        : "bg-white text-gray-600 border-gray-300 active:bg-gray-100"
-    }`;
-  });
-
-  renderList();
-};
+// ── Tab 按鈕產生器 ────────────────────────────────────
+function tabBtn(label, isActive, onClick, isSub = false) {
+  const btn = document.createElement("button");
+  btn.textContent = label;
+  btn.className = [
+    "shrink-0 px-3 sm:px-4 py-1.5 rounded-full border transition",
+    isSub ? "text-xs sm:text-sm" : "text-xs sm:text-sm font-medium",
+    isActive
+      ? (isSub ? "bg-gray-700 text-white border-gray-700" : "bg-black text-white border-black")
+      : "bg-white text-gray-600 border-gray-300 hover:border-gray-500 active:bg-gray-100",
+  ].join(" ");
+  btn.onclick = onClick;
+  return btn.outerHTML;
+}
 
 init();

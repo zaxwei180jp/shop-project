@@ -84,6 +84,14 @@ async function init() {
         <!-- 商品資訊 -->
         <div class="mt-5 lg:mt-0">
 
+          <!-- 分類麵包屑 -->
+          ${(p.mainCategory || p.category) ? `
+          <div class="text-xs text-gray-400 mb-2 flex items-center gap-1">
+            ${p.mainCategory ? `<span>${p.mainCategory}</span>` : ""}
+            ${p.mainCategory && p.category ? `<span>›</span>` : ""}
+            ${p.category ? `<span>${p.category}</span>` : ""}
+          </div>` : ""}
+
           <!-- 標籤 -->
           <div class="flex gap-2 mb-2 flex-wrap">
             ${p.isNew  ? `<span class="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-medium">NEW</span>` : ""}
