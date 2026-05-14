@@ -116,8 +116,12 @@
     </button>
   </div>
 
+  <a id="queryLink" href="order-status.html"
+    class="w-full max-w-xs py-3 bg-black text-white text-center font-medium rounded-xl active:bg-gray-800 block mb-3">
+    查詢訂單狀態
+  </a>
   <a href="index.html"
-    class="w-full max-w-xs py-3 bg-black text-white text-center font-medium rounded-xl active:bg-gray-800">
+    class="w-full max-w-xs py-3 text-center text-sm text-gray-400 underline block">
     繼續逛逛
   </a>
 </div>
@@ -223,6 +227,7 @@ window.submitOrder = async () => {
 
     // 顯示成功畫面
     document.getElementById("displayOrderId").textContent = orderId;
+    document.getElementById("queryLink").href = `order-status.html?orderId=${orderId}`;
     document.getElementById("successScreen").classList.remove("hidden");
 
   } catch (err) {
