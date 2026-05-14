@@ -50,6 +50,13 @@ async function init() {
       "https://via.placeholder.com/400";
 
     el.innerHTML = `
+      <!-- ⭐ 上一個 / 下一個 導覽列（頂部）-->
+      <div class="flex justify-between items-center mb-6 pb-4 border-b">
+        ${prevBtn}
+        <span class="text-sm text-gray-400">${idx + 1} / ${data.length}</span>
+        ${nextBtn}
+      </div>
+
       <div class="grid md:grid-cols-2 gap-6">
 
         <!-- 圖片 -->
