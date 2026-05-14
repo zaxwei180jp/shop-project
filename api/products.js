@@ -88,7 +88,8 @@ export default async function handler(req, res) {
         isNew,
         isView,
 
-        category: getSelect(props.category), // ⭐ 分類
+        mainCategory: getSelect(props.mainCategory), // ⭐ 大分類
+        category: getSelect(props.category),     // ⭐ 小分類
 
         image: getImage(props.image),
         images: getImages(props.images),
