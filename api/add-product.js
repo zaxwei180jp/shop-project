@@ -6,14 +6,15 @@ export default async function handler(req, res) {
   try {
     const { NOTION_TOKEN, DATABASE_ID } = process.env;
     const {
-      tname, tprice, sprice,
+      tname, jprice, jsprice,
       mainCategory, category,
       description,
       image, images,
+      weight,
       isView, isHot, isSale, isNew,
     } = req.body;
 
-    if (!tname || !tprice) {
+    if (!tname || !jprice) {
       return res.status(400).json({ error: "商品名稱和價格為必填" });
     }
 
@@ -30,11 +31,11 @@ export default async function handler(req, res) {
           tname: {
             title: [{ text: { content: tname } }],
           },
-          tprice: {
-            number: Number(tprice) || 0,
+          jprice: {
+            number: Number(jprice) || 0,
           },
-          sprice: {
-            number: Number(sprice) || 0,
+          jsprice: {
+            number: Number(jsprice) || 0,
           },
           description: {
             rich_text: [{ text: { content: description || "" } }],
@@ -50,6 +51,9 @@ export default async function handler(req, res) {
           },
           category: {
             select: category ? { name: category } : null,
+          },
+          weight: {
+            number: Number(weight) || 0,
           },
           isView:  { checkbox: !!isView },
           isHot:   { checkbox: !!isHot  },

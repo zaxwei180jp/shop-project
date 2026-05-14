@@ -72,8 +72,8 @@ export default async function handler(req, res) {
       const isSale = getCheckbox(props.isSale);
       const isNew  = getCheckbox(props.isNew);
 
-      const price  = getNumber(props.tprice);
-      const sprice = getNumber(props.sprice);
+      const price  = getNumber(props.jprice);
+      const sprice = getNumber(props.jsprice);
 
       return {
         id: page.id,
@@ -88,6 +88,7 @@ export default async function handler(req, res) {
         isNew,
         isView,
 
+        weight: getNumber(props.weight),             // ⭐ 重量
         mainCategory: getSelect(props.mainCategory), // ⭐ 大分類
         category: getSelect(props.category),     // ⭐ 小分類
 
