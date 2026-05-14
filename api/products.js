@@ -72,8 +72,8 @@ export default async function handler(req, res) {
       const isSale = getCheckbox(props.isSale);
       const isNew  = getCheckbox(props.isNew);
 
-      const price  = getNumber(props.jprice);
-      const sprice = getNumber(props.jsprice);
+      const price  = getNumber(props.tprice);  // formula：台幣售價
+      const sprice = getNumber(props.sprice);  // formula：台幣特價
 
       return {
         id: page.id,
