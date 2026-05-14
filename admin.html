@@ -68,13 +68,17 @@
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="text-xs text-gray-500 mb-1 block">大分類</label>
-          <input id="mainCategory" type="text" placeholder="例：日本好市多"
+          <input id="mainCategory" type="text" placeholder="選擇或輸入新分類"
+            list="mainCategoryList" autocomplete="off"
             class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+          <datalist id="mainCategoryList"></datalist>
         </div>
         <div>
           <label class="text-xs text-gray-500 mb-1 block">小分類</label>
-          <input id="category" type="text" placeholder="例：食品"
+          <input id="category" type="text" placeholder="選擇或輸入新分類"
+            list="categoryList" autocomplete="off"
             class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+          <datalist id="categoryList"></datalist>
         </div>
       </div>
 
@@ -169,11 +173,62 @@
 </div>
 
 <script>
-const CLOUD_NAME   = "doue38blc";
+const CLOUD_NAME    = "doue38blc";
 const UPLOAD_PRESET = "shop_upload";
-const ADD_API      = "https://shop-project-azure.vercel.app/api/add-product";
+const ADD_API       = "https://shop-project-azure.vercel.app/api/add-product";
+const PRODUCTS_API  = "https://shop-project-azure.vercel.app/api/products";
 
 let uploadedUrls = []; // 所有上傳成功的圖片網址
+
+// ── 頁面載入時抓現有分類 ──────────────────────────────
+(async () => {
+  try {
+    const res  = await fetch(PRODUCTS_API);
+    const data = await res.json();
+
+    // 大分類
+    const mains = [...new Set(data.map(p => p.mainCategory).filter(Boolean))].sort();
+    const mainList = document.getElementById("mainCategoryList");
+    mains.forEach(m => {
+      const opt = document.createElement("option");
+      opt.value = m;
+      mainList.appendChild(opt);
+    });
+
+    // 小分類（大分類選定時動態過濾）
+    const allSubs = data.map(p => ({ main: p.mainCategory, sub: p.category })).filter(p => p.sub);
+
+    function updateSubList(selectedMain) {
+      const subList = document.getElementById("categoryList");
+      subList.innerHTML = "";
+      const subs = [...new Set(
+        allSubs
+          .filter(p => !selectedMain || p.main === selectedMain)
+          .map(p => p.sub)
+      )].sort();
+      subs.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s;
+        subList.appendChild(opt);
+      });
+    }
+
+    // 初始載入全部小分類
+    updateSubList("");
+
+    // 大分類變動時更新小分類選項
+    document.getElementById("mainCategory").addEventListener("change", (e) => {
+      updateSubList(e.target.value);
+      document.getElementById("category").value = "";
+    });
+    document.getElementById("mainCategory").addEventListener("input", (e) => {
+      updateSubList(e.target.value);
+    });
+
+  } catch (err) {
+    console.warn("分類載入失敗", err);
+  }
+})();
 
 // ── 照片選取 & 上傳 ──────────────────────────────────
 document.getElementById("fileInput").addEventListener("change", async (e) => {
