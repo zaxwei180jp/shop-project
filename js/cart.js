@@ -63,9 +63,10 @@ async function init() {
         <span class="text-gray-500 text-sm">合計</span>
         <span class="text-xl font-bold">${formatPrice(total)}</span>
       </div>
-      <button class="w-full py-3 bg-black text-white font-medium rounded-xl active:bg-gray-800 transition">
-        結帳
-      </button>
+      <a href="checkout.html"
+         class="block w-full py-3 bg-black text-white font-medium rounded-xl active:bg-gray-800 transition text-center">
+        前往結帳 →
+      </a>
     </div>`;
 }
 
