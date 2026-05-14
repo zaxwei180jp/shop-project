@@ -40,7 +40,7 @@ export default async function handler(req, res) {
             rich_text: [{ text: { content: description || "" } }],
           },
           image: {
-            url: image || "",
+            rich_text: [{ text: { content: image || "" } }],
           },
           images: {
             rich_text: [{ text: { content: images || "" } }],
