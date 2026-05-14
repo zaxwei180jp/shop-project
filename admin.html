@@ -8,7 +8,6 @@
 </head>
 <body class="bg-gray-100 min-h-screen">
 
-<!-- Header -->
 <div class="sticky top-0 z-50 bg-white border-b shadow-sm">
   <div class="flex justify-between items-center px-4 py-3 max-w-2xl mx-auto">
     <h1 class="font-bold text-base">🛠 後台 · 新增商品</h1>
@@ -20,22 +19,41 @@
 
   <!-- ① 照片上傳 -->
   <div class="bg-white rounded-2xl p-4 shadow-sm">
-    <div class="flex items-center gap-2 mb-3">
+    <div class="flex items-center gap-2 mb-4">
       <span class="w-6 h-6 bg-black text-white rounded-full text-xs flex items-center justify-center font-bold">1</span>
       <h2 class="font-semibold text-sm">上傳照片</h2>
     </div>
+    <div class="space-y-3">
 
-    <!-- 上傳區 -->
-    <label id="uploadArea"
-      class="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-xl py-8 cursor-pointer hover:border-gray-400 transition mb-3">
-      <span class="text-3xl mb-2">📷</span>
-      <span class="text-sm text-gray-500">點擊選擇照片（可多選）</span>
-      <span class="text-xs text-gray-400 mt-1">第一張自動設為主圖</span>
-      <input id="fileInput" type="file" accept="image/*" multiple class="hidden">
-    </label>
+      <!-- 首頁主圖 -->
+      <div>
+        <div class="text-xs text-gray-500 mb-1.5">首頁主圖 <span class="text-red-400">（封面用，建議正方形）</span></div>
+        <div id="mainImgBox"
+          class="relative flex items-center justify-center border-2 border-dashed border-gray-200 rounded-xl h-36 cursor-pointer hover:border-gray-400 transition overflow-hidden"
+          onclick="document.getElementById('mainImgInput').click()">
+          <div id="mainImgPlaceholder" class="flex flex-col items-center text-gray-400">
+            <span class="text-3xl mb-1">🖼</span>
+            <span class="text-xs">點擊上傳主圖</span>
+          </div>
+          <img id="mainImgPreview" class="hidden absolute inset-0 w-full h-full object-cover">
+          <div id="mainImgLoading" class="hidden absolute inset-0 bg-gray-50 flex items-center justify-center text-sm text-gray-400">⏳ 上傳中...</div>
+          <button id="mainImgRemove" onclick="removeMainImg(event)"
+            class="hidden absolute top-2 right-2 bg-black bg-opacity-60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs z-10">✕</button>
+        </div>
+        <input id="mainImgInput" type="file" accept="image/*" class="hidden">
+      </div>
 
-    <!-- 預覽 + 進度 -->
-    <div id="previewArea" class="grid grid-cols-3 sm:grid-cols-4 gap-2"></div>
+      <!-- 詳細圖 -->
+      <div>
+        <div class="text-xs text-gray-500 mb-1.5">商品詳細圖 <span class="text-gray-400">（依序顯示於商品頁）</span></div>
+        <div id="detailSlots" class="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-2"></div>
+        <button type="button" onclick="addDetailSlot()"
+          class="w-full py-2 border border-dashed border-gray-300 rounded-xl text-xs text-gray-400 hover:border-gray-500 hover:text-gray-600 transition">
+          ＋ 新增一張詳細圖
+        </button>
+      </div>
+
+    </div>
   </div>
 
   <!-- ② 基本資料 -->
@@ -65,26 +83,29 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="text-xs text-gray-500 mb-1 block">大分類</label>
-          <input id="mainCategory" type="text" placeholder="選擇或輸入新分類"
-            list="mainCategoryList" autocomplete="off"
-            class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
-          <datalist id="mainCategoryList"></datalist>
-        </div>
-        <div>
-          <label class="text-xs text-gray-500 mb-1 block">小分類</label>
-          <input id="category" type="text" placeholder="選擇或輸入新分類"
-            list="categoryList" autocomplete="off"
-            class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
-          <datalist id="categoryList"></datalist>
-        </div>
+      <div>
+        <label class="text-xs text-gray-500 mb-1 block">重量（kg）</label>
+        <input id="weight" type="number" step="0.01" placeholder="例：0.5"
+          class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
       </div>
 
+      <!-- 大分類 -->
       <div>
-        <label class="text-xs text-gray-500 mb-1 block">重量（g）</label>
-        <input id="weight" type="number" placeholder="例：500"
+        <label class="text-xs text-gray-500 mb-2 block">大分類</label>
+        <div id="mainCategoryBtns" class="flex flex-wrap gap-2 mb-2 min-h-[28px]">
+          <span class="text-xs text-gray-300 self-center">載入中...</span>
+        </div>
+        <input id="mainCategory" type="text" placeholder="或直接輸入新分類"
+          class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+      </div>
+
+      <!-- 小分類 -->
+      <div>
+        <label class="text-xs text-gray-500 mb-2 block">小分類</label>
+        <div id="categoryBtns" class="flex flex-wrap gap-2 mb-2 min-h-[28px]">
+          <span class="text-xs text-gray-300 self-center">請先選大分類</span>
+        </div>
+        <input id="category" type="text" placeholder="或直接輸入新分類"
           class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
       </div>
 
@@ -114,50 +135,30 @@
       <h2 class="font-semibold text-sm">標籤設定</h2>
     </div>
     <div class="grid grid-cols-2 gap-2">
-
       <label class="flex items-center gap-3 border rounded-xl px-3 py-3 cursor-pointer hover:bg-gray-50">
         <input id="isView" type="checkbox" checked class="w-4 h-4 accent-black">
-        <div>
-          <div class="text-sm font-medium">上架</div>
-          <div class="text-xs text-gray-400">isView</div>
-        </div>
+        <div><div class="text-sm font-medium">上架</div><div class="text-xs text-gray-400">isView</div></div>
       </label>
-
       <label class="flex items-center gap-3 border rounded-xl px-3 py-3 cursor-pointer hover:bg-gray-50">
         <input id="isNew" type="checkbox" class="w-4 h-4 accent-black">
-        <div>
-          <div class="text-sm font-medium">🆕 新品</div>
-          <div class="text-xs text-gray-400">isNew</div>
-        </div>
+        <div><div class="text-sm font-medium">🆕 新品</div><div class="text-xs text-gray-400">isNew</div></div>
       </label>
-
       <label class="flex items-center gap-3 border rounded-xl px-3 py-3 cursor-pointer hover:bg-gray-50">
         <input id="isHot" type="checkbox" class="w-4 h-4 accent-black">
-        <div>
-          <div class="text-sm font-medium">🔥 熱賣</div>
-          <div class="text-xs text-gray-400">isHot</div>
-        </div>
+        <div><div class="text-sm font-medium">🔥 熱賣</div><div class="text-xs text-gray-400">isHot</div></div>
       </label>
-
       <label class="flex items-center gap-3 border rounded-xl px-3 py-3 cursor-pointer hover:bg-gray-50">
         <input id="isSale" type="checkbox" class="w-4 h-4 accent-black">
-        <div>
-          <div class="text-sm font-medium">🈹 特價</div>
-          <div class="text-xs text-gray-400">isSale</div>
-        </div>
+        <div><div class="text-sm font-medium">🈹 特價</div><div class="text-xs text-gray-400">isSale</div></div>
       </label>
-
     </div>
   </div>
 
-  <!-- 送出 -->
   <button id="submitBtn" onclick="submitProduct()"
     class="w-full py-4 bg-black text-white font-semibold rounded-2xl active:bg-gray-800 transition text-base shadow-sm">
     ＋ 新增商品
   </button>
-
   <div class="pb-8"></div>
-
 </div>
 
 <!-- 成功畫面 -->
@@ -178,146 +179,191 @@ const UPLOAD_PRESET = "shop_upload";
 const ADD_API       = "https://shop-project-azure.vercel.app/api/add-product";
 const PRODUCTS_API  = "https://shop-project-azure.vercel.app/api/products";
 
-let uploadedUrls = []; // 所有上傳成功的圖片網址
+let mainImgUrl     = "";
+let detailUrls     = [];   // 每個 slot 對應一個 URL（""=尚未上傳）
+let allProductData = [];
 
-// ── 頁面載入時抓現有分類 ──────────────────────────────
+// ── 初始化 ───────────────────────────────────────────
 (async () => {
   try {
-    const res  = await fetch(PRODUCTS_API);
-    const data = await res.json();
-
-    // 大分類
-    const mains = [...new Set(data.map(p => p.mainCategory).filter(Boolean))].sort();
-    const mainList = document.getElementById("mainCategoryList");
-    mains.forEach(m => {
-      const opt = document.createElement("option");
-      opt.value = m;
-      mainList.appendChild(opt);
-    });
-
-    // 小分類（大分類選定時動態過濾）
-    const allSubs = data.map(p => ({ main: p.mainCategory, sub: p.category })).filter(p => p.sub);
-
-    function updateSubList(selectedMain) {
-      const subList = document.getElementById("categoryList");
-      subList.innerHTML = "";
-      const subs = [...new Set(
-        allSubs
-          .filter(p => !selectedMain || p.main === selectedMain)
-          .map(p => p.sub)
-      )].sort();
-      subs.forEach(s => {
-        const opt = document.createElement("option");
-        opt.value = s;
-        subList.appendChild(opt);
-      });
-    }
-
-    // 初始載入全部小分類
-    updateSubList("");
-
-    // 大分類變動時更新小分類選項
-    document.getElementById("mainCategory").addEventListener("change", (e) => {
-      updateSubList(e.target.value);
-      document.getElementById("category").value = "";
-    });
-    document.getElementById("mainCategory").addEventListener("input", (e) => {
-      updateSubList(e.target.value);
-    });
-
-  } catch (err) {
-    console.warn("分類載入失敗", err);
+    const res = await fetch(PRODUCTS_API);
+    allProductData = await res.json();
+    renderMainBtns();
+    renderSubBtns("");
+  } catch {
+    document.getElementById("mainCategoryBtns").innerHTML =
+      '<span class="text-xs text-gray-300">載入失敗</span>';
   }
+  addDetailSlot(); // 預設一個詳細圖 slot
+
+  document.getElementById("mainImgInput").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (file) { e.target.value = ""; await uploadMainImg(file); }
+  });
+
+  // 手動輸入大分類時，同步更新小分類按鈕
+  document.getElementById("mainCategory").addEventListener("input", (e) => {
+    renderSubBtns(e.target.value.trim());
+  });
 })();
 
-// ── 照片選取 & 上傳 ──────────────────────────────────
-document.getElementById("fileInput").addEventListener("change", async (e) => {
-  const files = Array.from(e.target.files);
-  if (!files.length) return;
+// ── 分類按鈕 ─────────────────────────────────────────
+const BTN_NORMAL = "px-3 py-1.5 rounded-full border text-xs transition bg-white text-gray-700 border-gray-300 hover:border-black active:bg-gray-100";
+const BTN_ACTIVE = "px-3 py-1.5 rounded-full border text-xs transition bg-black text-white border-black";
 
-  for (const file of files) {
-    await uploadOne(file);
-  }
-  // 清空 input 讓同樣的檔案可以重新選
-  e.target.value = "";
-});
-
-async function uploadOne(file) {
-  const previewArea = document.getElementById("previewArea");
-
-  // 建立預覽卡（loading 狀態）
-  const card = document.createElement("div");
-  card.className = "relative aspect-square rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center";
-  card.innerHTML = `
-    <div class="absolute inset-0 flex items-center justify-center bg-gray-100">
-      <div class="text-xs text-gray-400 text-center">
-        <div class="animate-spin text-2xl mb-1">⏳</div>
-        上傳中
-      </div>
-    </div>`;
-  previewArea.appendChild(card);
-
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", UPLOAD_PRESET);
-
-    const res  = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-      method: "POST",
-      body: formData,
-    });
-    const data = await res.json();
-
-    if (!data.secure_url) throw new Error("上傳失敗");
-
-    const url = data.secure_url;
-    uploadedUrls.push(url);
-
-    const idx = uploadedUrls.length - 1;
-
-    // 更新成功狀態
-    card.innerHTML = `
-      <img src="${url}" class="w-full h-full object-cover">
-      ${idx === 0 ? `<span class="absolute top-1 left-1 bg-black text-white text-xs px-1.5 py-0.5 rounded-md">主圖</span>` : ""}
-      <button onclick="removePhoto(${idx}, this)"
-        class="absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">✕</button>`;
-
-  } catch (err) {
-    card.innerHTML = `
-      <div class="text-xs text-red-400 text-center p-2">
-        <div class="text-xl mb-1">❌</div>
-        上傳失敗
-      </div>`;
-    setTimeout(() => card.remove(), 2000);
-  }
-}
-
-function removePhoto(idx, btn) {
-  uploadedUrls.splice(idx, 1);
-  btn.closest("div.relative").remove();
-  // 重新標記主圖
-  refreshMainBadge();
-}
-
-function refreshMainBadge() {
-  const cards = document.querySelectorAll("#previewArea .relative");
-  cards.forEach((card, i) => {
-    const existing = card.querySelector(".main-badge");
-    if (existing) existing.remove();
-    if (i === 0 && uploadedUrls.length > 0) {
-      const badge = document.createElement("span");
-      badge.className = "main-badge absolute top-1 left-1 bg-black text-white text-xs px-1.5 py-0.5 rounded-md";
-      badge.textContent = "主圖";
-      card.appendChild(badge);
-    }
+function renderMainBtns() {
+  const mains = [...new Set(allProductData.map(p => p.mainCategory).filter(Boolean))].sort();
+  const el = document.getElementById("mainCategoryBtns");
+  el.innerHTML = "";
+  if (!mains.length) { el.innerHTML = '<span class="text-xs text-gray-300">尚無大分類</span>'; return; }
+  mains.forEach(m => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = m;
+    btn.className = BTN_NORMAL;
+    btn.onclick = () => {
+      selectMainBtn(btn, m);
+    };
+    el.appendChild(btn);
   });
 }
 
-// ── 送出商品 ──────────────────────────────────────────
-async function submitProduct() {
-  const tname = document.getElementById("tname").value.trim();
-  const tprice = document.getElementById("tprice").value.trim();
+function selectMainBtn(btn, value) {
+  document.getElementById("mainCategory").value = value;
+  document.getElementById("mainCategoryBtns").querySelectorAll("button")
+    .forEach(b => b.className = BTN_NORMAL);
+  btn.className = BTN_ACTIVE;
+  // 重置小分類
+  document.getElementById("category").value = "";
+  renderSubBtns(value);
+}
 
+function renderSubBtns(selectedMain) {
+  const subs = [...new Set(
+    allProductData
+      .filter(p => !selectedMain || p.mainCategory === selectedMain)
+      .map(p => p.category).filter(Boolean)
+  )].sort();
+  const el = document.getElementById("categoryBtns");
+  el.innerHTML = "";
+  if (!subs.length) {
+    el.innerHTML = '<span class="text-xs text-gray-300">' +
+      (selectedMain ? "此大分類尚無小分類" : "請先選大分類") + '</span>';
+    return;
+  }
+  subs.forEach(s => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = s;
+    btn.className = BTN_NORMAL;
+    btn.onclick = () => {
+      document.getElementById("category").value = s;
+      el.querySelectorAll("button").forEach(b => b.className = BTN_NORMAL);
+      btn.className = BTN_ACTIVE;
+    };
+    el.appendChild(btn);
+  });
+}
+
+// ── 主圖 ─────────────────────────────────────────────
+async function uploadMainImg(file) {
+  document.getElementById("mainImgPlaceholder").classList.add("hidden");
+  document.getElementById("mainImgLoading").classList.remove("hidden");
+  try {
+    mainImgUrl = await uploadToCloudinary(file);
+    document.getElementById("mainImgPreview").src = mainImgUrl;
+    document.getElementById("mainImgPreview").classList.remove("hidden");
+    document.getElementById("mainImgRemove").classList.remove("hidden");
+  } catch {
+    alert("主圖上傳失敗，請重試");
+    document.getElementById("mainImgPlaceholder").classList.remove("hidden");
+  } finally {
+    document.getElementById("mainImgLoading").classList.add("hidden");
+  }
+}
+
+function removeMainImg(e) {
+  e.stopPropagation();
+  mainImgUrl = "";
+  document.getElementById("mainImgPreview").classList.add("hidden");
+  document.getElementById("mainImgRemove").classList.add("hidden");
+  document.getElementById("mainImgPlaceholder").classList.remove("hidden");
+}
+
+// ── 詳細圖 ───────────────────────────────────────────
+function addDetailSlot() {
+  const idx = detailUrls.length;
+  detailUrls.push("");
+  const container = document.getElementById("detailSlots");
+
+  const slot = document.createElement("div");
+  slot.id = `slot-${idx}`;
+  slot.className = "relative aspect-square rounded-xl overflow-hidden bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:border-gray-400 transition";
+  slot.innerHTML = `
+    <div class="slot-ph flex flex-col items-center text-gray-400 pointer-events-none">
+      <span class="text-xl">📷</span>
+      <span class="text-xs mt-0.5">圖${idx + 1}</span>
+    </div>
+    <img class="slot-img hidden absolute inset-0 w-full h-full object-cover">
+    <div class="slot-load hidden absolute inset-0 bg-gray-50 flex items-center justify-center text-xs text-gray-400">⏳</div>
+    <button class="slot-del hidden absolute top-1 right-1 bg-black bg-opacity-60 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs z-10">✕</button>`;
+
+  slot.querySelector(".slot-del").onclick = (e) => { e.stopPropagation(); clearSlot(idx, slot); };
+  slot.onclick = () => pickFile(idx, slot);
+  container.appendChild(slot);
+}
+
+function pickFile(idx, slot) {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    slot.querySelector(".slot-ph").classList.add("hidden");
+    slot.querySelector(".slot-load").classList.remove("hidden");
+    try {
+      const url = await uploadToCloudinary(file);
+      detailUrls[idx] = url;
+      slot.querySelector(".slot-img").src = url;
+      slot.querySelector(".slot-img").classList.remove("hidden");
+      slot.querySelector(".slot-del").classList.remove("hidden");
+      slot.onclick = null; // 有圖後鎖定，不再選檔（要換要先刪）
+      slot.classList.remove("cursor-pointer", "hover:border-gray-400");
+    } catch {
+      alert(`圖 ${idx + 1} 上傳失敗`);
+      slot.querySelector(".slot-ph").classList.remove("hidden");
+    } finally {
+      slot.querySelector(".slot-load").classList.add("hidden");
+    }
+  };
+  input.click();
+}
+
+function clearSlot(idx, slot) {
+  detailUrls[idx] = "";
+  slot.querySelector(".slot-img").classList.add("hidden");
+  slot.querySelector(".slot-del").classList.add("hidden");
+  slot.querySelector(".slot-ph").classList.remove("hidden");
+  slot.classList.add("cursor-pointer", "hover:border-gray-400");
+  slot.onclick = () => pickFile(idx, slot);
+}
+
+// ── Cloudinary ────────────────────────────────────────
+async function uploadToCloudinary(file) {
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("upload_preset", UPLOAD_PRESET);
+  const res  = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: fd });
+  const data = await res.json();
+  if (!data.secure_url) throw new Error("上傳失敗");
+  return data.secure_url;
+}
+
+// ── 送出 ──────────────────────────────────────────────
+async function submitProduct() {
+  const tname  = document.getElementById("tname").value.trim();
+  const tprice = document.getElementById("tprice").value.trim();
   if (!tname)  { alert("請填寫商品名稱"); return; }
   if (!tprice) { alert("請填寫原價");     return; }
 
@@ -326,6 +372,12 @@ async function submitProduct() {
   btn.textContent = "送出中...";
 
   try {
+    const validDetails = detailUrls.filter(Boolean);
+    // images：主圖放第一張，再接詳細圖（排除重複）
+    const allImages = mainImgUrl
+      ? [mainImgUrl, ...validDetails.filter(u => u !== mainImgUrl)]
+      : validDetails;
+
     const payload = {
       tname,
       jprice:       Number(tprice),
@@ -334,25 +386,18 @@ async function submitProduct() {
       category:     document.getElementById("category").value.trim(),
       description:  document.getElementById("description").value.trim(),
       weight:       Number(document.getElementById("weight").value) || 0,
-      image:        uploadedUrls[0] || "",          // 首頁主圖（第一張）
-      images:       uploadedUrls.join(","),          // 詳細頁全部照片（含第一張）
+      image:        mainImgUrl,
+      images:       allImages.join(","),
       isView:       document.getElementById("isView").checked,
       isNew:        document.getElementById("isNew").checked,
       isHot:        document.getElementById("isHot").checked,
       isSale:       document.getElementById("isSale").checked,
     };
 
-    const res  = await fetch(ADD_API, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    const res  = await fetch(ADD_API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     const data = await res.json();
-
     if (!data.success) throw new Error(data.error || "新增失敗");
-
     document.getElementById("successScreen").classList.remove("hidden");
-
   } catch (err) {
     alert("新增失敗：" + err.message);
     btn.disabled = false;
@@ -360,26 +405,32 @@ async function submitProduct() {
   }
 }
 
-// ── 重置表單 ──────────────────────────────────────────
+// ── 重置 ──────────────────────────────────────────────
 function resetForm() {
   document.getElementById("successScreen").classList.add("hidden");
-  document.getElementById("tname").value = "";
-  document.getElementById("tprice").value = "";
-  document.getElementById("sprice").value = "";
-  document.getElementById("weight").value = "";
-  document.getElementById("mainCategory").value = "";
-  document.getElementById("category").value = "";
-  document.getElementById("description").value = "";
+  ["tname","tprice","sprice","weight","mainCategory","category","description"]
+    .forEach(id => document.getElementById(id).value = "");
   document.getElementById("isView").checked = true;
-  document.getElementById("isNew").checked  = false;
-  document.getElementById("isHot").checked  = false;
-  document.getElementById("isSale").checked = false;
-  document.getElementById("previewArea").innerHTML = "";
-  uploadedUrls = [];
+  ["isNew","isHot","isSale"].forEach(id => document.getElementById(id).checked = false);
+
+  mainImgUrl = "";
+  document.getElementById("mainImgPreview").classList.add("hidden");
+  document.getElementById("mainImgRemove").classList.add("hidden");
+  document.getElementById("mainImgPlaceholder").classList.remove("hidden");
+
+  detailUrls = [];
+  document.getElementById("detailSlots").innerHTML = "";
+  addDetailSlot();
+
+  ["mainCategoryBtns","categoryBtns"].forEach(id =>
+    document.getElementById(id).querySelectorAll("button")
+      .forEach(b => b.className = BTN_NORMAL)
+  );
+  renderSubBtns("");
+
   document.getElementById("submitBtn").disabled = false;
   document.getElementById("submitBtn").textContent = "＋ 新增商品";
 }
 </script>
-
 </body>
 </html>
