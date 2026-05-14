@@ -17,6 +17,7 @@ export function renderCard(p) {
         ${badges ? `<div class="absolute top-2 left-2 flex gap-1">${badges}</div>` : ""}
       </div>
       <div class="p-3">
+        ${p.category ? `<div class="text-xs text-gray-400 mb-1">${p.category}</div>` : ""}
         <div class="text-sm font-semibold leading-snug line-clamp-2 text-gray-800">${p.name}</div>
         <div class="mt-1.5 flex items-baseline gap-1.5">
           <span class="text-red-500 font-bold">${formatPrice(p.price)}</span>
