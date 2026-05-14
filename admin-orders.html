@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>後台 · 訂單管理</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+<!-- Header -->
+<div class="sticky top-0 z-50 bg-white border-b shadow-sm">
+  <div class="flex justify-between items-center px-4 py-3 max-w-4xl mx-auto">
+    <div class="flex items-center gap-3">
+      <h1 class="font-bold text-base">📋 訂單管理</h1>
+      <span id="totalBadge" class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full"></span>
+    </div>
+    <div class="flex gap-2">
+      <a href="admin.html" class="text-xs text-gray-400 hover:text-black px-2 py-1">← 新增商品</a>
+      <a href="index.html" class="text-xs text-gray-400 hover:text-black px-2 py-1">前往前台</a>
+    </div>
+  </div>
+</div>
+
+<div class="px-4 py-4 max-w-4xl mx-auto">
+
+  <!-- 狀態篩選 -->
+  <div class="overflow-x-auto mb-4 -mx-4 px-4">
+    <div id="filterBtns" class="flex gap-2 w-max">
+      <!-- JS 產生 -->
+    </div>
+  </div>
+
+  <!-- 搜尋 -->
+  <div class="relative mb-4">
+    <input id="searchInput" type="text" placeholder="搜尋訂單編號、姓名、電話…"
+      class="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black pr-10">
+    <span class="absolute right-3 top-2.5 text-gray-400">🔍</span>
+  </div>
+
+  <!-- 訂單列表 -->
+  <div id="orderList" class="space-y-3"></div>
+
+</div>
+
+<!-- 訂單詳情 Modal -->
+<div id="modal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-40 flex items-end sm:items-center justify-center p-0 sm:p-4">
+  <div class="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto">
+
+    <!-- Modal Header -->
+    <div class="sticky top-0 bg-white flex justify-between items-center px-4 py-3 border-b rounded-t-2xl">
+      <div>
+        <div class="font-bold text-base" id="modalOrderId"></div>
+        <div class="text-xs text-gray-400" id="modalDate"></div>
+      </div>
+      <button onclick="closeModal()" class="text-gray-400 hover:text-black text-xl w-8 h-8 flex items-center justify-center">✕</button>
+    </div>
+
+    <div class="px-4 py-4 space-y-4">
+
+      <!-- 狀態更新 -->
+      <div>
+        <div class="text-xs text-gray-500 mb-2 font-medium">訂單狀態</div>
+        <div id="statusBtns" class="flex flex-wrap gap-2"></div>
+      </div>
+
+      <!-- 客戶資料 -->
+      <div class="bg-gray-50 rounded-xl p-3 space-y-2">
+        <div class="text-xs font-medium text-gray-500 mb-1">客戶資料</div>
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-500">姓名</span>
+          <span class="font-medium" id="modalName"></span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-500">電話</span>
+          <a id="modalPhone" href="" class="font-medium text-blue-500"></a>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-500">Email</span>
+          <a id="modalEmail" href="" class="font-medium text-blue-500 text-xs break-all"></a>
+        </div>
+        <div class="text-sm">
+          <span class="text-gray-500">地址　</span>
+          <span id="modalAddress" class="font-medium"></span>
+        </div>
+        <div id="modalNoteWrap" class="text-sm hidden">
+          <span class="text-gray-500">備註　</span>
+          <span id="modalNote" class="font-medium text-orange-500"></span>
+        </div>
+      </div>
+
+      <!-- 訂單明細 -->
+      <div>
+        <div class="text-xs font-medium text-gray-500 mb-2">訂單明細</div>
+        <div id="modalItems" class="space-y-1.5"></div>
+        <div class="flex justify-between items-center mt-3 pt-3 border-t font-bold">
+          <span>合計</span>
+          <span class="text-red-500 text-lg" id="modalTotal"></span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const ORDERS_API = "https://shop-project-azure.vercel.app/api/orders-list";
+const UPDATE_API = "https://shop-project-azure.vercel.app/api/order-update";
+
+const STATUS_LIST = ["全部", "待處理", "處理中", "已出貨", "已完成", "已取消"];
+const STATUS_STYLE = {
+  "待處理": "bg-yellow-100 text-yellow-700",
+  "處理中": "bg-blue-100 text-blue-600",
+  "已出貨": "bg-purple-100 text-purple-600",
+  "已完成": "bg-green-100 text-green-600",
+  "已取消": "bg-gray-100 text-gray-500",
+};
+
+let allOrders    = [];
+let activeFilter = "全部";
+let currentOrder = null;
+
+const BTN_NORMAL = "shrink-0 px-3 py-1.5 rounded-full text-xs border transition bg-white text-gray-600 border-gray-300 hover:border-black";
+const BTN_ACTIVE = "shrink-0 px-3 py-1.5 rounded-full text-xs border transition bg-black text-white border-black";
+
+// ── 初始化 ───────────────────────────────────────────
+async function init() {
+  document.getElementById("orderList").innerHTML =
+    `<div class="text-center text-gray-400 py-10 text-sm">載入中...</div>`;
+
+  try {
+    const res = await fetch(ORDERS_API);
+    allOrders  = await res.json();
+    renderFilterBtns();
+    renderOrders();
+  } catch (err) {
+    document.getElementById("orderList").innerHTML =
+      `<div class="text-center text-red-400 py-10 text-sm">載入失敗：${err.message}</div>`;
+  }
+}
+
+// ── 篩選按鈕 ─────────────────────────────────────────
+function renderFilterBtns() {
+  const el = document.getElementById("filterBtns");
+  el.innerHTML = "";
+  STATUS_LIST.forEach(s => {
+    const count = s === "全部" ? allOrders.length
+      : allOrders.filter(o => o.status === s).length;
+    const btn = document.createElement("button");
+    btn.className = s === activeFilter ? BTN_ACTIVE : BTN_NORMAL;
+    btn.innerHTML = `${s} <span class="opacity-60">${count}</span>`;
+    btn.onclick = () => {
+      activeFilter = s;
+      renderFilterBtns();
+      renderOrders();
+    };
+    el.appendChild(btn);
+  });
+}
+
+// ── 訂單列表 ─────────────────────────────────────────
+function renderOrders() {
+  const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
+
+  let list = allOrders;
+  if (activeFilter !== "全部")
+    list = list.filter(o => o.status === activeFilter);
+  if (keyword)
+    list = list.filter(o =>
+      o.orderId.toLowerCase().includes(keyword) ||
+      o.name.toLowerCase().includes(keyword) ||
+      o.phone.includes(keyword)
+    );
+
+  document.getElementById("totalBadge").textContent = `共 ${allOrders.length} 筆`;
+
+  if (!list.length) {
+    document.getElementById("orderList").innerHTML =
+      `<div class="text-center text-gray-400 py-10 text-sm">沒有符合的訂單</div>`;
+    return;
+  }
+
+  document.getElementById("orderList").innerHTML = list.map(o => {
+    const style = STATUS_STYLE[o.status] || "bg-gray-100 text-gray-500";
+    const date  = formatDate(o.createdAt);
+    const firstItem = o.items?.split("\n")[0] || "";
+
+    return `
+      <div onclick="openModal('${o.orderId}')"
+        class="bg-white rounded-xl border px-4 py-3.5 cursor-pointer hover:shadow-md active:bg-gray-50 transition">
+        <div class="flex justify-between items-start">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="font-bold text-sm tracking-wide">${o.orderId}</span>
+              <span class="text-xs px-2 py-0.5 rounded-full font-medium ${style}">${o.status}</span>
+            </div>
+            <div class="text-sm text-gray-600">${o.name} · ${o.phone}</div>
+            <div class="text-xs text-gray-400 mt-0.5 truncate">${firstItem}</div>
+          </div>
+          <div class="text-right shrink-0 ml-3">
+            <div class="font-bold text-red-500 text-sm">NT$ ${o.total.toLocaleString()}</div>
+            <div class="text-xs text-gray-400 mt-0.5">${date}</div>
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+// ── Modal ─────────────────────────────────────────────
+function openModal(orderId) {
+  currentOrder = allOrders.find(o => o.orderId === orderId);
+  if (!currentOrder) return;
+
+  const o    = currentOrder;
+  const date = formatDate(o.createdAt);
+
+  document.getElementById("modalOrderId").textContent = o.orderId;
+  document.getElementById("modalDate").textContent    = date;
+  document.getElementById("modalName").textContent    = o.name;
+  document.getElementById("modalPhone").textContent   = o.phone;
+  document.getElementById("modalPhone").href          = `tel:${o.phone}`;
+  document.getElementById("modalEmail").textContent   = o.email;
+  document.getElementById("modalEmail").href          = `mailto:${o.email}`;
+  document.getElementById("modalAddress").textContent = o.address;
+  document.getElementById("modalTotal").textContent   = `NT$ ${o.total.toLocaleString()}`;
+
+  // 備註
+  if (o.note) {
+    document.getElementById("modalNote").textContent = o.note;
+    document.getElementById("modalNoteWrap").classList.remove("hidden");
+  } else {
+    document.getElementById("modalNoteWrap").classList.add("hidden");
+  }
+
+  // 商品明細
+  const items = (o.items || "").split("\n").filter(Boolean);
+  document.getElementById("modalItems").innerHTML = items.map(line => `
+    <div class="flex justify-between text-sm py-1.5 border-b border-gray-50 last:border-0">
+      <span class="text-gray-700">${line.split("（")[0].trim()}</span>
+      <span class="text-gray-500 shrink-0 ml-2">${line.match(/（(.+)）/)?.[1] || ""}</span>
+    </div>`).join("");
+
+  // 狀態按鈕
+  const statusEl = document.getElementById("statusBtns");
+  statusEl.innerHTML = "";
+  ["待處理", "處理中", "已出貨", "已完成", "已取消"].forEach(s => {
+    const btn = document.createElement("button");
+    const isActive = s === o.status;
+    btn.textContent = s;
+    btn.className = isActive
+      ? `px-3 py-1.5 rounded-full text-xs font-medium border transition ${STATUS_STYLE[s]} border-transparent`
+      : "px-3 py-1.5 rounded-full text-xs border transition bg-white text-gray-500 border-gray-300 hover:border-gray-500";
+    if (!isActive) {
+      btn.onclick = () => updateStatus(s);
+    }
+    statusEl.appendChild(btn);
+  });
+
+  document.getElementById("modal").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
+function closeModal() {
+  document.getElementById("modal").classList.add("hidden");
+  document.body.style.overflow = "";
+  currentOrder = null;
+}
+
+// 點背景關閉
+document.getElementById("modal").addEventListener("click", (e) => {
+  if (e.target === document.getElementById("modal")) closeModal();
+});
+
+// ── 更新狀態 ─────────────────────────────────────────
+async function updateStatus(newStatus) {
+  if (!currentOrder) return;
+
+  const btns = document.getElementById("statusBtns").querySelectorAll("button");
+  btns.forEach(b => b.disabled = true);
+
+  try {
+    const res  = await fetch(UPDATE_API, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pageId: currentOrder.pageId, status: newStatus }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || "更新失敗");
+
+    // 本地更新
+    currentOrder.status = newStatus;
+    allOrders.find(o => o.orderId === currentOrder.orderId).status = newStatus;
+
+    closeModal();
+    renderFilterBtns();
+    renderOrders();
+
+  } catch (err) {
+    alert("更新失敗：" + err.message);
+    btns.forEach(b => b.disabled = false);
+  }
+}
+
+// ── 搜尋 ─────────────────────────────────────────────
+document.getElementById("searchInput").addEventListener("input", renderOrders);
+
+// ── 工具 ─────────────────────────────────────────────
+function formatDate(iso) {
+  const d = new Date(iso);
+  return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+}
+
+init();
+</script>
+</body>
+</html>
