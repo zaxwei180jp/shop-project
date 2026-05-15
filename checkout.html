@@ -46,8 +46,16 @@
     </button>
     <div id="summaryContent" class="border-t px-4 pb-4 hidden">
       <div id="orderItems" class="divide-y text-sm"></div>
-      <div class="flex justify-between items-center mt-3 font-bold">
-        <span>合計</span>
+      <div class="flex justify-between items-center mt-2 text-sm text-gray-500">
+        <span>商品小計</span>
+        <span id="orderSubtotal"></span>
+      </div>
+      <div class="flex justify-between items-center mt-1 text-sm" id="orderShippingRow">
+        <span>運費</span>
+        <span id="orderShipping"></span>
+      </div>
+      <div class="flex justify-between items-center mt-3 pt-2 border-t font-bold">
+        <span>總計</span>
         <span id="orderTotal" class="text-red-500 text-base"></span>
       </div>
     </div>
@@ -134,8 +142,13 @@ import { formatPrice } from "./js/utils.js";
 const PRODUCTS_API = "https://shop-project-azure.vercel.app/api/products";
 const ORDERS_API   = "https://shop-project-azure.vercel.app/api/orders";
 
-let orderItems = [];
-let orderTotal = 0;
+const SHIPPING    = 150;
+const FREE_WEIGHT = 10;
+
+let orderItems  = [];
+let orderTotal  = 0;
+let orderSubtotal = 0;
+let orderShipping = 0;
 
 // ── 初始化：讀購物車 + 抓商品資料 ──────────────────────
 async function init() {
@@ -148,16 +161,23 @@ async function init() {
   const res = await fetch(PRODUCTS_API);
   const products = await res.json();
 
-  orderItems = [];
-  orderTotal = 0;
+  orderItems    = [];
+  orderSubtotal = 0;
+  let totalWeight = 0;
 
   Object.entries(cart).forEach(([id, qty]) => {
     const p = products.find(x => x.id === id);
     if (!p) return;
     const sub = p.price * qty;
-    orderTotal += sub;
+    orderSubtotal += sub;
+    totalWeight   += (p.weight || 0) * qty;
     orderItems.push({ name: p.name, qty, price: formatPrice(p.price), sub });
   });
+
+  // 運費
+  const hasFreeShipping = totalWeight >= FREE_WEIGHT;
+  orderShipping = hasFreeShipping ? 0 : SHIPPING;
+  orderTotal    = orderSubtotal + orderShipping;
 
   // 訂單明細
   document.getElementById("orderItems").innerHTML = orderItems.map(i => `
@@ -166,6 +186,19 @@ async function init() {
       <span class="font-medium">${formatPrice(i.sub)}</span>
     </div>
   `).join("");
+
+  document.getElementById("orderSubtotal").textContent = formatPrice(orderSubtotal);
+
+  const shippingEl  = document.getElementById("orderShipping");
+  const shippingRow = document.getElementById("orderShippingRow");
+  if (hasFreeShipping) {
+    shippingEl.textContent  = "免運";
+    shippingEl.className    = "text-green-600 font-medium";
+    shippingRow.className   = "flex justify-between items-center mt-1 text-sm text-green-600";
+  } else {
+    shippingEl.textContent = formatPrice(SHIPPING);
+    shippingEl.className   = "";
+  }
 
   document.getElementById("orderTotal").textContent = formatPrice(orderTotal);
 }
