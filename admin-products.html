@@ -185,9 +185,9 @@ function openEdit(id) {
   editingProduct = allProducts.find(x => x.id === id);
   if (!editingProduct) return;
   const p = editingProduct;
-  document.getElementById("editName").value     = p.name        || "";
-  document.getElementById("editJprice").value   = "";
-  document.getElementById("editJsprice").value  = "";
+  document.getElementById("editName").value     = p.name    || "";
+  document.getElementById("editJprice").value   = p.jprice  || "";
+  document.getElementById("editJsprice").value  = p.jsprice || "";
   document.getElementById("editWeight").value   = p.weight      || "";
   document.getElementById("editMainCat").value  = p.mainCategory|| "";
   document.getElementById("editCat").value      = p.category    || "";
