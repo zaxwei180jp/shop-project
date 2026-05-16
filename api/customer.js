@@ -26,7 +26,7 @@ export default async function handler(req, res) {
       if (email) {
         filter = { property: "email", email: { equals: email.toLowerCase().trim() } };
       } else if (customerId) {
-        filter = { property: "customerId", rich_text: { equals: customerId.trim() } };
+        filter = { property: "customerId", title: { equals: customerId.trim() } };
       } else {
         return res.status(400).json({ error: "請提供 email 或 customerId" });
       }
@@ -91,7 +91,7 @@ export default async function handler(req, res) {
           method: "POST",
           headers,
           body: JSON.stringify({
-            sorts: [{ property: "customerId", direction: "descending" }],
+            sorts: [{ timestamp: "created_time", direction: "descending" }],
             page_size: 100,
           }),
         }
