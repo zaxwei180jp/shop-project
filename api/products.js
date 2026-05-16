@@ -90,7 +90,8 @@ export default async function handler(req, res) {
         isNew,
         isView,
 
-        weight:  getNumber(props.weight),            // ⭐ 重量
+        weight:    getNumber(props.weight),          // ⭐ 重量
+        idnumber:  getNumber(props.idnumber),         // ⭐ 商品編號
         sort:    getNumber(props.sort),               // ⭐ 排序
         jprice:  jprice,                                // ⭐ 日幣原價
         jsprice: jsprice,                               // ⭐ 日幣特價

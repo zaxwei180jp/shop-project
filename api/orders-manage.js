@@ -36,16 +36,12 @@ export default async function handler(req, res) {
         const props = page.properties;
         return {
           pageId:    page.id,
-          orderId:   getText(props.orderId),
-          name:      getText(props.name),
-          phone:     props.phone?.phone_number || "",
-          email:     props.email?.email || "",
-          address:   getText(props.address),
-          note:      getText(props.note),
-          items:     getText(props.items),
-          total:     props.total?.number || 0,
-          status:    props.status?.select?.name || "待處理",
-          createdAt: page.created_time,
+          orderId:    getText(props.orderId),
+          customerId: getText(props.customerId),
+          items:      getText(props.items),
+          total:      props.total?.number || 0,
+          status:     props.status?.select?.name || "待處理",
+          createdAt:  page.created_time,
         };
       });
       return res.status(200).json(orders);
@@ -86,7 +82,7 @@ export default async function handler(req, res) {
 
     // ── POST：建立訂單 ────────────────────────────────
     if (req.method === "POST") {
-      const { orderId, name, phone, email, address, note, items, total } = req.body;
+      const { orderId, customerId, items, total } = req.body;
       const itemsText = items.map(i => `${i.name} × ${i.qty}（${i.price}）`).join("\n");
       const response = await fetch("https://api.notion.com/v1/pages", {
         method: "POST",
@@ -98,15 +94,11 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           parent: { database_id: ORDERS_DATABASE_ID },
           properties: {
-            orderId:  { title:      [{ text: { content: orderId } }] },
-            name:     { rich_text:  [{ text: { content: name } }] },
-            phone:    { phone_number: phone },
-            email:    { email },
-            address:  { rich_text:  [{ text: { content: address } }] },
-            note:     { rich_text:  [{ text: { content: note || "" } }] },
-            items:    { rich_text:  [{ text: { content: itemsText } }] },
-            total:    { number: total },
-            status:   { select: { name: "待處理" } },
+            orderId:    { title:     [{ text: { content: orderId } }] },
+            customerId: { rich_text: [{ text: { content: customerId || "" } }] },
+            items:      { rich_text: [{ text: { content: itemsText } }] },
+            total:      { number: total },
+            status:     { select: { name: "待處理" } },
           },
         }),
       });
@@ -135,6 +127,26 @@ export default async function handler(req, res) {
       if (!response.ok) {
         const err = await response.json();
         return res.status(500).json({ error: err.message || "更新失敗" });
+      }
+      return res.status(200).json({ success: true });
+    }
+
+    // ── DELETE：刪除訂單（archive）────────────────────
+    if (req.method === "DELETE") {
+      const { pageId } = req.body;
+      if (!pageId) return res.status(400).json({ error: "缺少 pageId" });
+      const response = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${NOTION_TOKEN}`,
+          "Notion-Version": "2022-06-28",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ archived: true }),
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        return res.status(500).json({ error: err.message || "刪除失敗" });
       }
       return res.status(200).json({ success: true });
     }
