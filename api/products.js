@@ -100,8 +100,10 @@ export default async function handler(req, res) {
       };
     });
 
-    // ⭐ 只回傳 isView = true 的商品（下架商品不顯示）
-    const visible = products.filter(p => p.isView);
+    // ⭐ showAll=1 時回傳全部（後台用），否則只回傳上架商品
+    const visible = req.query.showAll === "1"
+      ? products
+      : products.filter(p => p.isView);
 
     res.status(200).json(visible);
 
