@@ -11,10 +11,12 @@ async function init() {
     const data = await res.json();
 
     // 與首頁相同排序
-    data.sort((a, b) =>
-      new Date(b.update || b.createdTime) -
-      new Date(a.update || a.createdTime)
-    );
+    data.sort((a, b) => {
+      const sa = a.sort || 9999;
+      const sb = b.sort || 9999;
+      if (sa !== sb) return sa - sb;
+      return new Date(b.update || b.createdTime) - new Date(a.update || a.createdTime);
+    });
 
     const idx = data.findIndex(x => x.id === id);
     const p = data[idx];
