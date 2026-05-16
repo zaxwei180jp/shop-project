@@ -128,6 +128,15 @@ async function init() {
   try {
     const res = await fetch(PRODUCTS_API + "?showAll=1");
     allProducts = await res.json();
+
+    // ⭐ 與首頁相同排序：sort 小的排前面，沒有 sort 排最後，再依時間
+    allProducts.sort((a, b) => {
+      const sa = a.sort || 9999;
+      const sb = b.sort || 9999;
+      if (sa !== sb) return sa - sb;
+      return new Date(b.update || b.createdTime) - new Date(a.update || a.createdTime);
+    });
+
     renderCatBtns();
     renderList();
   } catch (err) {
