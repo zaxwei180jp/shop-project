@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>商品管理</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+<div class="px-4 py-4 max-w-4xl mx-auto">
+
+  <!-- 搜尋 + 篩選 -->
+  <div class="flex gap-2 mb-4">
+    <input id="searchInput" type="text" placeholder="搜尋商品名稱…"
+      class="flex-1 border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+    <select id="filterStatus"
+      class="border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black bg-white">
+      <option value="all">全部</option>
+      <option value="on">上架中</option>
+      <option value="off">已下架</option>
+    </select>
+  </div>
+
+  <div id="productCount" class="text-xs text-gray-400 mb-3"></div>
+  <div id="productList" class="space-y-2"></div>
+</div>
+
+<!-- 編輯 Modal -->
+<div id="editModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-40 flex items-end sm:items-center justify-center p-0 sm:p-4">
+  <div class="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto">
+    <div class="sticky top-0 bg-white flex justify-between items-center px-4 py-3 border-b rounded-t-2xl">
+      <h2 class="font-bold text-sm">編輯商品</h2>
+      <button onclick="closeEdit()" class="text-gray-400 hover:text-black text-xl w-8 h-8 flex items-center justify-center">✕</button>
+    </div>
+    <div class="px-4 py-4 space-y-3">
+      <div>
+        <label class="text-xs text-gray-500 mb-1 block">商品名稱</label>
+        <input id="editName" type="text" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-gray-500 mb-1 block">日幣原價</label>
+          <input id="editJprice" type="number" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+        </div>
+        <div>
+          <label class="text-xs text-gray-500 mb-1 block">日幣特價</label>
+          <input id="editJsprice" type="number" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-gray-500 mb-1 block">大分類</label>
+          <input id="editMainCat" type="text" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+        </div>
+        <div>
+          <label class="text-xs text-gray-500 mb-1 block">小分類</label>
+          <input id="editCat" type="text" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+        </div>
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 mb-1 block">重量（kg）</label>
+        <input id="editWeight" type="number" step="0.01" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 mb-1 block">商品描述</label>
+        <textarea id="editDesc" rows="5"
+          class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black resize-none"></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <label class="flex items-center gap-2 border rounded-xl px-3 py-2.5 cursor-pointer hover:bg-gray-50">
+          <input id="editIsView" type="checkbox" class="w-4 h-4 accent-black">
+          <span class="text-sm">上架</span>
+        </label>
+        <label class="flex items-center gap-2 border rounded-xl px-3 py-2.5 cursor-pointer hover:bg-gray-50">
+          <input id="editIsNew" type="checkbox" class="w-4 h-4 accent-black">
+          <span class="text-sm">🆕 新品</span>
+        </label>
+        <label class="flex items-center gap-2 border rounded-xl px-3 py-2.5 cursor-pointer hover:bg-gray-50">
+          <input id="editIsHot" type="checkbox" class="w-4 h-4 accent-black">
+          <span class="text-sm">🔥 熱賣</span>
+        </label>
+        <label class="flex items-center gap-2 border rounded-xl px-3 py-2.5 cursor-pointer hover:bg-gray-50">
+          <input id="editIsSale" type="checkbox" class="w-4 h-4 accent-black">
+          <span class="text-sm">🈹 特價</span>
+        </label>
+      </div>
+      <button onclick="saveEdit()"
+        class="w-full py-3 bg-black text-white font-medium rounded-xl active:bg-gray-800 transition">
+        儲存變更
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PRODUCTS_API = "https://shop-project-azure.vercel.app/api/products";
+const UPDATE_API   = "https://shop-project-azure.vercel.app/api/product-update";
+
+let allProducts  = [];
+let editingProduct = null;
+
+// ── 初始化 ───────────────────────────────────────────
+async function init() {
+  document.getElementById("productList").innerHTML =
+    `<div class="text-center text-gray-400 py-10 text-sm">載入中...</div>`;
+  try {
+    const res = await fetch(PRODUCTS_API + "?showAll=1");
+    allProducts = await res.json();
+    renderList();
+  } catch (err) {
+    document.getElementById("productList").innerHTML =
+      `<div class="text-center text-red-400 py-6 text-sm">載入失敗</div>`;
+  }
+}
+
+// ── 列表渲染 ─────────────────────────────────────────
+function renderList() {
+  const kw     = document.getElementById("searchInput").value.trim().toLowerCase();
+  const status = document.getElementById("filterStatus").value;
+
+  let list = allProducts;
+  if (kw)          list = list.filter(p => (p.name||"").toLowerCase().includes(kw));
+  if (status==="on")  list = list.filter(p => p.isView);
+  if (status==="off") list = list.filter(p => !p.isView);
+
+  document.getElementById("productCount").textContent = `共 ${list.length} 件`;
+
+  if (!list.length) {
+    document.getElementById("productList").innerHTML =
+      `<div class="text-center text-gray-400 py-10 text-sm">沒有符合的商品</div>`;
+    return;
+  }
+
+  document.getElementById("productList").innerHTML = list.map(p => {
+    const img = p.image || p.images?.[0] || "";
+    return `
+      <div class="bg-white rounded-xl border px-3 py-3 flex items-center gap-3">
+        ${img ? `<img src="${img}" class="w-14 h-14 object-cover rounded-lg shrink-0">` : `<div class="w-14 h-14 bg-gray-100 rounded-lg shrink-0 flex items-center justify-center text-gray-300 text-xl">📷</div>`}
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-semibold truncate">${p.name}</div>
+          <div class="text-xs text-gray-400 mt-0.5">${[p.mainCategory,p.category].filter(Boolean).join(" · ")}</div>
+          <div class="text-xs text-red-500 mt-0.5 font-medium">NT$ ${(p.price||0).toLocaleString()}</div>
+        </div>
+        <div class="flex flex-col items-end gap-2 shrink-0">
+          <span class="text-xs px-2 py-0.5 rounded-full font-medium ${p.isView ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400"}">
+            ${p.isView ? "上架" : "下架"}
+          </span>
+          <div class="flex gap-1.5">
+            <button onclick="toggleView('${p.id}', ${!p.isView})"
+              class="text-xs px-2 py-1 border rounded-lg hover:bg-gray-50 active:bg-gray-100">
+              ${p.isView ? "下架" : "上架"}
+            </button>
+            <button onclick="openEdit('${p.id}')"
+              class="text-xs px-2 py-1 border rounded-lg hover:bg-gray-50 active:bg-gray-100">
+              編輯
+            </button>
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+// ── 快速上下架 ────────────────────────────────────────
+async function toggleView(id, newVal) {
+  const p = allProducts.find(x => x.id === id);
+  if (!p) return;
+  try {
+    const res  = await fetch(UPDATE_API, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pageId: id, isView: newVal, update: true }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    p.isView = newVal;
+    renderList();
+  } catch (err) {
+    alert("更新失敗：" + err.message);
+  }
+}
+
+// ── 編輯 Modal ────────────────────────────────────────
+function openEdit(id) {
+  editingProduct = allProducts.find(x => x.id === id);
+  if (!editingProduct) return;
+  const p = editingProduct;
+  document.getElementById("editName").value     = p.name        || "";
+  document.getElementById("editJprice").value   = "";
+  document.getElementById("editJsprice").value  = "";
+  document.getElementById("editWeight").value   = p.weight      || "";
+  document.getElementById("editMainCat").value  = p.mainCategory|| "";
+  document.getElementById("editCat").value      = p.category    || "";
+  document.getElementById("editDesc").value     = p.description || "";
+  document.getElementById("editIsView").checked = p.isView;
+  document.getElementById("editIsNew").checked  = p.isNew;
+  document.getElementById("editIsHot").checked  = p.isHot;
+  document.getElementById("editIsSale").checked = p.isSale;
+  document.getElementById("editModal").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
+function closeEdit() {
+  document.getElementById("editModal").classList.add("hidden");
+  document.body.style.overflow = "";
+  editingProduct = null;
+}
+
+document.getElementById("editModal").addEventListener("click", (e) => {
+  if (e.target === document.getElementById("editModal")) closeEdit();
+});
+
+async function saveEdit() {
+  if (!editingProduct) return;
+  const payload = {
+    pageId:       editingProduct.id,
+    tname:        document.getElementById("editName").value.trim(),
+    mainCategory: document.getElementById("editMainCat").value.trim(),
+    category:     document.getElementById("editCat").value.trim(),
+    description:  document.getElementById("editDesc").value.trim(),
+    weight:       Number(document.getElementById("editWeight").value) || 0,
+    isView:       document.getElementById("editIsView").checked,
+    isNew:        document.getElementById("editIsNew").checked,
+    isHot:        document.getElementById("editIsHot").checked,
+    isSale:       document.getElementById("editIsSale").checked,
+    update:       true,
+  };
+  const jp  = document.getElementById("editJprice").value;
+  const jsp = document.getElementById("editJsprice").value;
+  if (jp)  payload.jprice  = Number(jp);
+  if (jsp) payload.jsprice = Number(jsp);
+
+  const btn = document.querySelector("#editModal button:last-child");
+  btn.textContent = "儲存中..."; btn.disabled = true;
+
+  try {
+    const res  = await fetch(UPDATE_API, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || "儲存失敗");
+
+    // 本地更新
+    Object.assign(editingProduct, {
+      name: payload.tname, mainCategory: payload.mainCategory,
+      category: payload.category, description: payload.description,
+      weight: payload.weight, isView: payload.isView,
+      isNew: payload.isNew, isHot: payload.isHot, isSale: payload.isSale,
+    });
+
+    closeEdit();
+    renderList();
+  } catch (err) {
+    alert("儲存失敗：" + err.message);
+  } finally {
+    btn.textContent = "儲存變更"; btn.disabled = false;
+  }
+}
+
+// 搜尋 + 篩選
+document.getElementById("searchInput").addEventListener("input", renderList);
+document.getElementById("filterStatus").addEventListener("change", renderList);
+
+init();
+</script>
+</body>
+</html>

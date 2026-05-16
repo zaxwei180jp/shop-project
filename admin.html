@@ -1,488 +1,186 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>後台 · 新增商品</title>
+  <title>後台管理</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
 
-<div class="sticky top-0 z-50 bg-white border-b shadow-sm">
-  <div class="flex justify-between items-center px-4 py-3 max-w-2xl mx-auto">
-    <h1 class="font-bold text-base">🛠 後台 · 新增商品</h1>
-    <div class="flex gap-3">
-      <a href="admin-orders.html" class="text-xs text-gray-400 hover:text-black">📋 訂單管理</a>
-      <a href="admin-banners.html"  class="text-xs text-gray-400 hover:text-black">🖼 輪播管理</a>
-      <a href="index.html" class="text-xs text-gray-400 hover:text-black">← 前往前台</a>
+<!-- 登入頁 -->
+<div id="loginScreen" class="min-h-screen flex items-center justify-center px-4">
+  <div class="bg-white rounded-2xl shadow-sm p-8 w-full max-w-sm">
+    <div class="text-center mb-6">
+      <div class="text-4xl mb-2">🛠</div>
+      <h1 class="text-xl font-bold text-gray-900">後台管理</h1>
+      <p class="text-xs text-gray-400 mt-1">請輸入管理員密碼</p>
+    </div>
+    <div class="space-y-3">
+      <input id="passwordInput" type="password" placeholder="請輸入密碼"
+        class="w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+        onkeydown="if(event.key==='Enter') doLogin()">
+      <button onclick="doLogin()"
+        class="w-full py-3 bg-black text-white font-medium rounded-xl active:bg-gray-800 transition">
+        登入
+      </button>
+      <p id="loginError" class="text-xs text-red-500 text-center hidden">密碼錯誤，請再試一次</p>
     </div>
   </div>
 </div>
 
-<div class="px-4 py-5 max-w-2xl mx-auto space-y-4">
+<!-- 後台主畫面（登入後顯示）-->
+<div id="adminScreen" class="hidden min-h-screen">
 
-  <!-- ① 照片上傳 -->
-  <div class="bg-white rounded-2xl p-4 shadow-sm">
-    <div class="flex items-center gap-2 mb-4">
-      <span class="w-6 h-6 bg-black text-white rounded-full text-xs flex items-center justify-center font-bold">1</span>
-      <h2 class="font-semibold text-sm">上傳照片</h2>
-    </div>
-    <div class="space-y-3">
-
-      <!-- 首頁主圖 -->
-      <div>
-        <div class="text-xs text-gray-500 mb-1.5">首頁主圖 <span class="text-red-400">（封面用，建議正方形）</span></div>
-        <div id="mainImgBox"
-          class="relative flex items-center justify-center border-2 border-dashed border-gray-200 rounded-xl h-36 cursor-pointer hover:border-gray-400 transition overflow-hidden"
-          onclick="document.getElementById('mainImgInput').click()">
-          <div id="mainImgPlaceholder" class="flex flex-col items-center text-gray-400">
-            <span class="text-3xl mb-1">🖼</span>
-            <span class="text-xs">點擊上傳主圖</span>
-          </div>
-          <img id="mainImgPreview" class="hidden absolute inset-0 w-full h-full object-cover">
-          <div id="mainImgLoading" class="hidden absolute inset-0 bg-gray-50 flex items-center justify-center text-sm text-gray-400">⏳ 上傳中...</div>
-          <button id="mainImgRemove" onclick="removeMainImg(event)"
-            class="hidden absolute top-2 right-2 bg-black bg-opacity-60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs z-10">✕</button>
-        </div>
-        <input id="mainImgInput" type="file" accept="image/*" class="hidden">
+  <!-- Navibar -->
+  <div class="sticky top-0 z-50 bg-white border-b shadow-sm">
+    <div class="flex justify-between items-center px-4 py-3 max-w-4xl mx-auto">
+      <div class="flex items-center gap-2">
+        <span class="text-base">🛠</span>
+        <h1 class="font-bold text-sm">後台管理</h1>
       </div>
-
-      <!-- 詳細圖 -->
-      <div>
-        <div class="text-xs text-gray-500 mb-1.5">商品詳細圖 <span class="text-gray-400">（依序顯示於商品頁）</span></div>
-        <div id="detailSlots" class="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-2"></div>
-        <button type="button" onclick="addDetailSlot()"
-          class="w-full py-2 border border-dashed border-gray-300 rounded-xl text-xs text-gray-400 hover:border-gray-500 hover:text-gray-600 transition">
-          ＋ 新增一張詳細圖
+      <div class="flex items-center gap-2">
+        <a href="index.html" target="_blank"
+          class="text-xs text-gray-400 hover:text-black px-2 py-1 rounded-lg hover:bg-gray-100">
+          前台 ↗
+        </a>
+        <button onclick="doLogout()"
+          class="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded-lg hover:bg-gray-100">
+          登出
         </button>
       </div>
-
     </div>
   </div>
 
-  <!-- ② 基本資料 -->
-  <div class="bg-white rounded-2xl p-4 shadow-sm">
-    <div class="flex items-center gap-2 mb-3">
-      <span class="w-6 h-6 bg-black text-white rounded-full text-xs flex items-center justify-center font-bold">2</span>
-      <h2 class="font-semibold text-sm">基本資料</h2>
+  <!-- 功能選單 -->
+  <div class="px-4 py-5 max-w-4xl mx-auto">
+
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+      <button onclick="showPage('products')"
+        class="admin-menu-btn bg-white rounded-2xl p-4 shadow-sm text-center hover:shadow-md transition active:bg-gray-50">
+        <div class="text-3xl mb-2">📦</div>
+        <div class="text-sm font-semibold">商品管理</div>
+        <div class="text-xs text-gray-400 mt-0.5">查看 / 編輯 / 上下架</div>
+      </button>
+      <button onclick="showPage('add')"
+        class="admin-menu-btn bg-white rounded-2xl p-4 shadow-sm text-center hover:shadow-md transition active:bg-gray-50">
+        <div class="text-3xl mb-2">➕</div>
+        <div class="text-sm font-semibold">新增商品</div>
+        <div class="text-xs text-gray-400 mt-0.5">上傳照片 / 填寫資料</div>
+      </button>
+      <button onclick="showPage('orders')"
+        class="admin-menu-btn bg-white rounded-2xl p-4 shadow-sm text-center hover:shadow-md transition active:bg-gray-50">
+        <div class="text-3xl mb-2">📋</div>
+        <div class="text-sm font-semibold">訂單管理</div>
+        <div class="text-xs text-gray-400 mt-0.5">查看 / 更新狀態</div>
+      </button>
+      <button onclick="showPage('banners')"
+        class="admin-menu-btn bg-white rounded-2xl p-4 shadow-sm text-center hover:shadow-md transition active:bg-gray-50">
+        <div class="text-3xl mb-2">🖼</div>
+        <div class="text-sm font-semibold">輪播管理</div>
+        <div class="text-xs text-gray-400 mt-0.5">上傳 / 排序 / 顯示</div>
+      </button>
     </div>
-    <div class="space-y-3">
 
-      <div>
-        <label class="text-xs text-gray-500 mb-1 block">商品名稱 <span class="text-red-500">*</span></label>
-        <input id="tname" type="text" placeholder="請輸入商品名稱"
-          class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+    <!-- 各功能 iframe -->
+    <div id="pageContainer" class="hidden bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-2.5 border-b bg-gray-50">
+        <span id="pageTitle" class="text-sm font-semibold text-gray-700"></span>
+        <button onclick="closePage()" class="text-gray-400 hover:text-black text-sm px-2">✕ 關閉</button>
       </div>
-
-      <div>
-        <label class="text-xs text-gray-500 mb-1 block">商品編號 <span class="text-gray-400">（選填）</span></label>
-        <div class="relative">
-          <input id="idnumber" type="number" placeholder="請輸入商品編號"
-            class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black pr-24">
-          <div id="idnumberStatus" class="absolute right-3 top-2.5 text-xs"></div>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="text-xs text-gray-500 mb-1 block">原價 <span class="text-red-500">*</span></label>
-          <input id="tprice" type="number" placeholder="0"
-            class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
-        </div>
-        <div>
-          <label class="text-xs text-gray-500 mb-1 block">特價（選填）</label>
-          <input id="sprice" type="number" placeholder="0"
-            class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
-        </div>
-      </div>
-
-      <div>
-        <label class="text-xs text-gray-500 mb-1 block">重量（kg）</label>
-        <input id="weight" type="number" step="0.01" placeholder="例：0.5"
-          class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
-      </div>
-
-      <!-- 大分類 -->
-      <div>
-        <label class="text-xs text-gray-500 mb-2 block">大分類</label>
-        <div id="mainCategoryBtns" class="flex flex-wrap gap-2 mb-2 min-h-[28px]">
-          <span class="text-xs text-gray-300 self-center">載入中...</span>
-        </div>
-        <input id="mainCategory" type="text" placeholder="或直接輸入新分類"
-          class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
-      </div>
-
-      <!-- 小分類 -->
-      <div>
-        <label class="text-xs text-gray-500 mb-2 block">小分類</label>
-        <div id="categoryBtns" class="flex flex-wrap gap-2 mb-2 min-h-[28px]">
-          <span class="text-xs text-gray-300 self-center">請先選大分類</span>
-        </div>
-        <input id="category" type="text" placeholder="或直接輸入新分類"
-          class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
-      </div>
-
+      <iframe id="pageFrame"
+        class="w-full border-0"
+        style="height: calc(100vh - 180px); min-height: 500px;">
+      </iframe>
     </div>
+
   </div>
-
-  <!-- ③ 商品描述 -->
-  <div class="bg-white rounded-2xl p-4 shadow-sm">
-    <div class="flex items-center gap-2 mb-3">
-      <span class="w-6 h-6 bg-black text-white rounded-full text-xs flex items-center justify-center font-bold">3</span>
-      <h2 class="font-semibold text-sm">商品描述</h2>
-    </div>
-    <textarea id="description" rows="6"
-      placeholder="商品內容跟特點
-• 特點一
-• 特點二
-重量：1kg
-產地：日本"
-      class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black resize-none leading-relaxed"></textarea>
-    <p class="text-xs text-gray-400 mt-1.5">• 開頭 → 清單　｜　key：value → 規格表　｜　其餘 → 段落</p>
-  </div>
-
-  <!-- ④ 標籤設定 -->
-  <div class="bg-white rounded-2xl p-4 shadow-sm">
-    <div class="flex items-center gap-2 mb-3">
-      <span class="w-6 h-6 bg-black text-white rounded-full text-xs flex items-center justify-center font-bold">4</span>
-      <h2 class="font-semibold text-sm">標籤設定</h2>
-    </div>
-    <div class="grid grid-cols-2 gap-2">
-      <label class="flex items-center gap-3 border rounded-xl px-3 py-3 cursor-pointer hover:bg-gray-50">
-        <input id="isView" type="checkbox" checked class="w-4 h-4 accent-black">
-        <div><div class="text-sm font-medium">上架</div><div class="text-xs text-gray-400">isView</div></div>
-      </label>
-      <label class="flex items-center gap-3 border rounded-xl px-3 py-3 cursor-pointer hover:bg-gray-50">
-        <input id="isNew" type="checkbox" class="w-4 h-4 accent-black">
-        <div><div class="text-sm font-medium">🆕 新品</div><div class="text-xs text-gray-400">isNew</div></div>
-      </label>
-      <label class="flex items-center gap-3 border rounded-xl px-3 py-3 cursor-pointer hover:bg-gray-50">
-        <input id="isHot" type="checkbox" class="w-4 h-4 accent-black">
-        <div><div class="text-sm font-medium">🔥 熱賣</div><div class="text-xs text-gray-400">isHot</div></div>
-      </label>
-      <label class="flex items-center gap-3 border rounded-xl px-3 py-3 cursor-pointer hover:bg-gray-50">
-        <input id="isSale" type="checkbox" class="w-4 h-4 accent-black">
-        <div><div class="text-sm font-medium">🈹 特價</div><div class="text-xs text-gray-400">isSale</div></div>
-      </label>
-    </div>
-  </div>
-
-  <button id="submitBtn" onclick="submitProduct()"
-    class="w-full py-4 bg-black text-white font-semibold rounded-2xl active:bg-gray-800 transition text-base shadow-sm">
-    ＋ 新增商品
-  </button>
-  <div class="pb-8"></div>
-</div>
-
-<!-- 成功畫面 -->
-<div id="successScreen" class="hidden fixed inset-0 bg-white z-50 flex flex-col items-center justify-center px-6">
-  <div class="text-6xl mb-4">🎉</div>
-  <h2 class="text-2xl font-bold mb-2">商品已新增！</h2>
-  <p class="text-gray-400 text-sm mb-8">商品已成功寫入 Notion，稍後將出現在網站上</p>
-  <button onclick="resetForm()"
-    class="w-full max-w-xs py-3 bg-black text-white font-medium rounded-xl active:bg-gray-800 mb-3">
-    繼續新增商品
-  </button>
-  <a href="index.html" class="text-sm text-gray-400 underline">前往前台查看</a>
 </div>
 
 <script>
-const CLOUD_NAME    = "doue38blc";
-const UPLOAD_PRESET = "shop_upload";
-const ADD_API       = "https://shop-project-azure.vercel.app/api/add-product";
-const CHECK_ID_API  = "https://shop-project-azure.vercel.app/api/check-idnumber";
-const PRODUCTS_API  = "https://shop-project-azure.vercel.app/api/products";
+const LOGIN_API = "https://shop-project-azure.vercel.app/api/admin-login";
 
-let mainImgUrl     = "";
-let detailUrls     = [];   // 每個 slot 對應一個 URL（""=尚未上傳）
-let allProductData = [];
+const PAGES = {
+  products: { title: "📦 商品管理", url: "admin-products.html" },
+  add:      { title: "➕ 新增商品", url: "admin-add.html"      },
+  orders:   { title: "📋 訂單管理", url: "admin-orders.html"   },
+  banners:  { title: "🖼 輪播管理", url: "admin-banners.html"  },
+};
 
-// ── 初始化 ───────────────────────────────────────────
-(async () => {
-  try {
-    const res = await fetch(PRODUCTS_API);
-    allProductData = await res.json();
-    renderMainBtns();
-    renderSubBtns("");
-  } catch {
-    document.getElementById("mainCategoryBtns").innerHTML =
-      '<span class="text-xs text-gray-300">載入失敗</span>';
-  }
-  addDetailSlot(); // 預設一個詳細圖 slot
-
-  // 商品編號即時檢查
-  let idCheckTimer = null;
-  document.getElementById("idnumber").addEventListener("input", (e) => {
-    const val = e.target.value.trim();
-    const statusEl = document.getElementById("idnumberStatus");
-
-    clearTimeout(idCheckTimer);
-
-    if (!val) { statusEl.textContent = ""; return; }
-
-    statusEl.textContent = "⏳ 檢查中";
-    statusEl.className = "absolute right-3 top-2.5 text-xs text-gray-400";
-
-    idCheckTimer = setTimeout(async () => {
-      try {
-        const res  = await fetch(`${CHECK_ID_API}?idnumber=${encodeURIComponent(val)}`);
-        const data = await res.json();
-        if (data.exists) {
-          statusEl.textContent = "⚠️ 編號已存在";
-          statusEl.className = "absolute right-3 top-2.5 text-xs text-orange-500 font-medium";
-          document.getElementById("idnumber").classList.add("border-orange-400");
-          document.getElementById("idnumber").classList.remove("border-green-400");
-        } else {
-          statusEl.textContent = "✅ 可使用";
-          statusEl.className = "absolute right-3 top-2.5 text-xs text-green-500 font-medium";
-          document.getElementById("idnumber").classList.add("border-green-400");
-          document.getElementById("idnumber").classList.remove("border-orange-400");
-        }
-      } catch {
-        statusEl.textContent = "無法檢查";
-        statusEl.className = "absolute right-3 top-2.5 text-xs text-gray-400";
-      }
-    }, 600); // 停止輸入 600ms 後才送出檢查
-  });
-
-  document.getElementById("mainImgInput").addEventListener("change", async (e) => {
-    const file = e.target.files[0];
-    if (file) { e.target.value = ""; await uploadMainImg(file); }
-  });
-
-  // 手動輸入大分類時，同步更新小分類按鈕
-  document.getElementById("mainCategory").addEventListener("input", (e) => {
-    renderSubBtns(e.target.value.trim());
-  });
+// ── 初始化：檢查是否已登入 ───────────────────────────
+(function init() {
+  const token = sessionStorage.getItem("adminToken");
+  if (token) showAdmin();
 })();
 
-// ── 分類按鈕 ─────────────────────────────────────────
-const BTN_NORMAL = "px-3 py-1.5 rounded-full border text-xs transition bg-white text-gray-700 border-gray-300 hover:border-black active:bg-gray-100";
-const BTN_ACTIVE = "px-3 py-1.5 rounded-full border text-xs transition bg-black text-white border-black";
+// ── 登入 ─────────────────────────────────────────────
+async function doLogin() {
+  const pw  = document.getElementById("passwordInput").value;
+  const err = document.getElementById("loginError");
+  const btn = document.querySelector("#loginScreen button");
 
-function renderMainBtns() {
-  const mains = [...new Set(allProductData.map(p => p.mainCategory).filter(Boolean))].sort();
-  const el = document.getElementById("mainCategoryBtns");
-  el.innerHTML = "";
-  if (!mains.length) { el.innerHTML = '<span class="text-xs text-gray-300">尚無大分類</span>'; return; }
-  mains.forEach(m => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.textContent = m;
-    btn.className = BTN_NORMAL;
-    btn.onclick = () => {
-      selectMainBtn(btn, m);
-    };
-    el.appendChild(btn);
-  });
-}
-
-function selectMainBtn(btn, value) {
-  document.getElementById("mainCategory").value = value;
-  document.getElementById("mainCategoryBtns").querySelectorAll("button")
-    .forEach(b => b.className = BTN_NORMAL);
-  btn.className = BTN_ACTIVE;
-  // 重置小分類
-  document.getElementById("category").value = "";
-  renderSubBtns(value);
-}
-
-function renderSubBtns(selectedMain) {
-  const subs = [...new Set(
-    allProductData
-      .filter(p => !selectedMain || p.mainCategory === selectedMain)
-      .map(p => p.category).filter(Boolean)
-  )].sort();
-  const el = document.getElementById("categoryBtns");
-  el.innerHTML = "";
-  if (!subs.length) {
-    el.innerHTML = '<span class="text-xs text-gray-300">' +
-      (selectedMain ? "此大分類尚無小分類" : "請先選大分類") + '</span>';
-    return;
-  }
-  subs.forEach(s => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.textContent = s;
-    btn.className = BTN_NORMAL;
-    btn.onclick = () => {
-      document.getElementById("category").value = s;
-      el.querySelectorAll("button").forEach(b => b.className = BTN_NORMAL);
-      btn.className = BTN_ACTIVE;
-    };
-    el.appendChild(btn);
-  });
-}
-
-// ── 主圖 ─────────────────────────────────────────────
-async function uploadMainImg(file) {
-  document.getElementById("mainImgPlaceholder").classList.add("hidden");
-  document.getElementById("mainImgLoading").classList.remove("hidden");
-  try {
-    mainImgUrl = await uploadToCloudinary(file);
-    document.getElementById("mainImgPreview").src = mainImgUrl;
-    document.getElementById("mainImgPreview").classList.remove("hidden");
-    document.getElementById("mainImgRemove").classList.remove("hidden");
-  } catch {
-    alert("主圖上傳失敗，請重試");
-    document.getElementById("mainImgPlaceholder").classList.remove("hidden");
-  } finally {
-    document.getElementById("mainImgLoading").classList.add("hidden");
-  }
-}
-
-function removeMainImg(e) {
-  e.stopPropagation();
-  mainImgUrl = "";
-  document.getElementById("mainImgPreview").classList.add("hidden");
-  document.getElementById("mainImgRemove").classList.add("hidden");
-  document.getElementById("mainImgPlaceholder").classList.remove("hidden");
-}
-
-// ── 詳細圖 ───────────────────────────────────────────
-function addDetailSlot() {
-  const idx = detailUrls.length;
-  detailUrls.push("");
-  const container = document.getElementById("detailSlots");
-
-  const slot = document.createElement("div");
-  slot.id = `slot-${idx}`;
-  slot.className = "relative aspect-square rounded-xl overflow-hidden bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:border-gray-400 transition";
-  slot.innerHTML = `
-    <div class="slot-ph flex flex-col items-center text-gray-400 pointer-events-none">
-      <span class="text-xl">📷</span>
-      <span class="text-xs mt-0.5">圖${idx + 1}</span>
-    </div>
-    <img class="slot-img hidden absolute inset-0 w-full h-full object-cover">
-    <div class="slot-load hidden absolute inset-0 bg-gray-50 flex items-center justify-center text-xs text-gray-400">⏳</div>
-    <button class="slot-del hidden absolute top-1 right-1 bg-black bg-opacity-60 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs z-10">✕</button>`;
-
-  slot.querySelector(".slot-del").onclick = (e) => { e.stopPropagation(); clearSlot(idx, slot); };
-  slot.onclick = () => pickFile(idx, slot);
-  container.appendChild(slot);
-}
-
-function pickFile(idx, slot) {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*";
-  input.onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    slot.querySelector(".slot-ph").classList.add("hidden");
-    slot.querySelector(".slot-load").classList.remove("hidden");
-    try {
-      const url = await uploadToCloudinary(file);
-      detailUrls[idx] = url;
-      slot.querySelector(".slot-img").src = url;
-      slot.querySelector(".slot-img").classList.remove("hidden");
-      slot.querySelector(".slot-del").classList.remove("hidden");
-      slot.onclick = null; // 有圖後鎖定，不再選檔（要換要先刪）
-      slot.classList.remove("cursor-pointer", "hover:border-gray-400");
-    } catch {
-      alert(`圖 ${idx + 1} 上傳失敗`);
-      slot.querySelector(".slot-ph").classList.remove("hidden");
-    } finally {
-      slot.querySelector(".slot-load").classList.add("hidden");
-    }
-  };
-  input.click();
-}
-
-function clearSlot(idx, slot) {
-  detailUrls[idx] = "";
-  slot.querySelector(".slot-img").classList.add("hidden");
-  slot.querySelector(".slot-del").classList.add("hidden");
-  slot.querySelector(".slot-ph").classList.remove("hidden");
-  slot.classList.add("cursor-pointer", "hover:border-gray-400");
-  slot.onclick = () => pickFile(idx, slot);
-}
-
-// ── Cloudinary ────────────────────────────────────────
-async function uploadToCloudinary(file) {
-  const fd = new FormData();
-  fd.append("file", file);
-  fd.append("upload_preset", UPLOAD_PRESET);
-  const res  = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: fd });
-  const data = await res.json();
-  if (!data.secure_url) throw new Error("上傳失敗");
-  return data.secure_url;
-}
-
-// ── 送出 ──────────────────────────────────────────────
-async function submitProduct() {
-  const tname  = document.getElementById("tname").value.trim();
-  const tprice = document.getElementById("tprice").value.trim();
-  if (!tname)  { alert("請填寫商品名稱"); return; }
-  if (!tprice) { alert("請填寫原價");     return; }
-
-  const btn = document.getElementById("submitBtn");
-  btn.disabled = true;
-  btn.textContent = "送出中...";
+  if (!pw) return;
+  btn.textContent = "驗證中...";
+  btn.disabled    = true;
+  err.classList.add("hidden");
 
   try {
-    const validDetails = detailUrls.filter(Boolean);
-    // images：主圖放第一張，再接詳細圖（排除重複）
-    const allImages = mainImgUrl
-      ? [mainImgUrl, ...validDetails.filter(u => u !== mainImgUrl)]
-      : validDetails;
-
-    const payload = {
-      tname,
-      jprice:       Number(tprice),
-      jsprice:      Number(document.getElementById("sprice").value) || 0,
-      mainCategory: document.getElementById("mainCategory").value.trim(),
-      category:     document.getElementById("category").value.trim(),
-      description:  document.getElementById("description").value.trim(),
-      weight:       Number(document.getElementById("weight").value) || 0,
-      idnumber:     document.getElementById("idnumber").value.trim() || null,
-      image:        mainImgUrl,
-      images:       allImages.join(","),
-      isView:       document.getElementById("isView").checked,
-      isNew:        document.getElementById("isNew").checked,
-      isHot:        document.getElementById("isHot").checked,
-      isSale:       document.getElementById("isSale").checked,
-    };
-
-    const res  = await fetch(ADD_API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    const res  = await fetch(LOGIN_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: pw }),
+    });
     const data = await res.json();
-    if (!data.success) throw new Error(data.error || "新增失敗");
-    document.getElementById("successScreen").classList.remove("hidden");
-  } catch (err) {
-    alert("新增失敗：" + err.message);
-    btn.disabled = false;
-    btn.textContent = "＋ 新增商品";
+
+    if (data.success) {
+      sessionStorage.setItem("adminToken", data.token);
+      showAdmin();
+    } else {
+      err.classList.remove("hidden");
+      document.getElementById("passwordInput").value = "";
+      document.getElementById("passwordInput").focus();
+    }
+  } catch (e) {
+    err.textContent = "連線失敗，請稍後再試";
+    err.classList.remove("hidden");
+  } finally {
+    btn.textContent = "登入";
+    btn.disabled    = false;
   }
 }
 
-// ── 重置 ──────────────────────────────────────────────
-function resetForm() {
-  document.getElementById("successScreen").classList.add("hidden");
-  ["tname","idnumber","tprice","sprice","weight","mainCategory","category","description"]
-    .forEach(id => document.getElementById(id).value = "");
-  document.getElementById("idnumberStatus").textContent = "";
-  document.getElementById("idnumber").classList.remove("border-orange-400","border-green-400");
-  document.getElementById("isView").checked = true;
-  ["isNew","isHot","isSale"].forEach(id => document.getElementById(id).checked = false);
-
-  mainImgUrl = "";
-  document.getElementById("mainImgPreview").classList.add("hidden");
-  document.getElementById("mainImgRemove").classList.add("hidden");
-  document.getElementById("mainImgPlaceholder").classList.remove("hidden");
-
-  detailUrls = [];
-  document.getElementById("detailSlots").innerHTML = "";
-  addDetailSlot();
-
-  ["mainCategoryBtns","categoryBtns"].forEach(id =>
-    document.getElementById(id).querySelectorAll("button")
-      .forEach(b => b.className = BTN_NORMAL)
-  );
-  renderSubBtns("");
-
-  document.getElementById("submitBtn").disabled = false;
-  document.getElementById("submitBtn").textContent = "＋ 新增商品";
+function showAdmin() {
+  document.getElementById("loginScreen").classList.add("hidden");
+  document.getElementById("adminScreen").classList.remove("hidden");
 }
+
+function doLogout() {
+  sessionStorage.removeItem("adminToken");
+  document.getElementById("adminScreen").classList.add("hidden");
+  document.getElementById("loginScreen").classList.remove("hidden");
+  document.getElementById("passwordInput").value = "";
+  closePage();
+}
+
+// ── 頁面切換 ─────────────────────────────────────────
+function showPage(key) {
+  const p = PAGES[key];
+  if (!p) return;
+  document.getElementById("pageTitle").textContent = p.title;
+  document.getElementById("pageFrame").src = p.url;
+  document.getElementById("pageContainer").classList.remove("hidden");
+  document.getElementById("pageContainer").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function closePage() {
+  document.getElementById("pageContainer").classList.add("hidden");
+  document.getElementById("pageFrame").src = "";
+}
+
+// Enter 登入
+document.getElementById("passwordInput")
+  .addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
 </script>
+
 </body>
 </html>
