@@ -24,6 +24,20 @@ async function init() {
   renderMainTabs();
   renderSubTabs();
   renderList();
+
+  // ⭐ 從其他頁面帶 ?q= 參數過來，自動執行搜尋
+  const urlQ = new URLSearchParams(location.search).get("q");
+  if (urlQ) {
+    const input = document.getElementById("navSearchInput");
+    const box   = document.getElementById("searchBox");
+    // 展開搜尋框並填入關鍵字
+    box.classList.remove("hidden");
+    box.classList.add("flex");
+    input.value = urlQ;
+    handleNavSearch(urlQ);
+    // 清掉 URL 參數（不影響上一頁返回）
+    history.replaceState(null, "", location.pathname);
+  }
 }
 
 // ── 大分類 Tab ────────────────────────────────────────
