@@ -70,13 +70,12 @@ export default async function handler(req, res) {
       const page  = data.results[0];
       const props = page.properties;
       return res.status(200).json({
-        orderId:   getText(props.orderId),
-        name:      getText(props.name),
-        address:   getText(props.address),
-        items:     getText(props.items),
-        total:     props.total?.number || 0,
-        status:    props.status?.select?.name || "待處理",
-        createdAt: page.created_time,
+        orderId:    getText(props.orderId),
+        customerId: getText(props.customerId),
+        items:      getText(props.items),
+        total:      props.total?.number || 0,
+        status:     props.status?.select?.name || "待處理",
+        createdAt:  page.created_time,
       });
     }
 

@@ -152,7 +152,6 @@ export default async function handler(req, res) {
             name:       { rich_text:    [{ text: { content: name || "" } }] },
             phone:      { phone_number: phone || null },
             address:    { rich_text:    [{ text: { content: address || "" } }] },
-            createdAt:  { date:         { start: new Date().toISOString().split("T")[0] } },
           },
         }),
       });
