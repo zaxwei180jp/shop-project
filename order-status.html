@@ -49,7 +49,7 @@
   <!-- 搜尋框 -->
   <div class="flex gap-2 mb-6">
     <input id="orderInput" type="text"
-      placeholder="請輸入訂單編號，例如 ORD12345678"
+      placeholder="訂單編號（ORD...）或客戶編號（W-82...）"
       class="flex-1 border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black uppercase"
       oninput="this.value = this.value.toUpperCase()"
       onkeydown="if(event.key==='Enter') queryOrder()">
@@ -93,33 +93,85 @@ window.queryOrder = async () => {
   el.innerHTML = `<div class="text-center text-gray-400 py-8 text-sm">查詢中...</div>`;
 
   try {
-    const res = await fetch(`${QUERY_API}&orderId=${encodeURIComponent(orderId)}`);
-    const data = await res.json();
-    console.log("API response:", res.status, JSON.stringify(data));
+    // 判斷是訂單編號還是客戶編號
+    const isCustomerId = orderId.startsWith("W-");
+    const queryParam   = isCustomerId
+      ? `&customerId=${encodeURIComponent(orderId)}`
+      : `&orderId=${encodeURIComponent(orderId)}`;
 
-    // ⭐ 查客戶資料
-    if (data.customerId) {
-      try {
-        const custRes  = await fetch(CUSTOMER_API + "?customerId=" + encodeURIComponent(data.customerId));
-        const custData = await custRes.json();
-        if (custData.found) {
-          data.name    = custData.name;
-          data.address = custData.address;
-          data.phone   = custData.phone;
-          data.email   = custData.email;
-        }
-      } catch (e) {}
-    }
+    const res  = await fetch(`${QUERY_API}${queryParam}`);
+    const json = await res.json();
 
     if (!res.ok) {
       el.innerHTML = `
         <div class="flex flex-col items-center py-10 text-gray-400">
           <div class="text-4xl mb-3">🔍</div>
-          <div class="text-sm font-medium text-gray-500">找不到此訂單</div>
-          <div class="text-xs mt-1">請確認訂單編號是否正確</div>
+          <div class="text-sm font-medium text-gray-500">${isCustomerId ? "找不到此客戶的訂單" : "找不到此訂單"}</div>
+          <div class="text-xs mt-1">請確認編號是否正確</div>
         </div>`;
       return;
     }
+
+    // 客戶編號查詢回傳陣列，訂單編號回傳單筆
+    const orders = Array.isArray(json) ? json : [json];
+
+    // 查客戶資料
+    let customerInfo = {};
+    const cid = orders[0]?.customerId;
+    if (cid) {
+      try {
+        const custRes  = await fetch(CUSTOMER_API + "?customerId=" + encodeURIComponent(cid));
+        const custData = await custRes.json();
+        if (custData.found) customerInfo = custData;
+      } catch (e) {}
+    }
+
+    // 多筆訂單（客戶編號查詢）
+    if (orders.length > 1) {
+      el.innerHTML = `
+        <!-- 客戶資訊 -->
+        <div class="bg-white rounded-xl border px-4 py-3 mb-3">
+          <div class="flex justify-between items-center">
+            <div class="text-xs font-semibold text-gray-500">客戶資料</div>
+            <span class="text-xs text-blue-500 font-bold">${cid}</span>
+          </div>
+          <div class="text-sm text-gray-700 mt-1">${customerInfo.name || "—"}</div>
+          <div class="text-xs text-gray-400">${customerInfo.address || "—"}</div>
+        </div>
+
+        <!-- 訂單列表 -->
+        <div class="space-y-3">
+          ${orders.map(o => {
+            const st    = STATUS_MAP[o.status] || STATUS_MAP["待處理"];
+            const date  = new Date(o.createdAt);
+            const dateStr = (date.getMonth()+1) + "/" + date.getDate() + " " +
+              String(date.getHours()).padStart(2,"0") + ":" + String(date.getMinutes()).padStart(2,"0");
+            const firstItem = o.items?.split("\n")[0] || "";
+            return `
+              <div class="bg-white rounded-xl border px-4 py-3 cursor-pointer hover:shadow-md transition"
+                onclick="document.getElementById('orderInput').value='${o.orderId}'; queryOrder();">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="font-bold text-sm">${o.orderId}</span>
+                      <span class="text-xs px-2 py-0.5 rounded-full ${st.color}">${o.status}</span>
+                    </div>
+                    <div class="text-xs text-gray-400 truncate max-w-[200px]">${firstItem}</div>
+                  </div>
+                  <div class="text-right shrink-0 ml-2">
+                    <div class="font-bold text-red-500 text-sm">NT$ ${o.total.toLocaleString()}</div>
+                    <div class="text-xs text-gray-400">${dateStr}</div>
+                  </div>
+                </div>
+              </div>`;
+          }).join("")}
+        </div>`;
+      return;
+    }
+
+    // 單筆訂單
+    const data = { ...orders[0], ...customerInfo };
+    const dummy = null; // 避免舊程式碼參照問題
 
     const status = STATUS_MAP[data.status] || STATUS_MAP["待處理"];
     const currentStep = STEPS.indexOf(data.status);

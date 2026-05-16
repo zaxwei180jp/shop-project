@@ -166,7 +166,6 @@ const ORDERS_API   = "https://shop-project-azure.vercel.app/api/orders-manage";
 const CUSTOMER_API = "https://shop-project-azure.vercel.app/api/customer";
 
 const RATE       = 220;
-const BOX_WEIGHT = 0.5;
 const SURCHARGE  = 150;
 const FREE_KG    = 10;
 
@@ -200,9 +199,8 @@ async function init() {
   });
 
   // ⭐ 運費計算
-  const totalWithBox = totalWeight + BOX_WEIGHT;
   const baseShipping = Math.ceil(totalWeight * RATE);
-  const hasSurcharge = totalWithBox < FREE_KG;
+  const hasSurcharge = totalWeight < FREE_KG;
   orderShipping      = baseShipping + (hasSurcharge ? SURCHARGE : 0);
   orderTotal         = orderSubtotal + orderShipping;
 
