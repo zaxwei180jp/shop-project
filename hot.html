@@ -74,9 +74,27 @@ function closeSearch() {
 
 function onNavSearch(val) {
   if (typeof handleNavSearch === "function") {
+    // 首頁：直接處理
     handleNavSearch(val);
+  } else {
+    // 其他頁：Enter 或有值就跳回首頁
+    if (val.trim()) {
+      window.location.href = "index.html?q=" + encodeURIComponent(val.trim());
+    }
   }
 }
+
+// 非首頁也支援按 Enter 直接跳轉
+document.addEventListener("DOMContentLoaded", () => {
+  const input = document.getElementById("navSearchInput");
+  if (input) {
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && input.value.trim()) {
+        window.location.href = "index.html?q=" + encodeURIComponent(input.value.trim());
+      }
+    });
+  }
+});
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeSearch();
