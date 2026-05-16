@@ -29,6 +29,7 @@ export default async function handler(req, res) {
       properties.image = { rich_text: [{ text: { content: fields.image } }] };
     if (fields.images !== undefined)
       properties.images = { rich_text: [{ text: { content: fields.images } }] };
+    if (fields.sort    !== undefined) properties.sort    = { number: Number(fields.sort) };
     if (fields.isView  !== undefined) properties.isView  = { checkbox: !!fields.isView  };
     if (fields.isHot   !== undefined) properties.isHot   = { checkbox: !!fields.isHot   };
     if (fields.isSale  !== undefined) properties.isSale  = { checkbox: !!fields.isSale  };

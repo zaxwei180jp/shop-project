@@ -91,6 +91,7 @@ export default async function handler(req, res) {
         isView,
 
         weight:  getNumber(props.weight),            // ⭐ 重量
+        sort:    getNumber(props.sort),               // ⭐ 排序
         jprice:  jprice,                                // ⭐ 日幣原價
         jsprice: jsprice,                               // ⭐ 日幣特價
         mainCategory: getSelect(props.mainCategory), // ⭐ 大分類
