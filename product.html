@@ -17,6 +17,19 @@
       <a href="sale.html"  class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-xs lg:text-sm">🈹 <span class="hidden sm:inline">特價</span></a>
     </div>
     <div class="flex items-center gap-1">
+      <!-- ⭐ 搜尋 -->
+      <div id="searchWrap" class="flex items-center">
+        <div id="searchBox"
+          class="hidden items-center gap-1 bg-gray-50 border rounded-xl px-2 py-1 mr-1 transition-all">
+          <input id="navSearchInput" type="text" placeholder="搜尋商品…"
+            class="bg-transparent text-sm outline-none w-32 sm:w-48"
+            oninput="onNavSearch(this.value)"
+            onkeydown="if(event.key==='Escape') closeSearch()">
+          <button onclick="closeSearch()" class="text-gray-400 hover:text-black text-sm leading-none">✕</button>
+        </div>
+        <button onclick="toggleSearch()" id="searchToggleBtn"
+          class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-base">🔍</button>
+      </div>
       <a href="order-status.html" class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-xs lg:text-sm">📋 <span class="hidden sm:inline">訂單查詢</span></a>
       <button onclick="history.back()" class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-sm">⬅️</button>
       <a href="cart.html" class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-sm">
@@ -24,11 +37,55 @@
       </a>
     </div>
   </div>
+  <!-- ⭐ 搜尋結果下拉（僅首頁顯示即時結果） -->
+  <div id="searchDropdown" class="hidden absolute left-0 right-0 bg-white border-t shadow-lg z-50 max-h-80 overflow-y-auto max-w-7xl mx-auto"></div>
 </div>
 
 <div id="product" class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-6xl mx-auto"></div>
 
 <script type="module" src="./js/product.js"></script>
 <script src="./js/cartCount.js"></script>
+<script>
+// ── Navibar 搜尋共用 JS ───────────────────────────────
+function toggleSearch() {
+  const box = document.getElementById("searchBox");
+  const isHidden = box.classList.contains("hidden");
+  box.classList.toggle("hidden", !isHidden);
+  box.classList.toggle("flex", isHidden);
+  if (isHidden) {
+    setTimeout(() => document.getElementById("navSearchInput").focus(), 50);
+  } else {
+    closeSearch();
+  }
+}
+
+function closeSearch() {
+  const box = document.getElementById("searchBox");
+  box.classList.add("hidden");
+  box.classList.remove("flex");
+  document.getElementById("navSearchInput").value = "";
+  const dd = document.getElementById("searchDropdown");
+  if (dd) { dd.classList.add("hidden"); dd.innerHTML = ""; }
+  if (typeof restoreList === "function") restoreList();
+}
+
+function onNavSearch(val) {
+  if (typeof handleNavSearch === "function") {
+    handleNavSearch(val);
+  }
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeSearch();
+});
+
+document.addEventListener("click", (e) => {
+  const wrap = document.getElementById("searchWrap");
+  const dd   = document.getElementById("searchDropdown");
+  if (wrap && !wrap.contains(e.target) && dd && !dd.contains(e.target)) {
+    closeSearch();
+  }
+});
+</script>
 </body>
 </html>
