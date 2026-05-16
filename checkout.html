@@ -131,13 +131,20 @@
   <h1 class="text-2xl font-bold mb-2">訂單已送出！</h1>
   <p class="text-gray-500 text-sm mb-6">感謝您的購買，我們將盡快與您聯繫</p>
 
-  <div class="bg-gray-50 border rounded-xl px-6 py-4 w-full max-w-xs text-center mb-6">
-    <div class="text-xs text-gray-400 mb-1">您的訂單編號</div>
-    <div id="displayOrderId" class="text-xl font-bold tracking-widest text-black"></div>
-    <button onclick="copyOrderId()"
-      class="mt-2 text-xs text-gray-400 underline active:text-black">
-      點擊複製
-    </button>
+  <div class="bg-gray-50 border rounded-xl px-6 py-4 w-full max-w-xs text-center mb-6 space-y-3">
+    <div>
+      <div class="text-xs text-gray-400 mb-0.5">您的訂單編號</div>
+      <div id="displayOrderId" class="text-xl font-bold tracking-widest text-black"></div>
+      <button onclick="copyOrderId()"
+        class="mt-1 text-xs text-gray-400 underline active:text-black">
+        點擊複製
+      </button>
+    </div>
+    <div class="border-t pt-3">
+      <div class="text-xs text-gray-400 mb-0.5">您的客戶編號</div>
+      <div id="displayCustomerId" class="text-base font-bold text-gray-700"></div>
+      <div class="text-xs text-gray-400 mt-0.5">下次購物可用此編號查詢訂單</div>
+    </div>
   </div>
 
   <a id="queryLink" href="order-status.html"
@@ -156,12 +163,15 @@ import { formatPrice } from "./js/utils.js";
 
 const PRODUCTS_API = "https://shop-project-azure.vercel.app/api/products";
 const ORDERS_API   = "https://shop-project-azure.vercel.app/api/orders-manage";
+const CUSTOMER_API = "https://shop-project-azure.vercel.app/api/customer";
 
-const SHIPPING    = 150;
-const FREE_WEIGHT = 10;
+const RATE       = 220;
+const BOX_WEIGHT = 0.5;
+const SURCHARGE  = 150;
+const FREE_KG    = 10;
 
-let orderItems  = [];
-let orderTotal  = 0;
+let orderItems    = [];
+let orderTotal    = 0;
 let orderSubtotal = 0;
 let orderShipping = 0;
 
@@ -189,10 +199,12 @@ async function init() {
     orderItems.push({ name: p.name, qty, price: formatPrice(p.price), sub });
   });
 
-  // 運費
-  const hasFreeShipping = totalWeight >= FREE_WEIGHT;
-  orderShipping = hasFreeShipping ? 0 : SHIPPING;
-  orderTotal    = orderSubtotal + orderShipping;
+  // ⭐ 運費計算
+  const totalWithBox = totalWeight + BOX_WEIGHT;
+  const baseShipping = Math.ceil(totalWeight * RATE);
+  const hasSurcharge = totalWithBox < FREE_KG;
+  orderShipping      = baseShipping + (hasSurcharge ? SURCHARGE : 0);
+  orderTotal         = orderSubtotal + orderShipping;
 
   // 訂單明細
   document.getElementById("orderItems").innerHTML = orderItems.map(i => `
@@ -206,14 +218,11 @@ async function init() {
 
   const shippingEl  = document.getElementById("orderShipping");
   const shippingRow = document.getElementById("orderShippingRow");
-  if (hasFreeShipping) {
-    shippingEl.textContent  = "免運";
-    shippingEl.className    = "text-green-600 font-medium";
-    shippingRow.className   = "flex justify-between items-center mt-1 text-sm text-green-600";
-  } else {
-    shippingEl.textContent = formatPrice(SHIPPING);
-    shippingEl.className   = "";
-  }
+  shippingRow.className = "flex justify-between items-center mt-1 text-sm text-gray-500";
+
+  let shippingText = formatPrice(baseShipping) + "（" + totalWeight.toFixed(2).replace(/\.?0+$/, "") + "kg × NT$" + RATE + "）";
+  if (hasSurcharge) shippingText += " + NT$" + SURCHARGE + " 附加費";
+  shippingEl.textContent = shippingText;
 
   document.getElementById("orderTotal").textContent = formatPrice(orderTotal);
 }
@@ -249,34 +258,52 @@ window.submitOrder = async () => {
     return;
   }
 
-  // 產生訂單編號：ORD + 時間戳
   const orderId = "ORD" + Date.now().toString().slice(-8);
-
   const btn = document.getElementById("submitBtn");
   btn.disabled = true;
-  btn.textContent = "送出中...";
+  btn.textContent = "確認客戶資料...";
 
   try {
+    // ⭐ Step 1：查詢或建立客戶
+    const custCheck = await fetch(
+      CUSTOMER_API + "?email=" + encodeURIComponent(email)
+    );
+    const custData = await custCheck.json();
+
+    let customerId;
+    if (custData.found) {
+      customerId = custData.customerId;
+    } else {
+      const custCreate = await fetch(CUSTOMER_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, name, phone, address }),
+      });
+      const custCreated = await custCreate.json();
+      if (!custCreated.customerId) throw new Error("客戶建立失敗");
+      customerId = custCreated.customerId;
+    }
+
+    // ⭐ Step 2：建立訂單
+    btn.textContent = "建立訂單...";
     const res = await fetch(ORDERS_API, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        orderId, name, phone, email, address, note,
+        orderId, customerId,
         items: orderItems,
         total: orderTotal,
       }),
     });
 
     const data = await res.json();
-
     if (!data.success) throw new Error(data.error || "送出失敗");
 
-    // 清空購物車
     localStorage.removeItem("cart");
 
-    // 顯示成功畫面
     document.getElementById("displayOrderId").textContent = orderId;
-    document.getElementById("queryLink").href = `order-status.html?orderId=${orderId}`;
+    document.getElementById("displayCustomerId").textContent = customerId;
+    document.getElementById("queryLink").href = "order-status.html?orderId=" + orderId;
     document.getElementById("successScreen").classList.remove("hidden");
 
   } catch (err) {

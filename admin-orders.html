@@ -44,7 +44,13 @@
         <div class="font-bold text-base" id="modalOrderId"></div>
         <div class="text-xs text-gray-400" id="modalDate"></div>
       </div>
-      <button onclick="closeModal()" class="text-gray-400 hover:text-black text-xl w-8 h-8 flex items-center justify-center">✕</button>
+      <div class="flex items-center gap-2">
+        <button onclick="deleteOrder()"
+          class="text-xs text-red-400 hover:text-red-600 px-2 py-1 rounded-lg hover:bg-red-50 transition">
+          🗑 刪除
+        </button>
+        <button onclick="closeModal()" class="text-gray-400 hover:text-black text-xl w-8 h-8 flex items-center justify-center">✕</button>
+      </div>
     </div>
 
     <div class="px-4 py-4 space-y-4">
@@ -57,26 +63,12 @@
 
       <!-- 客戶資料 -->
       <div class="bg-gray-50 rounded-xl p-3 space-y-2">
-        <div class="text-xs font-medium text-gray-500 mb-1">客戶資料</div>
-        <div class="flex justify-between text-sm">
-          <span class="text-gray-500">姓名</span>
-          <span class="font-medium" id="modalName"></span>
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-xs font-medium text-gray-500">客戶資料</span>
+          <span id="modalCustomerId" class="text-xs font-bold text-blue-500"></span>
         </div>
-        <div class="flex justify-between text-sm">
-          <span class="text-gray-500">電話</span>
-          <a id="modalPhone" href="" class="font-medium text-blue-500"></a>
-        </div>
-        <div class="flex justify-between text-sm">
-          <span class="text-gray-500">Email</span>
-          <a id="modalEmail" href="" class="font-medium text-blue-500 text-xs break-all"></a>
-        </div>
-        <div class="text-sm">
-          <span class="text-gray-500">地址　</span>
-          <span id="modalAddress" class="font-medium"></span>
-        </div>
-        <div id="modalNoteWrap" class="text-sm hidden">
-          <span class="text-gray-500">備註　</span>
-          <span id="modalNote" class="font-medium text-orange-500"></span>
+        <div id="customerInfo">
+          <div class="text-xs text-gray-400 text-center py-2">載入中...</div>
         </div>
       </div>
 
@@ -95,8 +87,9 @@
 </div>
 
 <script>
-const ORDERS_API = "https://shop-project-azure.vercel.app/api/orders-manage?type=list";
-const UPDATE_API = "https://shop-project-azure.vercel.app/api/orders-manage";
+const ORDERS_API  = "https://shop-project-azure.vercel.app/api/orders-manage?type=list";
+const UPDATE_API  = "https://shop-project-azure.vercel.app/api/orders-manage";
+const CUSTOMER_API = "https://shop-project-azure.vercel.app/api/customer";
 
 const STATUS_LIST = ["全部", "待處理", "處理中", "已出貨", "已完成", "已取消"];
 const STATUS_STYLE = {
@@ -185,8 +178,8 @@ function renderOrders() {
               <span class="font-bold text-sm tracking-wide">${o.orderId}</span>
               <span class="text-xs px-2 py-0.5 rounded-full font-medium ${style}">${o.status}</span>
             </div>
-            <div class="text-sm text-gray-600">${o.name} · ${o.phone}</div>
-            <div class="text-xs text-gray-400 mt-0.5 truncate">${firstItem}</div>
+            ${o.customerId ? `<div class="text-xs text-blue-500 font-medium mb-0.5">${o.customerId}</div>` : ""}
+            <div class="text-xs text-gray-400 truncate">${firstItem}</div>
           </div>
           <div class="text-right shrink-0 ml-3">
             <div class="font-bold text-red-500 text-sm">NT$ ${o.total.toLocaleString()}</div>
@@ -205,22 +198,21 @@ function openModal(orderId) {
   const o    = currentOrder;
   const date = formatDate(o.createdAt);
 
-  document.getElementById("modalOrderId").textContent = o.orderId;
-  document.getElementById("modalDate").textContent    = date;
-  document.getElementById("modalName").textContent    = o.name;
-  document.getElementById("modalPhone").textContent   = o.phone;
-  document.getElementById("modalPhone").href          = `tel:${o.phone}`;
-  document.getElementById("modalEmail").textContent   = o.email;
-  document.getElementById("modalEmail").href          = `mailto:${o.email}`;
-  document.getElementById("modalAddress").textContent = o.address;
-  document.getElementById("modalTotal").textContent   = `NT$ ${o.total.toLocaleString()}`;
+  document.getElementById("modalOrderId").textContent    = o.orderId;
+  document.getElementById("modalDate").textContent       = date;
+  document.getElementById("modalCustomerId").textContent = o.customerId || "—";
+  document.getElementById("modalTotal").textContent      = `NT$ ${o.total.toLocaleString()}`;
 
-  // 備註
-  if (o.note) {
-    document.getElementById("modalNote").textContent = o.note;
-    document.getElementById("modalNoteWrap").classList.remove("hidden");
+  // ⭐ 用 customerId 的 email 查詢客戶資料
+  const infoEl = document.getElementById("customerInfo");
+  infoEl.innerHTML = `<div class="text-xs text-gray-400 text-center py-2">載入中...</div>`;
+
+  if (o.customerId) {
+    // 從 customer API 查詢（用 customerId 找 email 需要另一個方式）
+    // 先顯示客戶編號，並從訂單資料庫查詢
+    fetchCustomerByEmail(o.customerId, infoEl);
   } else {
-    document.getElementById("modalNoteWrap").classList.add("hidden");
+    infoEl.innerHTML = `<div class="text-xs text-gray-400 text-center py-2">無客戶資料</div>`;
   }
 
   // 商品明細
@@ -262,6 +254,41 @@ document.getElementById("modal").addEventListener("click", (e) => {
   if (e.target === document.getElementById("modal")) closeModal();
 });
 
+// ── 查詢客戶資料 ─────────────────────────────────────
+async function fetchCustomerByEmail(customerId, el) {
+  try {
+    // 用 customerId 查詢（GET ?customerId=xxx）
+    const res  = await fetch(CUSTOMER_API + "?customerId=" + encodeURIComponent(customerId));
+    const data = await res.json();
+
+    if (data.found) {
+      el.innerHTML = `
+        <div class="space-y-1.5 text-sm">
+          <div class="flex justify-between">
+            <span class="text-gray-500">姓名</span>
+            <span class="font-medium">${data.name || "—"}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">電話</span>
+            <a href="tel:${data.phone}" class="font-medium text-blue-500">${data.phone || "—"}</a>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">Email</span>
+            <a href="mailto:${data.email}" class="font-medium text-blue-500 text-xs">${data.email || "—"}</a>
+          </div>
+          <div class="text-sm">
+            <span class="text-gray-500">地址　</span>
+            <span class="font-medium">${data.address || "—"}</span>
+          </div>
+        </div>`;
+    } else {
+      el.innerHTML = `<div class="text-xs text-gray-400 text-center py-2">找不到客戶資料</div>`;
+    }
+  } catch (err) {
+    el.innerHTML = `<div class="text-xs text-red-400 text-center py-2">載入失敗</div>`;
+  }
+}
+
 // ── 更新狀態 ─────────────────────────────────────────
 async function updateStatus(newStatus) {
   if (!currentOrder) return;
@@ -289,6 +316,31 @@ async function updateStatus(newStatus) {
   } catch (err) {
     alert("更新失敗：" + err.message);
     btns.forEach(b => b.disabled = false);
+  }
+}
+
+// ── 刪除訂單 ─────────────────────────────────────────
+async function deleteOrder() {
+  if (!currentOrder) return;
+  if (!confirm(`確定刪除訂單「${currentOrder.orderId}」？
+此操作無法復原。`)) return;
+
+  try {
+    const res  = await fetch(UPDATE_API, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pageId: currentOrder.pageId }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || "刪除失敗");
+
+    // 本地移除
+    allOrders = allOrders.filter(o => o.orderId !== currentOrder.orderId);
+    closeModal();
+    renderFilterBtns();
+    renderOrders();
+  } catch (err) {
+    alert("刪除失敗：" + err.message);
   }
 }
 
