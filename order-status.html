@@ -93,7 +93,7 @@ window.queryOrder = async () => {
   el.innerHTML = `<div class="text-center text-gray-400 py-8 text-sm">查詢中...</div>`;
 
   try {
-    const res = await fetch(`${QUERY_API}?orderId=${encodeURIComponent(orderId)}`);
+    const res = await fetch(`${QUERY_API}&orderId=${encodeURIComponent(orderId)}`);
     const data = await res.json();
     console.log("API response:", res.status, JSON.stringify(data));
 
