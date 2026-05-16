@@ -63,16 +63,14 @@ async function init() {
   }).join("");
 
   // ⭐ 運費計算邏輯
-  const RATE       = 220;   // 每公斤運費（台幣）
-  const BOX_WEIGHT = 0.5;   // 包材箱重（kg）
-  const SURCHARGE  = 150;   // 未滿 10kg 附加費
-  const FREE_KG    = 10;    // 免附加費門檻（kg）
+  const RATE      = 220;  // 每公斤運費（台幣）
+  const SURCHARGE = 150;  // 未滿 10kg 附加費
+  const FREE_KG   = 10;   // 免附加費門檻（kg）
 
-  const totalWithBox    = totalWeight + BOX_WEIGHT;         // 含包材總重
-  const baseShipping    = Math.ceil(totalWeight * RATE);    // 商品重量 × 220
-  const hasSurcharge    = totalWithBox < FREE_KG;           // 含包材未滿 10kg
-  const shipping        = baseShipping + (hasSurcharge ? SURCHARGE : 0);
-  const grandTotal      = subtotal + shipping;
+  const baseShipping = Math.ceil(totalWeight * RATE);
+  const needSurcharge = totalWeight < FREE_KG;  // 未滿 10kg → 要加附加費
+  const shipping      = baseShipping + (needSurcharge ? SURCHARGE : 0);
+  const grandTotal    = subtotal + shipping;
 
   const weightStr = totalWeight % 1 === 0
     ? `${totalWeight} kg`
@@ -80,7 +78,7 @@ async function init() {
 
 
   const weightLeft   = FREE_KG - totalWeight;
-  const shippingHint = !hasSurcharge
+  const shippingHint = !needSurcharge
     ? `<div class="flex items-center gap-1.5 text-xs text-green-600 font-medium">
          <span>✅</span><span>已達 ${FREE_KG}kg，免附加費！</span>
        </div>`
@@ -117,7 +115,7 @@ async function init() {
         <span>${formatPrice(baseShipping)}</span>
       </div>
 
-      ${hasSurcharge ? `
+      ${needSurcharge ? `
       <div class="flex justify-between items-center text-sm text-orange-500">
         <span>未滿 ${FREE_KG}kg 附加費</span>
         <span>+ ${formatPrice(SURCHARGE)}</span>
