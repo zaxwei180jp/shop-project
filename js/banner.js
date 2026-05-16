@@ -1,4 +1,4 @@
-const BANNER_API = "https://shop-project-azure.vercel.app/api/banners";
+const BANNER_API = "https://shop-project-azure.vercel.app/api/banner-manage";
 
 export async function initBanner(containerId) {
   const container = document.getElementById(containerId);
