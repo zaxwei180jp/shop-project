@@ -25,18 +25,10 @@ async function init() {
   renderSubTabs();
   renderList();
 
-  // ⭐ 從其他頁面帶 ?q= 參數過來，自動執行搜尋
+  // ⭐ 首頁如果帶 ?q= 參數，轉到 search.html
   const urlQ = new URLSearchParams(location.search).get("q");
   if (urlQ) {
-    const input = document.getElementById("navSearchInput");
-    const box   = document.getElementById("searchBox");
-    // 展開搜尋框並填入關鍵字
-    box.classList.remove("hidden");
-    box.classList.add("flex");
-    input.value = urlQ;
-    handleNavSearch(urlQ);
-    // 清掉 URL 參數（不影響上一頁返回）
-    history.replaceState(null, "", location.pathname);
+    window.location.replace("search.html?q=" + encodeURIComponent(urlQ));
   }
 }
 
@@ -200,7 +192,11 @@ function showDropdown(results) {
   }).join("");
 
   if (results.length > 5) {
-    dd.innerHTML += `<div class="px-4 py-2 text-xs text-center text-gray-400 bg-gray-50">共 ${results.length} 筆結果</div>`;
+    dd.innerHTML += `
+      <a href="search.html?q=${encodeURIComponent(searchKeyword)}"
+         class="block px-4 py-2 text-xs text-center text-black font-medium bg-gray-50 hover:bg-gray-100">
+        查看全部 ${results.length} 筆結果 →
+      </a>`;
   }
 
   dd.classList.remove("hidden");
