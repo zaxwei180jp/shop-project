@@ -72,8 +72,10 @@ export default async function handler(req, res) {
       const isSale = getCheckbox(props.isSale);
       const isNew  = getCheckbox(props.isNew);
 
-      const price  = getNumber(props.tprice);  // formula：台幣售價
-      const sprice = getNumber(props.sprice);  // formula：台幣特價
+      const price   = getNumber(props.tprice);  // formula：台幣售價
+      const sprice  = getNumber(props.sprice);  // formula：台幣特價
+      const jprice  = getNumber(props.jprice);  // 日幣原價
+      const jsprice = getNumber(props.jsprice); // 日幣特價
 
       return {
         id: page.id,
@@ -88,7 +90,9 @@ export default async function handler(req, res) {
         isNew,
         isView,
 
-        weight: getNumber(props.weight),             // ⭐ 重量
+        weight:  getNumber(props.weight),            // ⭐ 重量
+        jprice:  jprice,                                // ⭐ 日幣原價
+        jsprice: jsprice,                               // ⭐ 日幣特價
         mainCategory: getSelect(props.mainCategory), // ⭐ 大分類
         category: getSelect(props.category),     // ⭐ 小分類
 
