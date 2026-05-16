@@ -68,7 +68,8 @@
 <script type="module">
 import { formatPrice } from "./js/utils.js";
 
-const QUERY_API = "https://shop-project-azure.vercel.app/api/orders-manage?type=query";
+const QUERY_API    = "https://shop-project-azure.vercel.app/api/orders-manage?type=query";
+const CUSTOMER_API = "https://shop-project-azure.vercel.app/api/customer";
 
 // 狀態對應設定
 const STATUS_MAP = {
@@ -94,6 +95,20 @@ window.queryOrder = async () => {
   try {
     const res = await fetch(`${QUERY_API}?orderId=${encodeURIComponent(orderId)}`);
     const data = await res.json();
+
+    // ⭐ 查客戶資料
+    if (data.customerId) {
+      try {
+        const custRes  = await fetch(CUSTOMER_API + "?customerId=" + encodeURIComponent(data.customerId));
+        const custData = await custRes.json();
+        if (custData.found) {
+          data.name    = custData.name;
+          data.address = custData.address;
+          data.phone   = custData.phone;
+          data.email   = custData.email;
+        }
+      } catch (e) {}
+    }
 
     if (!res.ok) {
       el.innerHTML = `
