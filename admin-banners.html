@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>後台 · 輪播管理</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+<!-- Header -->
+<div class="sticky top-0 z-50 bg-white border-b shadow-sm">
+  <div class="flex justify-between items-center px-4 py-3 max-w-2xl mx-auto">
+    <h1 class="font-bold text-base">🖼 輪播管理</h1>
+    <div class="flex gap-3">
+      <a href="admin.html"        class="text-xs text-gray-400 hover:text-black">新增商品</a>
+      <a href="admin-orders.html" class="text-xs text-gray-400 hover:text-black">訂單管理</a>
+      <a href="index.html"        class="text-xs text-gray-400 hover:text-black">← 前台</a>
+    </div>
+  </div>
+</div>
+
+<div class="px-4 py-5 max-w-2xl mx-auto space-y-4">
+
+  <!-- 新增 Banner -->
+  <div class="bg-white rounded-2xl p-4 shadow-sm">
+    <h2 class="font-semibold text-sm mb-3">新增輪播圖</h2>
+
+    <!-- 上傳區 -->
+    <div id="uploadArea"
+      class="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-xl py-8 cursor-pointer hover:border-gray-400 transition mb-3"
+      onclick="document.getElementById('bannerFileInput').click()">
+      <div id="uploadPlaceholder" class="flex flex-col items-center text-gray-400">
+        <span class="text-3xl mb-2">🖼</span>
+        <span class="text-sm">點擊上傳輪播圖</span>
+        <span class="text-xs text-gray-300 mt-1">建議比例 16:7</span>
+      </div>
+      <img id="uploadPreview" class="hidden w-full object-cover rounded-xl max-h-40">
+      <div id="uploadLoading" class="hidden text-sm text-gray-400">⏳ 上傳中...</div>
+    </div>
+    <input id="bannerFileInput" type="file" accept="image/*" class="hidden">
+
+    <div class="flex gap-2">
+      <input id="bannerTitle" type="text" placeholder="圖片名稱（方便辨識）"
+        class="flex-1 border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+      <button onclick="addBanner()"
+        class="px-4 py-2.5 bg-black text-white text-sm font-medium rounded-xl active:bg-gray-800 transition shrink-0">
+        新增
+      </button>
+    </div>
+    <p id="addStatus" class="text-xs text-gray-400 mt-2 hidden"></p>
+  </div>
+
+  <!-- Banner 列表 -->
+  <div class="bg-white rounded-2xl p-4 shadow-sm">
+    <div class="flex justify-between items-center mb-3">
+      <h2 class="font-semibold text-sm">目前輪播圖</h2>
+      <span id="bannerCount" class="text-xs text-gray-400"></span>
+    </div>
+    <div id="bannerList" class="space-y-3">
+      <div class="text-center text-gray-400 text-sm py-6">載入中...</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const CLOUD_NAME    = "doue38blc";
+const UPLOAD_PRESET = "shop_upload";
+const BANNERS_API   = "https://shop-project-azure.vercel.app/api/banners";
+const ADD_API       = "https://shop-project-azure.vercel.app/api/banner-add";
+const UPDATE_API    = "https://shop-project-azure.vercel.app/api/banner-update";
+const DELETE_API    = "https://shop-project-azure.vercel.app/api/banner-delete";
+
+let banners     = [];
+let uploadedUrl = "";
+
+// ── 初始化 ───────────────────────────────────────────
+async function init() {
+  try {
+    // 取全部（含未啟用），直接查所有然後前端判斷
+    const res = await fetch(BANNERS_API + "?all=1");
+    banners   = await res.json();
+    renderList();
+  } catch (err) {
+    document.getElementById("bannerList").innerHTML =
+      `<div class="text-center text-red-400 text-sm py-4">載入失敗：${err.message}</div>`;
+  }
+}
+
+// ── 列表渲染 ─────────────────────────────────────────
+function renderList() {
+  const el = document.getElementById("bannerList");
+  document.getElementById("bannerCount").textContent = `共 ${banners.length} 張`;
+
+  if (!banners.length) {
+    el.innerHTML = `<div class="text-center text-gray-400 text-sm py-6">尚無輪播圖</div>`;
+    return;
+  }
+
+  el.innerHTML = banners.map((b, i) => `
+    <div id="banner-${b.pageId}" class="flex items-center gap-3 border rounded-xl p-3 bg-gray-50">
+
+      <!-- 排序按鈕 -->
+      <div class="flex flex-col gap-1 shrink-0">
+        <button onclick="moveUp(${i})"
+          class="w-7 h-7 flex items-center justify-center rounded-lg border bg-white text-gray-400 hover:text-black disabled:opacity-30 text-xs"
+          ${i === 0 ? "disabled" : ""}>▲</button>
+        <button onclick="moveDown(${i})"
+          class="w-7 h-7 flex items-center justify-center rounded-lg border bg-white text-gray-400 hover:text-black disabled:opacity-30 text-xs"
+          ${i === banners.length - 1 ? "disabled" : ""}>▼</button>
+      </div>
+
+      <!-- 縮圖 -->
+      <img src="${b.image}" class="w-24 h-14 object-cover rounded-lg shrink-0 bg-gray-200">
+
+      <!-- 資訊 -->
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-medium text-gray-800 truncate">${b.title || "未命名"}</div>
+        <div class="text-xs text-gray-400 mt-0.5">排序：${b.order}</div>
+      </div>
+
+      <!-- 開關 + 刪除 -->
+      <div class="flex flex-col items-end gap-2 shrink-0">
+        <button onclick="toggleActive('${b.pageId}', ${!b.isActive}, ${i})"
+          class="text-xs px-2.5 py-1 rounded-full border font-medium transition
+                 ${b.isActive
+                   ? "bg-green-100 text-green-600 border-green-200"
+                   : "bg-gray-100 text-gray-400 border-gray-200"}">
+          ${b.isActive ? "顯示中" : "已隱藏"}
+        </button>
+        <button onclick="deleteBanner('${b.pageId}', ${i})"
+          class="text-xs text-red-400 hover:text-red-600 active:text-red-700">
+          刪除
+        </button>
+      </div>
+
+    </div>`).join("");
+}
+
+// ── 上傳圖片 ─────────────────────────────────────────
+document.getElementById("bannerFileInput").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  e.target.value = "";
+
+  document.getElementById("uploadPlaceholder").classList.add("hidden");
+  document.getElementById("uploadLoading").classList.remove("hidden");
+  document.getElementById("uploadPreview").classList.add("hidden");
+
+  try {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("upload_preset", UPLOAD_PRESET);
+    const res  = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: fd });
+    const data = await res.json();
+    if (!data.secure_url) throw new Error("上傳失敗");
+
+    uploadedUrl = data.secure_url;
+    document.getElementById("uploadPreview").src = uploadedUrl;
+    document.getElementById("uploadPreview").classList.remove("hidden");
+  } catch (err) {
+    alert("圖片上傳失敗：" + err.message);
+    document.getElementById("uploadPlaceholder").classList.remove("hidden");
+  } finally {
+    document.getElementById("uploadLoading").classList.add("hidden");
+  }
+});
+
+// ── 新增 Banner ───────────────────────────────────────
+async function addBanner() {
+  if (!uploadedUrl) { alert("請先上傳圖片"); return; }
+
+  const title  = document.getElementById("bannerTitle").value.trim() || "Banner";
+  const status = document.getElementById("addStatus");
+  status.textContent = "新增中...";
+  status.classList.remove("hidden");
+
+  try {
+    const res  = await fetch(ADD_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, image: uploadedUrl, order: banners.length + 1 }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || "新增失敗");
+
+    status.textContent = "✅ 新增成功！";
+    // 重置
+    uploadedUrl = "";
+    document.getElementById("uploadPreview").classList.add("hidden");
+    document.getElementById("uploadPlaceholder").classList.remove("hidden");
+    document.getElementById("bannerTitle").value = "";
+    setTimeout(() => status.classList.add("hidden"), 2000);
+    await init();
+  } catch (err) {
+    status.textContent = "❌ " + err.message;
+  }
+}
+
+// ── 排序上移 ─────────────────────────────────────────
+async function moveUp(idx) {
+  if (idx === 0) return;
+  await swapOrder(idx, idx - 1);
+}
+
+async function moveDown(idx) {
+  if (idx === banners.length - 1) return;
+  await swapOrder(idx, idx + 1);
+}
+
+async function swapOrder(a, b) {
+  const ba = banners[a];
+  const bb = banners[b];
+
+  try {
+    await Promise.all([
+      fetch(UPDATE_API, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pageId: ba.pageId, order: bb.order }),
+      }),
+      fetch(UPDATE_API, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pageId: bb.pageId, order: ba.order }),
+      }),
+    ]);
+    // 本地交換
+    [banners[a], banners[b]] = [banners[b], banners[a]];
+    renderList();
+  } catch (err) {
+    alert("排序更新失敗：" + err.message);
+  }
+}
+
+// ── 顯示 / 隱藏切換 ──────────────────────────────────
+async function toggleActive(pageId, newVal, idx) {
+  try {
+    const res  = await fetch(UPDATE_API, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pageId, isActive: newVal }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    banners[idx].isActive = newVal;
+    renderList();
+  } catch (err) {
+    alert("更新失敗：" + err.message);
+  }
+}
+
+// ── 刪除 ─────────────────────────────────────────────
+async function deleteBanner(pageId, idx) {
+  if (!confirm(`確定刪除「${banners[idx].title || "此圖片"}」嗎？`)) return;
+
+  try {
+    const res  = await fetch(DELETE_API, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pageId }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    banners.splice(idx, 1);
+    renderList();
+  } catch (err) {
+    alert("刪除失敗：" + err.message);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
