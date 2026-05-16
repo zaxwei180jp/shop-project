@@ -21,8 +21,7 @@
         <div id="searchBox" class="flex items-center gap-1 bg-gray-50 border rounded-xl px-2 py-1 mr-1">
           <input id="navSearchInput" type="text" placeholder="搜尋商品…"
             class="bg-transparent text-sm outline-none w-36 sm:w-56"
-            oninput="onNavSearch(this.value)"
-            onkeydown="if(event.key==='Escape') closeSearch()">
+            onkeydown="if(event.key==='Escape') clearSearch()">
           <button onclick="clearSearch()" class="text-gray-400 hover:text-black text-sm leading-none">✕</button>
         </div>
         <button onclick="toggleSearch()" id="searchToggleBtn"
@@ -121,6 +120,30 @@ init();
 </script>
 
 <script>
+// ── search.html：用 compositionend 避免注音截斷 ──────
+document.addEventListener("DOMContentLoaded", () => {
+  const input = document.getElementById("navSearchInput");
+  if (!input) return;
+
+  let isComposing = false;
+
+  input.addEventListener("compositionstart", () => { isComposing = true; });
+  input.addEventListener("compositionend", () => {
+    isComposing = false;
+    if (typeof handleNavSearch === "function") handleNavSearch(input.value);
+  });
+  input.addEventListener("input", () => {
+    if (!isComposing && typeof handleNavSearch === "function") {
+      handleNavSearch(input.value);
+    }
+  });
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !isComposing && input.value.trim()) {
+      if (typeof handleNavSearch === "function") handleNavSearch(input.value);
+    }
+  });
+});
+
 // ── Navibar 搜尋（search.html 專用：搜尋框常駐展開）──
 function toggleSearch() {
   document.getElementById("navSearchInput").focus();
