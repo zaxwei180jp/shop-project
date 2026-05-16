@@ -323,6 +323,14 @@ async function saveEdit() {
       category: payload.category, description: payload.description,
       weight: payload.weight, isView: payload.isView,
       isNew: payload.isNew, isHot: payload.isHot, isSale: payload.isSale,
+      sort: payload.sort,
+    });
+
+    // ⭐ 重新排序（sort 小的排前面，沒有 sort 排最後）
+    allProducts.sort((a, b) => {
+      const sa = a.sort || 9999;
+      const sb = b.sort || 9999;
+      return sa !== sb ? sa - sb : 0;
     });
 
     closeEdit();
