@@ -47,10 +47,18 @@ export default async function handler(req, res) {
       return res.status(200).json(orders);
     }
 
-    // ── GET query：查詢單筆訂單 ───────────────────────
+    // ── GET query：用訂單編號或客戶編號查詢 ──────────
     if (req.method === "GET" && req.query.type === "query") {
-      const { orderId } = req.query;
-      if (!orderId) return res.status(400).json({ error: "請提供訂單編號" });
+      const { orderId, customerId } = req.query;
+
+      if (!orderId && !customerId)
+        return res.status(400).json({ error: "請提供訂單編號或客戶編號" });
+
+      // 組合 filter
+      const filter = orderId
+        ? { property: "orderId",    title:     { equals: orderId.trim().toUpperCase() } }
+        : { property: "customerId", rich_text: { equals: customerId.trim() } };
+
       const response = await fetch(
         `https://api.notion.com/v1/databases/${ORDERS_DATABASE_ID}/query`,
         {
@@ -61,22 +69,30 @@ export default async function handler(req, res) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            filter: { property: "orderId", title: { equals: orderId.trim().toUpperCase() } },
+            filter,
+            sorts: [{ timestamp: "created_time", direction: "descending" }],
           }),
         }
       );
       const data = await response.json();
-      if (!data.results?.length) return res.status(404).json({ error: "找不到此訂單編號" });
-      const page  = data.results[0];
-      const props = page.properties;
-      return res.status(200).json({
-        orderId:    getText(props.orderId),
-        customerId: getText(props.customerId),
-        items:      getText(props.items),
-        total:      props.total?.number || 0,
-        status:     props.status?.select?.name || "待處理",
-        createdAt:  page.created_time,
+      if (!data.results?.length)
+        return res.status(404).json({ error: orderId ? "找不到此訂單編號" : "找不到此客戶編號的訂單" });
+
+      // 客戶編號查詢可能有多筆，回傳陣列
+      const orders = data.results.map(page => {
+        const props = page.properties;
+        return {
+          orderId:    getText(props.orderId),
+          customerId: getText(props.customerId),
+          items:      getText(props.items),
+          total:      props.total?.number || 0,
+          status:     props.status?.select?.name || "待處理",
+          createdAt:  page.created_time,
+        };
       });
+
+      // 訂單編號查詢回傳單筆，客戶編號查詢回傳陣列
+      return res.status(200).json(orderId ? orders[0] : orders);
     }
 
     // ── POST：建立訂單 ────────────────────────────────
