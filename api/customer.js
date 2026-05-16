@@ -150,7 +150,7 @@ export default async function handler(req, res) {
             customerId: { title:        [{ text: { content: customerId } }] },
             email:      { email:        email.toLowerCase().trim() },
             name:       { rich_text:    [{ text: { content: name || "" } }] },
-            phone:      { phone_number: phone || "" },
+            phone:      { phone_number: phone || null },
             address:    { rich_text:    [{ text: { content: address || "" } }] },
             createdAt:  { date:         { start: new Date().toISOString().split("T")[0] } },
           },
@@ -159,7 +159,8 @@ export default async function handler(req, res) {
 
       if (!createRes.ok) {
         const err = await createRes.json();
-        return res.status(500).json({ error: err.message || "建立失敗" });
+        console.error("Notion create error:", JSON.stringify(err));
+        return res.status(500).json({ error: err.message || "建立失敗", detail: err });
       }
 
       return res.status(200).json({ customerId, isNew: true });
