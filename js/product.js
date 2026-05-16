@@ -115,6 +115,22 @@ async function init() {
                </div>`
           }
 
+          <!-- 商品資訊列 -->
+          ${(p.idnumber || p.weight) ? `
+          <div class="flex gap-4 mt-4 pt-4 border-t border-gray-100">
+            ${p.idnumber ? `
+            <div class="flex flex-col gap-0.5">
+              <span class="text-xs text-gray-400 uppercase tracking-wide">商品編號</span>
+              <span class="text-sm font-medium text-gray-700">#${p.idnumber}</span>
+            </div>` : ""}
+            ${p.idnumber && p.weight ? `<div class="w-px bg-gray-200"></div>` : ""}
+            ${p.weight ? `
+            <div class="flex flex-col gap-0.5">
+              <span class="text-xs text-gray-400 uppercase tracking-wide">重量</span>
+              <span class="text-sm font-medium text-gray-700">${p.weight} kg</span>
+            </div>` : ""}
+          </div>` : ""}
+
           <!-- 數量 -->
           <div class="flex items-center gap-4 mt-5">
             <span class="text-sm text-gray-500">數量</span>

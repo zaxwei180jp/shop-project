@@ -2,8 +2,7 @@ import { formatPrice } from "./utils.js";
 
 const API_URL     = "https://shop-project-azure.vercel.app/api/products";
 const el          = document.getElementById("cart");
-const SHIPPING    = 150;      // 運費（台幣）
-const FREE_WEIGHT = 10;       // 免運門檻（kg）
+
 
 async function init() {
   const cart = JSON.parse(localStorage.getItem("cart") || "{}");
@@ -63,23 +62,31 @@ async function init() {
       </div>`;
   }).join("");
 
-  // 運費邏輯
-  const hasFreeShipping = totalWeight >= FREE_WEIGHT;
-  const shipping        = hasFreeShipping ? 0 : SHIPPING;
+  // ⭐ 運費計算邏輯
+  const RATE       = 220;   // 每公斤運費（台幣）
+  const BOX_WEIGHT = 0.5;   // 包材箱重（kg）
+  const SURCHARGE  = 150;   // 未滿 10kg 附加費
+  const FREE_KG    = 10;    // 免附加費門檻（kg）
+
+  const totalWithBox    = totalWeight + BOX_WEIGHT;         // 含包材總重
+  const baseShipping    = Math.ceil(totalWeight * RATE);    // 商品重量 × 220
+  const hasSurcharge    = totalWithBox < FREE_KG;           // 含包材未滿 10kg
+  const shipping        = baseShipping + (hasSurcharge ? SURCHARGE : 0);
   const grandTotal      = subtotal + shipping;
-  const weightStr       = totalWeight % 1 === 0
+
+  const weightStr = totalWeight % 1 === 0
     ? `${totalWeight} kg`
     : `${totalWeight.toFixed(2)} kg`;
 
-  // 差距提示
-  const weightLeft = FREE_WEIGHT - totalWeight;
-  const shippingHint = hasFreeShipping
+
+  const weightLeft   = FREE_KG - totalWeight;
+  const shippingHint = !hasSurcharge
     ? `<div class="flex items-center gap-1.5 text-xs text-green-600 font-medium">
-         <span>✅</span><span>已達 ${FREE_WEIGHT}kg，享免運費！</span>
+         <span>✅</span><span>已達 ${FREE_KG}kg，免附加費！</span>
        </div>`
     : `<div class="flex items-center gap-1.5 text-xs text-gray-400">
          <span>📦</span>
-         <span>再加 <span class="font-medium text-gray-600">${weightLeft.toFixed(2).replace(/\.?0+$/, "")} kg</span> 即可免運費</span>
+         <span>未滿 ${FREE_KG}kg，再加 <span class="font-medium text-gray-600">${weightLeft.toFixed(2).replace(/\.?0+$/, "")} kg</span> 可省 NT$${SURCHARGE}</span>
        </div>`;
 
   el.innerHTML = `
@@ -87,11 +94,11 @@ async function init() {
 
     <div class="sticky bottom-0 bg-white pt-3 pb-2 border-t mt-2 space-y-2">
 
-      <!-- 總重 + 免運提示 -->
+      <!-- 總重 -->
       <div class="flex items-center justify-between text-sm px-0.5">
         <div class="flex items-center gap-1.5 text-gray-500">
           <span>⚖️</span>
-          <span>總重量</span>
+          <span>商品總重</span>
         </div>
         <span class="font-medium text-gray-700">${weightStr}</span>
       </div>
@@ -104,13 +111,19 @@ async function init() {
         <span>${formatPrice(subtotal)}</span>
       </div>
 
-      <!-- 運費 -->
-      <div class="flex justify-between items-center text-sm ${hasFreeShipping ? "text-green-600" : "text-gray-500"}">
-        <span>運費</span>
-        <span>${hasFreeShipping ? "免運" : formatPrice(SHIPPING)}</span>
+      <!-- 運費明細 -->
+      <div class="flex justify-between items-center text-sm text-gray-500">
+        <span>運費（${weightStr} × NT$${RATE}）</span>
+        <span>${formatPrice(baseShipping)}</span>
       </div>
 
-      <!-- 分隔線 -->
+      ${hasSurcharge ? `
+      <div class="flex justify-between items-center text-sm text-orange-500">
+        <span>未滿 ${FREE_KG}kg 附加費</span>
+        <span>+ ${formatPrice(SURCHARGE)}</span>
+      </div>` : ""}
+
+      <!-- 總計 -->
       <div class="border-t pt-2 flex justify-between items-center">
         <span class="text-gray-700 font-medium">總計</span>
         <span class="text-xl sm:text-2xl font-bold">${formatPrice(grandTotal)}</span>
