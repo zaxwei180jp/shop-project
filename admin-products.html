@@ -41,7 +41,13 @@
   <div class="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto">
     <div class="sticky top-0 bg-white flex justify-between items-center px-4 py-3 border-b rounded-t-2xl">
       <h2 class="font-bold text-sm">編輯商品</h2>
-      <button onclick="closeEdit()" class="text-gray-400 hover:text-black text-xl w-8 h-8 flex items-center justify-center">✕</button>
+      <div class="flex items-center gap-2">
+        <button onclick="saveEdit()"
+          class="px-3 py-1.5 bg-black text-white text-xs font-medium rounded-lg active:bg-gray-800 transition">
+          儲存變更
+        </button>
+        <button onclick="closeEdit()" class="text-gray-400 hover:text-black text-xl w-8 h-8 flex items-center justify-center">✕</button>
+      </div>
     </div>
     <div class="px-4 py-4 space-y-3">
       <div>
@@ -101,10 +107,7 @@
           <span class="text-sm">🈹 特價</span>
         </label>
       </div>
-      <button onclick="saveEdit()"
-        class="w-full py-3 bg-black text-white font-medium rounded-xl active:bg-gray-800 transition">
-        儲存變更
-      </button>
+
     </div>
   </div>
 </div>
@@ -314,7 +317,7 @@ async function saveEdit() {
   if (jp)  payload.jprice  = Number(jp);
   if (jsp) payload.jsprice = Number(jsp);
 
-  const btn = document.querySelector("#editModal button:last-child");
+  const btn = document.querySelector("#editModal .sticky button:first-child");
   btn.textContent = "儲存中..."; btn.disabled = true;
 
   try {
