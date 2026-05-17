@@ -15,7 +15,6 @@
     <div class="flex items-center gap-2 mb-3">
       <span class="text-lg">🤖</span>
       <h2 class="font-semibold text-sm text-purple-800">AI 商品描述生成</h2>
-      <span class="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">免費</span>
     </div>
 
     <div class="space-y-2">
@@ -24,45 +23,15 @@
         <div class="flex gap-2">
           <input id="aiProductName" type="text"
             placeholder="例：カークランド アーモンドミルク"
-            class="flex-1 border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white">
-          <button onclick="copyPrompt()"
-            class="px-3 py-2.5 bg-purple-600 text-white text-xs font-medium rounded-xl hover:bg-purple-700 active:bg-purple-800 transition shrink-0">
-            複製 Prompt
+            class="flex-1 border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
+            onkeydown="if(event.key==='Enter') generateDescription()">
+          <button id="aiGenerateBtn" onclick="generateDescription()"
+            class="px-4 py-2.5 bg-purple-600 text-white text-sm font-medium rounded-xl hover:bg-purple-700 active:bg-purple-800 transition shrink-0">
+            ✨ 一鍵生成
           </button>
         </div>
       </div>
-
-      <div class="flex gap-2">
-        <a id="openClaudeBtn" href="https://claude.ai" target="_blank"
-          class="flex-1 flex items-center justify-center gap-1.5 py-2 border border-purple-200 rounded-xl text-xs text-purple-700 hover:bg-purple-50 transition">
-          <span>✨</span> 開啟 Claude.ai
-        </a>
-        <button onclick="togglePasteArea()"
-          class="flex-1 flex items-center justify-center gap-1.5 py-2 border border-blue-200 rounded-xl text-xs text-blue-700 hover:bg-blue-50 transition">
-          <span>📋</span> 貼上 AI 回覆
-        </button>
-      </div>
-
-      <!-- 貼上區 -->
-      <div id="pasteArea" class="hidden">
-        <textarea id="aiOutput" rows="6" placeholder="把 Claude 的回覆貼在這裡，然後點「填入欄位」..."
-          class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white resize-none leading-relaxed"></textarea>
-        <button onclick="fillFields()"
-          class="w-full mt-2 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 active:bg-blue-800 transition">
-          ✨ 自動填入商品欄位
-        </button>
-        <p id="fillStatus" class="text-xs text-center mt-1.5 hidden"></p>
-      </div>
-
-      <!-- Prompt 預覽 -->
-      <div id="promptPreview" class="hidden bg-white rounded-xl border border-purple-100 p-3">
-        <div class="flex justify-between items-center mb-1.5">
-          <span class="text-xs font-medium text-gray-500">已複製的 Prompt</span>
-          <button onclick="document.getElementById('promptPreview').classList.add('hidden')"
-            class="text-gray-300 hover:text-gray-500 text-xs">✕</button>
-        </div>
-        <pre id="promptText" class="text-xs text-gray-600 whitespace-pre-wrap leading-relaxed"></pre>
-      </div>
+      <p id="aiStatus" class="text-xs text-gray-400 hidden"></p>
     </div>
   </div>
 
@@ -354,110 +323,61 @@ async function submitProduct() {
   } catch (err) { alert("新增失敗：" + err.message); btn.disabled = false; btn.textContent = "＋ 新增商品"; }
 }
 
-// ── AI 描述生成工具 ──────────────────────────────────
+// ── AI 一鍵生成 ──────────────────────────────────────
+const GENERATE_API = "https://shop-project-azure.vercel.app/api/generate-description";
 
-function buildPrompt() {
-  const name = document.getElementById("aiProductName").value.trim();
-  return `你是一個日本好市多代購的商品編輯，請根據以下資訊產出商品資料。
+async function generateDescription() {
+  const name   = document.getElementById("aiProductName").value.trim();
+  const btn    = document.getElementById("aiGenerateBtn");
+  const status = document.getElementById("aiStatus");
 
-商品：${name || "（請填入商品名稱）"}
-
-請按照以下格式輸出，不要加其他說明：
-
-商品名稱：[繁體中文商品名稱，簡潔清楚]
-
-商品內容跟特點
-• [特點一]
-• [特點二]
-• [特點三]
-• [特點四]
-• [特點五]
-
-重量：[重量]
-產地：[產地]
-內容量：[內容量或數量]
-保存方式：[常溫／冷藏／冷凍]`;
-}
-
-function copyPrompt() {
-  const name = document.getElementById("aiProductName").value.trim();
   if (!name) {
     alert("請先填入商品名稱或編號");
     document.getElementById("aiProductName").focus();
     return;
   }
-  const prompt = buildPrompt();
-  navigator.clipboard.writeText(prompt).then(() => {
-    // 顯示預覽
-    document.getElementById("promptText").textContent = prompt;
-    document.getElementById("promptPreview").classList.remove("hidden");
-    // 更新 Claude 開啟連結
-    document.getElementById("openClaudeBtn").href = "https://claude.ai/new";
 
-    const btn = document.querySelector("button[onclick='copyPrompt()']");
-    const orig = btn.textContent;
-    btn.textContent = "✅ 已複製！";
-    btn.classList.replace("bg-purple-600", "bg-green-600");
-    setTimeout(() => {
-      btn.textContent = orig;
-      btn.classList.replace("bg-green-600", "bg-purple-600");
-    }, 2000);
-  });
-}
+  btn.disabled    = true;
+  btn.textContent = "⏳ 生成中...";
+  status.textContent = "AI 正在查詢商品資訊，約需 5-10 秒…";
+  status.className   = "text-xs text-gray-400";
+  status.classList.remove("hidden");
 
-function togglePasteArea() {
-  const area = document.getElementById("pasteArea");
-  area.classList.toggle("hidden");
-  if (!area.classList.contains("hidden")) {
-    document.getElementById("aiOutput").focus();
-  }
-}
+  try {
+    const res  = await fetch(GENERATE_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productName: name }),
+    });
+    const data = await res.json();
 
-function fillFields() {
-  const raw    = document.getElementById("aiOutput").value.trim();
-  const status = document.getElementById("fillStatus");
-  if (!raw) {
-    status.textContent = "⚠️ 請先貼上 AI 回覆";
-    status.className   = "text-xs text-center mt-1.5 text-orange-500";
-    status.classList.remove("hidden");
-    return;
-  }
+    if (!res.ok) throw new Error(data.error || "生成失敗");
 
-  let filled = 0;
+    const text = data.text || "";
 
-  // 商品名稱
-  const nameMatch = raw.match(/商品名稱[：:]\s*(.+)/);
-  if (nameMatch) {
-    document.getElementById("tname").value = nameMatch[1].trim();
-    filled++;
-  }
-
-  // 描述：取「商品內容跟特點」之後的全部內容
-  const descMatch = raw.match(/商品內容跟特點[\s\S]*/);
-  if (descMatch) {
-    document.getElementById("description").value = descMatch[0].trim();
-    filled++;
-  } else {
-    // fallback：取商品名稱後的全部當描述
-    const fallback = raw.replace(/商品名稱[：:]\s*.+
-?/, "").trim();
-    if (fallback) {
-      document.getElementById("description").value = fallback;
-      filled++;
+    // 解析並填入欄位
+    const nameMatch = text.match(/商品名稱[：:]\s*(.+)/);
+    if (nameMatch) {
+      document.getElementById("tname").value = nameMatch[1].trim();
     }
-  }
 
-  if (filled > 0) {
-    status.textContent = `✅ 已填入 ${filled} 個欄位，請確認後繼續填寫其他資訊`;
-    status.className   = "text-xs text-center mt-1.5 text-green-600";
-    status.classList.remove("hidden");
-    // 滾動到商品名稱欄位
+    const descMatch = text.match(/商品內容跟特點[\s\S]*/);
+    if (descMatch) {
+      document.getElementById("description").value = descMatch[0].trim();
+    }
+
+    status.textContent = "✅ 已生成並填入，請確認內容後繼續！";
+    status.className   = "text-xs text-green-600";
+
+    // 滾動到商品名稱
     document.getElementById("tname").scrollIntoView({ behavior: "smooth", block: "center" });
-    document.getElementById("tname").focus();
-  } else {
-    status.textContent = "⚠️ 無法解析內容，請確認格式是否正確";
-    status.className   = "text-xs text-center mt-1.5 text-orange-500";
-    status.classList.remove("hidden");
+
+  } catch (err) {
+    status.textContent = "❌ 生成失敗：" + err.message;
+    status.className   = "text-xs text-red-500";
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = "✨ 一鍵生成";
   }
 }
 
