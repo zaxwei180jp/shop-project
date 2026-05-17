@@ -34,6 +34,11 @@ async function init() {
     subtotal    += sub;
     totalWeight += weight;
 
+    // 沒有填重量的商品顯示提示
+    const weightNote = !p.weight
+      ? `<div class="text-xs text-orange-400 mt-0.5">⚠️ 未設定重量</div>`
+      : `<div class="text-xs text-gray-400 mt-0.5">${p.weight} kg／件</div>`;
+
     const img = p.image || p.images?.[0] || "https://via.placeholder.com/80";
 
     return `
@@ -43,7 +48,7 @@ async function init() {
         <div class="flex-1 min-w-0">
           <div class="text-sm sm:text-base font-semibold leading-snug line-clamp-2 text-gray-800">${p.name}</div>
           <div class="text-red-500 text-sm mt-1 font-medium">${formatPrice(p.price)}</div>
-          ${p.weight ? `<div class="text-xs text-gray-400 mt-0.5">${p.weight} kg／件</div>` : ""}
+          ${weightNote}
 
           <div class="flex items-center mt-2 border rounded-lg overflow-hidden w-fit">
             <button onclick="updateQty('${id}', -1)"
