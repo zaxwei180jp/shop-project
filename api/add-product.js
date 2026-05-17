@@ -55,7 +55,7 @@ export default async function handler(req, res) {
           weight: {
             number: Number(weight) || 0,
           },
-          idnumber: idnumber ? { number: Number(idnumber) } : { number: null },
+          idnumber: { rich_text: [{ text: { content: idnumber ? String(idnumber) : '' } }] },
           isView:  { checkbox: !!isView },
           isHot:   { checkbox: !!isHot  },
           isSale:  { checkbox: !!isSale },

@@ -23,7 +23,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           filter: {
             property: "idnumber",
-            number: { equals: Number(idnumber) },
+            rich_text: { equals: String(idnumber).trim() },
           },
           page_size: 1,
         }),
