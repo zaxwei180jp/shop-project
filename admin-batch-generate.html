@@ -159,7 +159,10 @@ async function startBatch() {
       const genRes  = await fetch(GENERATE_API, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ productName: keyword }),
+        body:    JSON.stringify({
+          jname:    p.jname    || "",
+          idnumber: p.idnumber || "",
+        }),
       });
       const genData = await genRes.json();
       if (!genRes.ok) throw new Error(genData.error || "生成失敗");

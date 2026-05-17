@@ -400,10 +400,15 @@ async function generateEditDesc() {
   status.classList.remove("hidden");
 
   try {
+    // 優先用 jname+idnumber，否則用手動輸入
+    const body = name
+      ? { productName: "コストコ " + name }
+      : { jname: editingProduct?.jname || "", idnumber: editingProduct?.idnumber || "" };
+
     const res  = await fetch(GENERATE_API, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productName: name }),
+      body: JSON.stringify(body),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "生成失敗");
