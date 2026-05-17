@@ -258,7 +258,7 @@ function renderList() {
           <div class="text-xs text-gray-400 mt-0.5">${[p.mainCategory,p.category].filter(Boolean).join(" · ")}</div>
           ${p.idnumber ? `<div class="text-xs text-gray-300 mt-0.5">#${p.idnumber}</div>` : ""}
           ${p.sort ? `<div class="text-xs text-gray-300 mt-0.5">排序：${p.sort}</div>` : ""}
-          <div class="text-xs text-red-500 mt-0.5 font-medium">NT$ ${(p.price||0).toLocaleString()}</div>
+          <div class="text-xs text-red-500 mt-0.5 font-medium">NT$ ${Math.round(p.price||0).toLocaleString()}</div>
         </div>
         <div class="flex flex-col items-end gap-2 shrink-0">
           <span class="text-xs px-2 py-0.5 rounded-full font-medium ${p.isView ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400"}">
@@ -361,6 +361,13 @@ async function saveEdit() {
   if (jp)  payload.jprice  = Number(jp);
   if (jsp) payload.jsprice = Number(jsp);
 
+  // ⭐ 圖片
+  const validImgs = editImgUrls.filter(Boolean);
+  if (validImgs.length) {
+    payload.image  = validImgs[0];
+    payload.images = validImgs.join(",");
+  }
+
   const btn = document.querySelector("#editModal .sticky button:first-child");
   btn.textContent = "儲存中..."; btn.disabled = true;
 
@@ -460,9 +467,6 @@ function pickEditSlot(slotIdx, slot) {
       const data = await res.json();
       if (!data.secure_url) throw new Error("失敗");
       editImgUrls[slotIdx] = data.secure_url;
-      console.log("上傳成功:", data.secure_url);
-      console.log("slot:", slot);
-      console.log("slot-img:", slot.querySelector(".slot-img"));
       const imgEl = slot.querySelector(".slot-img");
       if (imgEl) {
         imgEl.src = data.secure_url;
