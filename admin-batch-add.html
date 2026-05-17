@@ -83,43 +83,58 @@ let mainCategories = [];
 let subCategories  = [];
 
 // ── 圖片上傳 ─────────────────────────────────────────
-function pickImg(id) {
+function addImgSlot(rowId) {
+  if (!imgUrls[rowId]) imgUrls[rowId] = [];
+  const slotIdx   = imgUrls[rowId].length;
+  imgUrls[rowId].push("");
+
+  const container = document.getElementById(`imgSlots-${rowId}`);
+  const slot      = document.createElement("div");
+  slot.id         = `slot-${rowId}-${slotIdx}`;
+  slot.className  = "relative w-16 h-16 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:border-gray-400 transition overflow-hidden bg-gray-50 shrink-0";
+  slot.innerHTML  = `
+    <span class="slot-ph text-gray-300 text-lg pointer-events-none">📷</span>
+    <img class="slot-img hidden absolute inset-0 w-full h-full object-cover">
+    <div class="slot-load hidden absolute inset-0 bg-gray-50 flex items-center justify-center text-xs">⏳</div>
+    <button onclick="removeImgSlot(${rowId},${slotIdx},event)"
+      class="slot-del hidden absolute top-0 right-0 bg-black bg-opacity-60 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs z-10">✕</button>
+    ${slotIdx === 0 ? '<span class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-40 text-white text-xs text-center leading-4">主圖</span>' : ""}`;
+  slot.onclick = () => pickSlotImg(rowId, slotIdx, slot);
+  container.appendChild(slot);
+}
+
+function pickSlotImg(rowId, slotIdx, slot) {
   const input = document.createElement("input");
   input.type = "file"; input.accept = "image/*";
   input.onchange = async (e) => {
     const file = e.target.files[0]; if (!file) return;
-    const box  = document.getElementById(`imgBox-${id}`);
-    document.getElementById(`imgPh-${id}`).classList.add("hidden");
-    document.getElementById(`imgLoad-${id}`).classList.remove("hidden");
+    slot.querySelector(".slot-ph").classList.add("hidden");
+    slot.querySelector(".slot-load").classList.remove("hidden");
     try {
       const fd = new FormData();
       fd.append("file", file); fd.append("upload_preset", UPLOAD_PRESET);
       const res  = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method:"POST", body:fd });
       const data = await res.json();
       if (!data.secure_url) throw new Error("上傳失敗");
-      imgUrls[id] = data.secure_url;
-      document.getElementById(`imgPrev-${id}`).src = data.secure_url;
-      document.getElementById(`imgPrev-${id}`).classList.remove("hidden");
-      document.getElementById(`imgDel-${id}`).classList.remove("hidden");
-      box.onclick = null;
-    } catch (err) {
-      alert("圖片上傳失敗：" + err.message);
-      document.getElementById(`imgPh-${id}`).classList.remove("hidden");
-    } finally {
-      document.getElementById(`imgLoad-${id}`).classList.add("hidden");
-    }
+      imgUrls[rowId][slotIdx] = data.secure_url;
+      slot.querySelector(".slot-img").src = data.secure_url;
+      slot.querySelector(".slot-img").classList.remove("hidden");
+      slot.querySelector(".slot-del").classList.remove("hidden");
+      slot.onclick = null;
+    } catch { alert("圖片上傳失敗"); slot.querySelector(".slot-ph").classList.remove("hidden"); }
+    finally { slot.querySelector(".slot-load").classList.add("hidden"); }
   };
   input.click();
 }
 
-function clearImg(id, e) {
+function removeImgSlot(rowId, slotIdx, e) {
   e.stopPropagation();
-  delete imgUrls[id];
-  document.getElementById(`imgPrev-${id}`).classList.add("hidden");
-  document.getElementById(`imgDel-${id}`).classList.add("hidden");
-  document.getElementById(`imgPh-${id}`).classList.remove("hidden");
-  const box = document.getElementById(`imgBox-${id}`);
-  box.onclick = () => pickImg(id);
+  imgUrls[rowId][slotIdx] = "";
+  const slot = document.getElementById(`slot-${rowId}-${slotIdx}`);
+  slot.querySelector(".slot-img").classList.add("hidden");
+  slot.querySelector(".slot-del").classList.add("hidden");
+  slot.querySelector(".slot-ph").classList.remove("hidden");
+  slot.onclick = () => pickSlotImg(rowId, slotIdx, slot);
 }
 
 // ── 初始化：載入現有分類 ──────────────────────────────
@@ -189,20 +204,14 @@ function addRow() {
           class="w-full border rounded-lg px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black">
       </div>
 
-      <!-- 圖片 -->
-      <div>
-        <label class="text-xs text-gray-400 sm:hidden mb-0.5 block">圖片</label>
-        <div id="imgBox-${id}"
-          class="relative w-full h-24 sm:aspect-square sm:h-auto rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:border-gray-400 transition overflow-hidden bg-gray-50"
-          onclick="pickImg(${id})">
-          <div id="imgPh-${id}" class="flex flex-col items-center text-gray-300 pointer-events-none">
-            <span class="text-xl">📷</span>
-          </div>
-          <img id="imgPrev-${id}" class="hidden absolute inset-0 w-full h-full object-cover">
-          <div id="imgLoad-${id}" class="hidden absolute inset-0 bg-gray-50 flex items-center justify-center text-xs text-gray-400">⏳</div>
-          <button id="imgDel-${id}" onclick="clearImg(${id}, event)"
-            class="hidden absolute top-0.5 right-0.5 bg-black bg-opacity-50 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs z-10">✕</button>
-        </div>
+      <!-- 圖片區（跨欄，多張）-->
+      <div class="sm:col-span-full">
+        <label class="text-xs text-gray-400 mb-1.5 block">圖片（第一張為主圖）</label>
+        <div class="flex flex-wrap gap-2" id="imgSlots-${id}"></div>
+        <button type="button" onclick="addImgSlot(${id})"
+          class="mt-2 w-full py-1.5 border border-dashed border-gray-300 rounded-lg text-xs text-gray-400 hover:border-gray-500 transition">
+          ＋ 新增圖片
+        </button>
       </div>
 
       <!-- 刪除 -->
@@ -219,6 +228,8 @@ function addRow() {
   const gridEl = div.querySelector(".sm\\:grid");
   if (gridEl) gridEl.style.gridTemplateColumns = "2fr 1fr 1fr 1fr 1fr 80px 32px";
   document.getElementById("rowList").appendChild(div);
+  imgUrls[id] = [];
+  addImgSlot(id);
 }
 
 function removeRow(id) {
@@ -328,8 +339,8 @@ async function submitAll() {
           mainCategory: r.main,
           category:     r.sub,
           idnumber:     r.idnum ? r.idnum : null,
-          image:        imgUrls[r.id] || "",
-          images:       imgUrls[r.id] || "",
+          image:        (imgUrls[r.id] || []).filter(Boolean)[0] || "",
+          images:       (imgUrls[r.id] || []).filter(Boolean).join(","),
           isView:       true,
           isNew:        false,
           isHot:        false,
