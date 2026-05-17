@@ -408,13 +408,37 @@ function addEditImgSlot(existingUrl) {
   slot.id         = `editSlot-${slotIdx}`;
   slot.className  = "relative w-16 h-16 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:border-gray-400 transition overflow-hidden bg-gray-50 shrink-0";
   const hasImg    = !!existingUrl;
-  slot.innerHTML  = [
-    `<span class="slot-ph ${hasImg?"hidden":""} text-gray-300 text-lg pointer-events-none">📷</span>`,
-    `<img class="slot-img ${hasImg?"":"hidden"} absolute inset-0 w-full h-full object-cover" ${hasImg?'src="'+existingUrl+'"':""}>`,
-    `<div class="slot-load hidden absolute inset-0 bg-gray-50 flex items-center justify-center text-xs">⏳</div>`,
-    `<button onclick="removeEditSlot(${slotIdx},event)" class="slot-del ${hasImg?"":"hidden"} absolute top-0 right-0 bg-black bg-opacity-60 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs z-10">✕</button>`,
-    slotIdx===0?'<span class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-40 text-white text-xs text-center leading-4">主圖</span>':""
-  ].join("");
+
+  // 用 DOM 操作避免字串拼接問題
+  const ph = document.createElement("span");
+  ph.className = "slot-ph text-gray-300 text-lg pointer-events-none" + (hasImg ? " hidden" : "");
+  ph.textContent = "📷";
+
+  const img = document.createElement("img");
+  img.className = "slot-img absolute inset-0 w-full h-full object-cover" + (hasImg ? "" : " hidden");
+  if (hasImg) img.src = existingUrl;
+
+  const loader = document.createElement("div");
+  loader.className = "slot-load hidden absolute inset-0 bg-gray-50 flex items-center justify-center text-xs";
+  loader.textContent = "⏳";
+
+  const delBtn = document.createElement("button");
+  delBtn.className = "slot-del absolute top-0 right-0 bg-black bg-opacity-60 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs z-10" + (hasImg ? "" : " hidden");
+  delBtn.textContent = "✕";
+  delBtn.onclick = (e) => removeEditSlot(slotIdx, e);
+
+  slot.appendChild(ph);
+  slot.appendChild(img);
+  slot.appendChild(loader);
+  slot.appendChild(delBtn);
+
+  if (slotIdx === 0) {
+    const label = document.createElement("span");
+    label.className = "absolute bottom-0 left-0 right-0 bg-black bg-opacity-40 text-white text-xs text-center leading-4";
+    label.textContent = "主圖";
+    slot.appendChild(label);
+  }
+
   if (!hasImg) slot.onclick = () => pickEditSlot(slotIdx, slot);
   container.appendChild(slot);
 }
