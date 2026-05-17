@@ -47,17 +47,10 @@ export default async function handler(req, res) {
       return res.status(200).json(orders);
     }
 
-    // ── GET query：用訂單編號或客戶編號查詢 ──────────
+    // ── GET query：訂單編號查詢 ───────────────────────
     if (req.method === "GET" && req.query.type === "query") {
-      const { orderId, customerId } = req.query;
-
-      if (!orderId && !customerId)
-        return res.status(400).json({ error: "請提供訂單編號或客戶編號" });
-
-      // 組合 filter
-      const filter = orderId
-        ? { property: "orderId",    title:     { equals: orderId.trim().toUpperCase() } }
-        : { property: "customerId", rich_text: { equals: customerId.trim() } };
+      const { orderId } = req.query;
+      if (!orderId) return res.status(400).json({ error: "請提供訂單編號" });
 
       const response = await fetch(
         `https://api.notion.com/v1/databases/${ORDERS_DATABASE_ID}/query`,
@@ -69,17 +62,85 @@ export default async function handler(req, res) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            filter,
-            sorts: [{ timestamp: "created_time", direction: "descending" }],
+            filter: { property: "orderId", title: { equals: orderId.trim().toUpperCase() } },
           }),
         }
       );
       const data = await response.json();
       if (!data.results?.length)
-        return res.status(404).json({ error: orderId ? "找不到此訂單編號" : "找不到此客戶編號的訂單" });
+        return res.status(404).json({ error: "找不到此訂單編號" });
 
-      // 客戶編號查詢可能有多筆，回傳陣列
-      const orders = data.results.map(page => {
+      const page  = data.results[0];
+      const props = page.properties;
+      return res.status(200).json({
+        orderId:    getText(props.orderId),
+        customerId: getText(props.customerId),
+        items:      getText(props.items),
+        total:      props.total?.number || 0,
+        status:     props.status?.select?.name || "待處理",
+        createdAt:  page.created_time,
+      });
+    }
+
+    // ── GET customer-orders：客戶編號 + email 驗證後查訂單 ──
+    if (req.method === "GET" && req.query.type === "customer") {
+      const { customerId, email } = req.query;
+      if (!customerId || !email)
+        return res.status(400).json({ error: "請提供客戶編號和 Email" });
+
+      // 先驗證 email 是否符合此客戶編號
+      const { CUSTOMER_DATABASE_ID } = process.env;
+      const verifyRes = await fetch(
+        `https://api.notion.com/v1/databases/${CUSTOMER_DATABASE_ID}/query`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${NOTION_TOKEN}`,
+            "Notion-Version": "2022-06-28",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            filter: {
+              and: [
+                { property: "customerId", title: { equals: customerId.trim() } },
+                { property: "email", email: { equals: email.toLowerCase().trim() } },
+              ],
+            },
+            page_size: 1,
+          }),
+        }
+      );
+      const verifyData = await verifyRes.json();
+      if (!verifyData.results?.length)
+        return res.status(401).json({ error: "客戶編號或 Email 不正確" });
+
+      const customer = verifyData.results[0].properties;
+      const customerInfo = {
+        name:    customer.name?.rich_text?.map(t => t.plain_text).join("") || "",
+        phone:   customer.phone?.phone_number || "",
+        address: customer.address?.rich_text?.map(t => t.plain_text).join("") || "",
+        email:   customer.email?.email || "",
+      };
+
+      // 查詢該客戶所有訂單
+      const ordersRes = await fetch(
+        `https://api.notion.com/v1/databases/${ORDERS_DATABASE_ID}/query`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${NOTION_TOKEN}`,
+            "Notion-Version": "2022-06-28",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            filter: { property: "customerId", rich_text: { equals: customerId.trim() } },
+            sorts:  [{ timestamp: "created_time", direction: "descending" }],
+          }),
+        }
+      );
+      const ordersData = await ordersRes.json();
+
+      const orders = (ordersData.results || []).map(page => {
         const props = page.properties;
         return {
           orderId:    getText(props.orderId),
@@ -91,8 +152,7 @@ export default async function handler(req, res) {
         };
       });
 
-      // 訂單編號查詢回傳單筆，客戶編號查詢回傳陣列
-      return res.status(200).json(orderId ? orders[0] : orders);
+      return res.status(200).json({ customer: customerInfo, orders });
     }
 
     // ── POST：建立訂單 ────────────────────────────────
