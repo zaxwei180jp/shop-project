@@ -57,6 +57,57 @@ export default async function handler(req, res) {
       return res.status(200).json({ found: false });
     }
 
+    // ── GET list：所有客戶 ──────────────────────────────
+    if (req.method === "GET" && req.query.type === "list") {
+      const response = await fetch(
+        `https://api.notion.com/v1/databases/${CUSTOMER_DATABASE_ID}/query`,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            sorts: [{ property: "customerId", direction: "ascending" }],
+            page_size: 100,
+          }),
+        }
+      );
+      const data = await response.json();
+      const customers = data.results.map(page => {
+        const props = page.properties;
+        return {
+          pageId:     page.id,
+          customerId: getText(props.customerId),
+          email:      props.email?.email || "",
+          name:       getText(props.name),
+          phone:      props.phone?.phone_number || "",
+          address:    getText(props.address),
+          createdAt:  page.created_time,
+        };
+      });
+      return res.status(200).json(customers);
+    }
+
+    // ── PATCH：更新客戶資料 ──────────────────────────────
+    if (req.method === "PATCH") {
+      const { pageId, name, phone, address } = req.body;
+      if (!pageId) return res.status(400).json({ error: "缺少 pageId" });
+
+      const properties = {};
+      if (name    !== undefined) properties.name    = { rich_text:    [{ text: { content: name || "" } }] };
+      if (phone   !== undefined) properties.phone   = { phone_number: phone || null };
+      if (address !== undefined) properties.address = { rich_text:    [{ text: { content: address || "" } }] };
+
+      const response = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({ properties }),
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        return res.status(500).json({ error: err.message || "更新失敗" });
+      }
+      return res.status(200).json({ success: true });
+    }
+
     // ── POST：新增客戶 + 自動產生編號 ────────────────
     if (req.method === "POST") {
       const { email, name, phone, address } = req.body;
