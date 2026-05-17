@@ -78,14 +78,14 @@ async function init() {
           <img id="mainImg" src="${mainImg}"
                class="w-full aspect-square object-cover rounded-xl sm:rounded-2xl">
 
-          \${imagesArr.length > 0 ? \`
+          ${imagesArr.length > 0 ? `
           <div class="flex gap-2 mt-3 overflow-x-auto pb-1">
-            \${imagesArr.map(img => \`
-              <img src="\${img}"
+            ${imagesArr.map(img => `
+              <img src="${img}"
                    class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 object-cover rounded-lg cursor-pointer thumb
                           border-2 border-transparent hover:border-black transition">
-            \`).join("")}
-          </div>\` : ""}
+            `).join("")}
+          </div>` : ""}
         </div>
 
         <!-- 商品資訊 -->
