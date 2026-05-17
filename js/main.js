@@ -176,7 +176,8 @@ function showDropdown(results) {
 
   const preview = results.slice(0, 5);
   dd.innerHTML = preview.map(p => {
-    const img = p.image || p.images?.[0] || "";
+    const imagesArr = Array.isArray(p.images) ? p.images : (p.images||"").split(",").map(s=>s.trim()).filter(Boolean);
+    const img = p.image || imagesArr[0] || "";
     const highlight = (text) => {
       if (!text) return "";
       const re = new RegExp(`(${searchKeyword.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, "gi");

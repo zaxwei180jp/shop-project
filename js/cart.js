@@ -39,7 +39,8 @@ async function init() {
       ? `<div class="text-xs text-orange-400 mt-0.5">⚠️ 未設定重量</div>`
       : `<div class="text-xs text-gray-400 mt-0.5">${p.weight} kg／件</div>`;
 
-    const img = p.image || p.images?.[0] || "https://via.placeholder.com/80";
+    const imagesArr = Array.isArray(p.images) ? p.images : (p.images||"").split(",").map(s=>s.trim()).filter(Boolean);
+    const img = p.image || imagesArr[0] || "https://via.placeholder.com/80";
 
     return `
       <div class="flex items-center gap-3 py-4 border-b">

@@ -1,7 +1,8 @@
 import { formatPrice } from "./utils.js";
 
 export function renderCard(p) {
-  const img = p.image || p.images?.[0] || "https://via.placeholder.com/400";
+  const imagesArr = Array.isArray(p.images) ? p.images : (p.images||"").split(",").map(s=>s.trim()).filter(Boolean);
+  const img = p.image || imagesArr[0] || "https://via.placeholder.com/400";
 
   const badges = [
     p.isNew  ? `<span class="bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded">NEW</span>` : "",
