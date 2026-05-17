@@ -29,8 +29,8 @@ export async function initBanner(containerId) {
           ${banners.map((b, i) => `
             <div class="w-full shrink-0">
               <img src="${b.image}" alt="${b.title}"
-                class="w-full object-cover"
-                style="aspect-ratio: 16/7; max-height: 420px;"
+                class="w-full block"
+                style="max-height: 420px; width: 100%;"
                 draggable="false">
             </div>`).join("")}
         </div>
