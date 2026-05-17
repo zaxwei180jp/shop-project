@@ -185,7 +185,7 @@ function addRow() {
       <!-- 商品編號 -->
       <div>
         <label class="text-xs text-gray-400 sm:hidden mb-0.5 block">商品編號</label>
-        <input id="idnum-${id}" type="number" placeholder="編號"
+        <input id="idnum-${id}" type="text" placeholder="編號"
           class="w-full border rounded-lg px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black">
       </div>
 
@@ -327,7 +327,7 @@ async function submitAll() {
           jsprice:      0,
           mainCategory: r.main,
           category:     r.sub,
-          idnumber:     r.idnum ? Number(r.idnum) : null,
+          idnumber:     r.idnum ? r.idnum : null,
           image:        imgUrls[r.id] || "",
           images:       imgUrls[r.id] || "",
           isView:       true,

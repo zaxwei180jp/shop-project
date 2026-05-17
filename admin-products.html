@@ -56,7 +56,7 @@
       </div>
       <div>
         <label class="text-xs text-gray-500 mb-1 block">商品編號</label>
-        <input id="editIdnumber" type="number" placeholder="idnumber"
+        <input id="editIdnumber" type="text" placeholder="idnumber"
           class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
       </div>
 
@@ -327,7 +327,7 @@ async function saveEdit() {
     mainCategory: document.getElementById("editMainCat").value.trim(),
     category:     document.getElementById("editCat").value.trim(),
     description:  document.getElementById("editDesc").value.trim(),
-    idnumber:     document.getElementById("editIdnumber").value !== "" ? Number(document.getElementById("editIdnumber").value) : undefined,
+    idnumber:     document.getElementById("editIdnumber").value !== "" ? document.getElementById("editIdnumber").value : undefined,
     weight:       Number(document.getElementById("editWeight").value) || 0,
     sort:         document.getElementById('editSort').value !== '' ? Number(document.getElementById('editSort').value) : undefined,
     isView:       document.getElementById("editIsView").checked,
