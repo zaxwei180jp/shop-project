@@ -162,22 +162,24 @@ function addRow() {
       <!-- 大分類 -->
       <div>
         <label class="text-xs text-gray-400 sm:hidden mb-0.5 block">大分類</label>
-        <input id="main-${id}" type="text" placeholder="大分類" list="mainList-${id}"
+        <div id="mainBtns-${id}" class="flex flex-wrap gap-1 mb-1">
+          ${mainCategories.map(m => `
+            <button type="button" onclick="selectMain(${id}, '${m}')"
+              class="main-btn-${id} px-2 py-0.5 rounded-full border text-xs transition bg-white text-gray-600 border-gray-300 hover:border-black">
+              ${m}
+            </button>`).join("")}
+        </div>
+        <input id="main-${id}" type="text" placeholder="或輸入新分類"
           class="w-full border rounded-lg px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
-          oninput="updateSubList(${id})">
-        <datalist id="mainList-${id}">
-          ${mainCategories.map(m => `<option value="${m}">`).join("")}
-        </datalist>
+          oninput="onMainInput(${id})">
       </div>
 
       <!-- 小分類 -->
       <div>
         <label class="text-xs text-gray-400 sm:hidden mb-0.5 block">小分類</label>
-        <input id="sub-${id}" type="text" placeholder="小分類" list="subList-${id}"
+        <div id="subBtns-${id}" class="flex flex-wrap gap-1 mb-1 hidden"></div>
+        <input id="sub-${id}" type="text" placeholder="或輸入新分類"
           class="w-full border rounded-lg px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black">
-        <datalist id="subList-${id}">
-          ${[...new Set(subCategories.map(s => s.sub))].map(s => `<option value="${s}">`).join("")}
-        </datalist>
       </div>
 
       <!-- 商品編號 -->
@@ -224,17 +226,52 @@ function removeRow(id) {
   if (el) el.remove();
 }
 
-function updateSubList(id) {
-  const selectedMain = document.getElementById(`main-${id}`).value.trim();
+const BTN_NORMAL = "px-2 py-0.5 rounded-full border text-xs transition bg-white text-gray-600 border-gray-300 hover:border-black";
+const BTN_ACTIVE = "px-2 py-0.5 rounded-full border text-xs transition bg-black text-white border-black";
+
+function selectMain(id, value) {
+  document.getElementById(`main-${id}`).value = value;
+  // 更新按鈕樣式
+  document.querySelectorAll(`.main-btn-${id}`).forEach(btn => {
+    btn.className = btn.textContent.trim() === value ? BTN_ACTIVE : BTN_NORMAL;
+  });
+  // 清空小分類
+  document.getElementById(`sub-${id}`).value = "";
+  renderSubBtns(id, value);
+}
+
+function onMainInput(id) {
+  const val = document.getElementById(`main-${id}`).value.trim();
+  // 取消所有大分類按鈕選中
+  document.querySelectorAll(`.main-btn-${id}`).forEach(btn => {
+    btn.className = BTN_NORMAL;
+  });
+  renderSubBtns(id, val);
+}
+
+function renderSubBtns(id, selectedMain) {
   const subs = [...new Set(
     subCategories
       .filter(s => !selectedMain || s.main === selectedMain)
       .map(s => s.sub)
-  )];
-  const datalist = document.getElementById(`subList-${id}`);
-  if (datalist) {
-    datalist.innerHTML = subs.map(s => `<option value="${s}">`).join("");
-  }
+  )].sort();
+
+  const el = document.getElementById(`subBtns-${id}`);
+  if (!subs.length) { el.classList.add("hidden"); return; }
+
+  el.classList.remove("hidden");
+  el.innerHTML = subs.map(s => `
+    <button type="button" onclick="selectSub(${id}, '${s}')"
+      class="sub-btn-${id} ${BTN_NORMAL}">
+      ${s}
+    </button>`).join("");
+}
+
+function selectSub(id, value) {
+  document.getElementById(`sub-${id}`).value = value;
+  document.querySelectorAll(`.sub-btn-${id}`).forEach(btn => {
+    btn.className = btn.textContent.trim() === value ? BTN_ACTIVE : BTN_NORMAL;
+  });
 }
 
 // ── 全部送出 ─────────────────────────────────────────
