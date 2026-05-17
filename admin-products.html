@@ -319,7 +319,8 @@ function openEdit(id) {
   document.getElementById("editIsSale").checked = p.isSale;
   editImgUrls = [];
   document.getElementById("editImgSlots").innerHTML = "";
-  const allImgs = (p.images || "").split(",").map(s => s.trim()).filter(Boolean);
+  const imagesRaw = Array.isArray(p.images) ? p.images.join(",") : (p.images || "");
+  const allImgs = imagesRaw.split(",").map(s => s.trim()).filter(Boolean);
   const existingImgs = p.image ? [p.image, ...allImgs.filter(u => u !== p.image)] : allImgs;
   existingImgs.forEach(url => addEditImgSlot(url));
   if (!existingImgs.length) addEditImgSlot();
