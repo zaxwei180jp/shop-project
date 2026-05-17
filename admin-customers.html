@@ -89,7 +89,7 @@
 
 <script>
 const CUSTOMER_API = "https://shop-project-azure.vercel.app/api/customer";
-const ORDERS_API   = "https://shop-project-azure.vercel.app/api/orders-manage?type=customer";
+const ORDERS_API   = "https://shop-project-azure.vercel.app/api/orders-manage?type=list";
 
 const STATUS_STYLE = {
   "待處理": "bg-yellow-100 text-yellow-700",
@@ -195,11 +195,9 @@ async function openModal(pageId) {
 async function loadCustomerOrders(customerId, email) {
   const el = document.getElementById("orderList");
   try {
-    const res  = await fetch(
-      `${ORDERS_API}&customerId=${encodeURIComponent(customerId)}&email=${encodeURIComponent(email)}`
-    );
-    const data = await res.json();
-    const orders = data.orders || [];
+    const res  = await fetch(ORDERS_API);
+    const allOrders = await res.json();
+    const orders = allOrders.filter(o => o.customerId === customerId);
 
     if (!orders.length) {
       el.innerHTML = `<div class="text-xs text-gray-400 text-center py-3">尚無訂單紀錄</div>`;
