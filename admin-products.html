@@ -300,8 +300,9 @@ async function toggleView(id, newVal) {
 
 // ── 編輯 Modal ────────────────────────────────────────
 function openEdit(id) {
+  try {
   editingProduct = allProducts.find(x => x.id === id);
-  if (!editingProduct) return;
+  if (!editingProduct) { console.error("找不到商品 id:", id); return; }
   const p = editingProduct;
   document.getElementById("editName").value     = p.name    || "";
   document.getElementById("editIdnumber").value = p.idnumber || "";
@@ -324,6 +325,7 @@ function openEdit(id) {
   if (!existingImgs.length) addEditImgSlot();
   document.getElementById("editModal").classList.remove("hidden");
   document.body.style.overflow = "hidden";
+  } catch(err) { console.error("openEdit 錯誤:", err); alert("編輯開啟失敗：" + err.message); }
 }
 
 function closeEdit() {
