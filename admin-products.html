@@ -151,6 +151,7 @@ let allProducts    = [];
 let editingProduct = null;
 let activeMain     = "";
 let activeSub      = "";
+let editImgUrls    = [];
 
 const BTN_NORMAL = "px-3 py-1 rounded-full border text-xs transition bg-white text-gray-600 border-gray-300 hover:border-black active:bg-gray-100";
 const BTN_ACTIVE = "px-3 py-1 rounded-full border text-xs transition bg-black text-white border-black";
@@ -398,8 +399,6 @@ async function saveEdit() {
 // ── 商品管理圖片上傳 ─────────────────────────────────
 const CLOUD_NAME_P    = "doue38blc";
 const UPLOAD_PRESET_P = "shop_upload";
-let editImgUrls = [];
-
 function addEditImgSlot(existingUrl) {
   const slotIdx   = editImgUrls.length;
   editImgUrls.push(existingUrl || "");
