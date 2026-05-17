@@ -59,9 +59,7 @@ export default async function handler(req, res) {
 
     // ⭐ 多圖
     const getImages = (prop) => {
-      const text = getText(prop);
-      if (!text) return [];
-      return text.split(",").map(s => s.trim()).filter(Boolean);
+      return getText(prop); // 回傳原始字串，前端自行 split
     };
 
     const products = data.results.map((page) => {
