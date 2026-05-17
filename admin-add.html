@@ -32,6 +32,9 @@
         </div>
       </div>
       <p id="aiStatus" class="text-xs text-gray-400 hidden"></p>
+
+      <!-- 生成結果預覽 -->
+      <div id="aiPreview" class="hidden bg-white rounded-xl border border-purple-100 p-3 text-xs text-gray-600 leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto"></div>
     </div>
   </div>
 
@@ -354,6 +357,7 @@ async function generateDescription() {
     if (!res.ok) throw new Error(data.error || "生成失敗");
 
     const text = data.text || "";
+    console.log("AI 生成內容：", text);
 
     // 解析並填入欄位
     const nameMatch = text.match(/商品名稱[：:]\s*(.+)/);
@@ -368,6 +372,11 @@ async function generateDescription() {
 
     status.textContent = "✅ 已生成並填入，請確認內容後繼續！";
     status.className   = "text-xs text-green-600";
+
+    // 顯示預覽
+    const preview = document.getElementById("aiPreview");
+    preview.textContent = text;
+    preview.classList.remove("hidden");
 
     // 滾動到商品名稱
     document.getElementById("tname").scrollIntoView({ behavior: "smooth", block: "center" });
