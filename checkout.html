@@ -106,11 +106,6 @@
           class="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
       </div>
 
-      <div>
-        <label class="text-xs text-gray-500 mb-1 block">備註</label>
-        <textarea id="note" placeholder="顏色、尺寸或其他備註（選填）" rows="3"
-          class="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black resize-none"></textarea>
-      </div>
 
     </div>
   </div>
@@ -200,8 +195,8 @@ async function init() {
 
   // ⭐ 運費計算
   const baseShipping = Math.ceil(totalWeight * RATE);
-  const hasSurcharge = totalWeight < FREE_KG;
-  orderShipping      = baseShipping + (hasSurcharge ? SURCHARGE : 0);
+  const needSurcharge = totalWeight < FREE_KG;
+  orderShipping      = baseShipping + (needSurcharge ? SURCHARGE : 0);
   orderTotal         = orderSubtotal + orderShipping;
 
   // 訂單明細
@@ -219,7 +214,7 @@ async function init() {
   shippingRow.className = "flex justify-between items-center mt-1 text-sm text-gray-500";
 
   let shippingText = formatPrice(baseShipping) + "（" + totalWeight.toFixed(2).replace(/\.?0+$/, "") + "kg × NT$" + RATE + "）";
-  if (hasSurcharge) shippingText += " + NT$" + SURCHARGE + " 附加費";
+  if (needSurcharge) shippingText += " + NT$" + SURCHARGE + " 附加費";
   shippingEl.textContent = shippingText;
 
   document.getElementById("orderTotal").textContent = formatPrice(orderTotal);
@@ -240,7 +235,6 @@ window.submitOrder = async () => {
   const phone   = document.getElementById("phone").value.trim();
   const email   = document.getElementById("email").value.trim();
   const address = document.getElementById("address").value.trim();
-  const note    = document.getElementById("note").value.trim();
 
   // 驗證
   if (!name || !phone || !email || !address) {
