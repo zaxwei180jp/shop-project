@@ -55,7 +55,7 @@
   <!-- 功能選單 -->
   <div class="px-4 py-5 max-w-4xl mx-auto">
 
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
       <button onclick="showPage('products')"
         class="admin-menu-btn bg-white rounded-2xl p-4 shadow-sm text-center hover:shadow-md transition active:bg-gray-50">
         <div class="text-3xl mb-2">📦</div>
@@ -79,6 +79,12 @@
         <div class="text-3xl mb-2">🖼</div>
         <div class="text-sm font-semibold">輪播管理</div>
         <div class="text-xs text-gray-400 mt-0.5">上傳 / 排序 / 顯示</div>
+      </button>
+      <button onclick="showPage('customers')"
+        class="admin-menu-btn bg-white rounded-2xl p-4 shadow-sm text-center hover:shadow-md transition active:bg-gray-50">
+        <div class="text-3xl mb-2">👥</div>
+        <div class="text-sm font-semibold">客戶管理</div>
+        <div class="text-xs text-gray-400 mt-0.5">查看 / 編輯資料</div>
       </button>
     </div>
 
@@ -104,7 +110,8 @@ const PAGES = {
   products: { title: "📦 商品管理", url: "admin-products.html" },
   add:      { title: "➕ 新增商品", url: "admin-add.html"      },
   orders:   { title: "📋 訂單管理", url: "admin-orders.html"   },
-  banners:  { title: "🖼 輪播管理", url: "admin-banners.html"  },
+  banners:   { title: "🖼 輪播管理", url: "admin-banners.html"   },
+  customers: { title: "👥 客戶管理", url: "admin-customers.html" },
 };
 
 // ── 初始化：檢查是否已登入 ───────────────────────────
