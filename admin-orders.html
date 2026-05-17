@@ -24,7 +24,7 @@
 
   <!-- 搜尋 -->
   <div class="relative mb-4">
-    <input id="searchInput" type="text" placeholder="搜尋訂單編號、姓名、電話…"
+    <input id="searchInput" type="text" placeholder="搜尋訂單編號、客戶編號…"
       class="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black pr-10">
     <span class="absolute right-3 top-2.5 text-gray-400">🔍</span>
   </div>
@@ -151,9 +151,8 @@ function renderOrders() {
     list = list.filter(o => o.status === activeFilter);
   if (keyword)
     list = list.filter(o =>
-      o.orderId.toLowerCase().includes(keyword) ||
-      o.name.toLowerCase().includes(keyword) ||
-      o.phone.includes(keyword)
+      (o.orderId    || "").toLowerCase().includes(keyword) ||
+      (o.customerId || "").toLowerCase().includes(keyword)
     );
 
   document.getElementById("totalBadge").textContent = `共 ${allOrders.length} 筆`;
