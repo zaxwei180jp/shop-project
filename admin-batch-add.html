@@ -229,7 +229,7 @@ function addRow() {
   if (gridEl) gridEl.style.gridTemplateColumns = "2fr 1fr 1fr 1fr 1fr 80px 32px";
   document.getElementById("rowList").appendChild(div);
   imgUrls[id] = [];
-  addImgSlot(id);
+  setTimeout(() => addImgSlot(id), 0);
 }
 
 function removeRow(id) {
