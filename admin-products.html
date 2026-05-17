@@ -417,7 +417,8 @@ function addEditImgSlot(existingUrl) {
   ph.textContent = "📷";
 
   const img = document.createElement("img");
-  img.className = "slot-img absolute inset-0 w-full h-full object-cover" + (hasImg ? "" : " hidden");
+  img.className = "slot-img absolute inset-0 w-full h-full object-cover";
+  img.style.display = hasImg ? "block" : "none";
   if (hasImg) img.src = existingUrl;
 
   const loader = document.createElement("div");
@@ -459,10 +460,15 @@ function pickEditSlot(slotIdx, slot) {
       const data = await res.json();
       if (!data.secure_url) throw new Error("失敗");
       editImgUrls[slotIdx] = data.secure_url;
-      slot.querySelector(".slot-img").src = data.secure_url;
-      slot.querySelector(".slot-img").classList.remove("hidden");
+      const imgEl = slot.querySelector(".slot-img");
+      imgEl.src = data.secure_url;
+      imgEl.style.display = "block";
+      imgEl.classList.remove("hidden");
+      slot.querySelector(".slot-ph").style.display = "none";
+      slot.querySelector(".slot-del").style.display = "flex";
       slot.querySelector(".slot-del").classList.remove("hidden");
       slot.onclick = null;
+      slot.style.cursor = "default";
     } catch { alert("上傳失敗"); slot.querySelector(".slot-ph").classList.remove("hidden"); }
     finally { slot.querySelector(".slot-load").classList.add("hidden"); }
   };
