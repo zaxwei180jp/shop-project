@@ -48,12 +48,13 @@
 
   <!-- 表格標題 -->
   <div class="hidden sm:grid gap-2 px-1 text-xs text-gray-400 font-medium"
-    style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 32px;">
+    style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 80px 32px;">
     <span>商品名稱 *</span>
     <span>日幣售價 *</span>
     <span>大分類</span>
     <span>小分類</span>
     <span>商品編號</span>
+    <span>圖片</span>
     <span></span>
   </div>
 
@@ -71,12 +72,55 @@
 </div>
 
 <script>
-const ADD_API      = "https://shop-project-azure.vercel.app/api/add-product";
+const ADD_API       = "https://shop-project-azure.vercel.app/api/add-product";
+const CLOUD_NAME    = "doue38blc";
+const UPLOAD_PRESET = "shop_upload";
+const imgUrls       = {}; // rowId → uploadedUrl
 const PRODUCTS_API = "https://shop-project-azure.vercel.app/api/products";
 
 let rowCount = 0;
 let mainCategories = [];
 let subCategories  = [];
+
+// ── 圖片上傳 ─────────────────────────────────────────
+function pickImg(id) {
+  const input = document.createElement("input");
+  input.type = "file"; input.accept = "image/*";
+  input.onchange = async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    const box  = document.getElementById(`imgBox-${id}`);
+    document.getElementById(`imgPh-${id}`).classList.add("hidden");
+    document.getElementById(`imgLoad-${id}`).classList.remove("hidden");
+    try {
+      const fd = new FormData();
+      fd.append("file", file); fd.append("upload_preset", UPLOAD_PRESET);
+      const res  = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method:"POST", body:fd });
+      const data = await res.json();
+      if (!data.secure_url) throw new Error("上傳失敗");
+      imgUrls[id] = data.secure_url;
+      document.getElementById(`imgPrev-${id}`).src = data.secure_url;
+      document.getElementById(`imgPrev-${id}`).classList.remove("hidden");
+      document.getElementById(`imgDel-${id}`).classList.remove("hidden");
+      box.onclick = null;
+    } catch (err) {
+      alert("圖片上傳失敗：" + err.message);
+      document.getElementById(`imgPh-${id}`).classList.remove("hidden");
+    } finally {
+      document.getElementById(`imgLoad-${id}`).classList.add("hidden");
+    }
+  };
+  input.click();
+}
+
+function clearImg(id, e) {
+  e.stopPropagation();
+  delete imgUrls[id];
+  document.getElementById(`imgPrev-${id}`).classList.add("hidden");
+  document.getElementById(`imgDel-${id}`).classList.add("hidden");
+  document.getElementById(`imgPh-${id}`).classList.remove("hidden");
+  const box = document.getElementById(`imgBox-${id}`);
+  box.onclick = () => pickImg(id);
+}
 
 // ── 初始化：載入現有分類 ──────────────────────────────
 (async () => {
@@ -99,7 +143,7 @@ function addRow() {
   div.className = "bg-white rounded-xl border p-3 shadow-sm";
 
   div.innerHTML = `
-    <div class="grid gap-2 items-start" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 32px;">
+    <div class="grid gap-2 items-start" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 80px 32px;">
 
       <!-- 商品名稱 -->
       <div>
@@ -143,6 +187,22 @@ function addRow() {
           class="w-full border rounded-lg px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black">
       </div>
 
+      <!-- 圖片 -->
+      <div>
+        <label class="text-xs text-gray-400 sm:hidden mb-0.5 block">圖片</label>
+        <div id="imgBox-${id}"
+          class="relative w-full aspect-square rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:border-gray-400 transition overflow-hidden bg-gray-50"
+          onclick="pickImg(${id})">
+          <div id="imgPh-${id}" class="flex flex-col items-center text-gray-300 pointer-events-none">
+            <span class="text-xl">📷</span>
+          </div>
+          <img id="imgPrev-${id}" class="hidden absolute inset-0 w-full h-full object-cover">
+          <div id="imgLoad-${id}" class="hidden absolute inset-0 bg-gray-50 flex items-center justify-center text-xs text-gray-400">⏳</div>
+          <button id="imgDel-${id}" onclick="clearImg(${id}, event)"
+            class="hidden absolute top-0.5 right-0.5 bg-black bg-opacity-50 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs z-10">✕</button>
+        </div>
+      </div>
+
       <!-- 刪除 -->
       <button onclick="removeRow(${id})"
         class="mt-1 w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 text-lg rounded-lg hover:bg-red-50 transition">
@@ -183,7 +243,7 @@ async function submitAll() {
     const name  = document.getElementById(`name-${id}`)?.value.trim();
     const price = document.getElementById(`jprice-${id}`)?.value.trim();
     if (!name && !price) return; // 完全空的跳過
-    rows.push({ id, name, price,
+    rows.push({ id: id, name, price,
       main:  document.getElementById(`main-${id}`)?.value.trim() || "",
       sub:   document.getElementById(`sub-${id}`)?.value.trim()  || "",
       idnum: document.getElementById(`idnum-${id}`)?.value.trim() || "",
@@ -228,6 +288,8 @@ async function submitAll() {
           mainCategory: r.main,
           category:     r.sub,
           idnumber:     r.idnum ? Number(r.idnum) : null,
+          image:        imgUrls[r.id] || "",
+          images:       imgUrls[r.id] || "",
           isView:       true,
           isNew:        false,
           isHot:        false,
