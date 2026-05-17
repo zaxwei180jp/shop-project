@@ -27,10 +27,10 @@ export async function initBanner(containerId) {
           class="flex transition-transform duration-500 ease-in-out"
           style="will-change: transform;">
           ${banners.map((b, i) => `
-            <div class="w-full shrink-0">
+            <div class="w-full shrink-0" style="aspect-ratio: 16/7; max-height: 420px; overflow: hidden; background: #000;">
               <img src="${b.image}" alt="${b.title}"
-                class="w-full block"
-                style="max-height: 420px; width: 100%;"
+                class="w-full h-full object-contain"
+                style="display: block;"
                 draggable="false">
             </div>`).join("")}
         </div>
