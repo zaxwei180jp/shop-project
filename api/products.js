@@ -79,7 +79,8 @@ export default async function handler(req, res) {
 
       return {
         id: page.id,
-        name: getText(props.tname),
+        name:  getText(props.tname),
+        jname: getText(props.jname),   // ⭐ 日文名稱
         description: getText(props.description),
 
         price: isSale ? sprice || price : price,
