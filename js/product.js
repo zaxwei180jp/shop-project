@@ -10,8 +10,16 @@ async function init() {
     const res = await fetch(API_URL);
     const data = await res.json();
 
-    // 與首頁相同排序
+    // 與首頁相同排序：大分類 Tab 順序 → 各自 sort
+    const mainOrder = [];
+    data.forEach(p => {
+      if (p.mainCategory && !mainOrder.includes(p.mainCategory))
+        mainOrder.push(p.mainCategory);
+    });
     data.sort((a, b) => {
+      const mi = mainOrder.indexOf(a.mainCategory ?? "");
+      const mj = mainOrder.indexOf(b.mainCategory ?? "");
+      if (mi !== mj) return mi - mj;
       const sa = a.sort || 9999;
       const sb = b.sort || 9999;
       if (sa !== sb) return sa - sb;

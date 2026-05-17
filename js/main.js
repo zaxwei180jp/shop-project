@@ -16,11 +16,21 @@ async function init() {
   const res = await fetch(API_URL);
   allData   = await res.json();
 
+  // ⭐ 記錄大分類出現的順序（Tab 順序）
+  const mainOrder = [];
+  allData.forEach(p => {
+    if (p.mainCategory && !mainOrder.includes(p.mainCategory))
+      mainOrder.push(p.mainCategory);
+  });
+
+  // ⭐ 排序：先按大分類 Tab 順序，再按各自 sort
   allData.sort((a, b) => {
+    const mi = mainOrder.indexOf(a.mainCategory ?? "");
+    const mj = mainOrder.indexOf(b.mainCategory ?? "");
+    if (mi !== mj) return mi - mj;
     const sa = a.sort || 9999;
     const sb = b.sort || 9999;
     if (sa !== sb) return sa - sb;
-    // sort 相同時，用時間由新到舊當第二排序
     return new Date(b.update || b.createdTime) - new Date(a.update || a.createdTime);
   });
 
