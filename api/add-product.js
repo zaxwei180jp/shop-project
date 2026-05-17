@@ -14,8 +14,8 @@ export default async function handler(req, res) {
       isView, isHot, isSale, isNew,
     } = req.body;
 
-    if (!tname || !jprice) {
-      return res.status(400).json({ error: "商品名稱和價格為必填" });
+    if (!tname) {
+      return res.status(400).json({ error: "商品名稱為必填" });
     }
 
     const response = await fetch("https://api.notion.com/v1/pages", {
