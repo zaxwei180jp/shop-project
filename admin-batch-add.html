@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>批次上架商品</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+<div class="px-4 py-5 max-w-5xl mx-auto space-y-4">
+
+  <!-- 標題 -->
+  <div class="bg-white rounded-2xl p-4 shadow-sm">
+    <div class="flex items-center justify-between mb-1">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">📦</span>
+        <h1 class="font-bold text-base">批次上架商品</h1>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="addRow()"
+          class="px-3 py-1.5 border rounded-xl text-sm hover:bg-gray-50 transition">
+          ＋ 新增一列
+        </button>
+        <button id="submitBtn" onclick="submitAll()"
+          class="px-4 py-1.5 bg-black text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition">
+          ✅ 全部送出
+        </button>
+      </div>
+    </div>
+    <p class="text-xs text-gray-400">填完所有商品後，點「全部送出」一次寫入 Notion</p>
+  </div>
+
+  <!-- 進度條（送出時顯示）-->
+  <div id="progressWrap" class="hidden bg-white rounded-2xl p-4 shadow-sm">
+    <div class="flex justify-between text-xs text-gray-500 mb-1.5">
+      <span id="progressText">0 / 0</span>
+      <span id="progressPct">0%</span>
+    </div>
+    <div class="w-full bg-gray-100 rounded-full h-2 mb-2">
+      <div id="progressBar" class="bg-black h-2 rounded-full transition-all" style="width:0%"></div>
+    </div>
+    <div class="flex gap-4 text-xs">
+      <span class="text-green-600">✅ 成功：<span id="statSuccess">0</span></span>
+      <span class="text-red-500">❌ 失敗：<span id="statFail">0</span></span>
+    </div>
+  </div>
+
+  <!-- 表格標題 -->
+  <div class="hidden sm:grid gap-2 px-1 text-xs text-gray-400 font-medium"
+    style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 32px;">
+    <span>商品名稱 *</span>
+    <span>日幣售價 *</span>
+    <span>大分類</span>
+    <span>小分類</span>
+    <span>商品編號</span>
+    <span></span>
+  </div>
+
+  <!-- 商品列表 -->
+  <div id="rowList" class="space-y-2"></div>
+
+  <!-- 底部按鈕 -->
+  <div class="flex justify-between items-center pb-8">
+    <button onclick="addRow()"
+      class="px-4 py-2.5 border-2 border-dashed border-gray-300 rounded-xl text-sm text-gray-400 hover:border-gray-500 hover:text-gray-600 transition w-full">
+      ＋ 新增一列
+    </button>
+  </div>
+
+</div>
+
+<script>
+const ADD_API      = "https://shop-project-azure.vercel.app/api/add-product";
+const PRODUCTS_API = "https://shop-project-azure.vercel.app/api/products";
+
+let rowCount = 0;
+let mainCategories = [];
+let subCategories  = [];
+
+// ── 初始化：載入現有分類 ──────────────────────────────
+(async () => {
+  try {
+    const res  = await fetch(PRODUCTS_API);
+    const data = await res.json();
+    mainCategories = [...new Set(data.map(p => p.mainCategory).filter(Boolean))].sort();
+    subCategories  = data.map(p => ({ main: p.mainCategory, sub: p.category })).filter(p => p.sub);
+  } catch {}
+  // 預設加 3 列
+  addRow(); addRow(); addRow();
+})();
+
+// ── 新增一列 ─────────────────────────────────────────
+function addRow() {
+  rowCount++;
+  const id  = rowCount;
+  const div = document.createElement("div");
+  div.id    = `row-${id}`;
+  div.className = "bg-white rounded-xl border p-3 shadow-sm";
+
+  div.innerHTML = `
+    <div class="grid gap-2 items-start" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 32px;">
+
+      <!-- 商品名稱 -->
+      <div>
+        <label class="text-xs text-gray-400 sm:hidden mb-0.5 block">商品名稱 *</label>
+        <input id="name-${id}" type="text" placeholder="商品名稱"
+          class="w-full border rounded-lg px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+      </div>
+
+      <!-- 台幣售價 -->
+      <div>
+        <label class="text-xs text-gray-400 sm:hidden mb-0.5 block">日幣售價 *</label>
+        <input id="jprice-${id}" type="number" placeholder="¥0"
+          class="w-full border rounded-lg px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+      </div>
+
+      <!-- 大分類 -->
+      <div>
+        <label class="text-xs text-gray-400 sm:hidden mb-0.5 block">大分類</label>
+        <input id="main-${id}" type="text" placeholder="大分類" list="mainList-${id}"
+          class="w-full border rounded-lg px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+          oninput="updateSubList(${id})">
+        <datalist id="mainList-${id}">
+          ${mainCategories.map(m => `<option value="${m}">`).join("")}
+        </datalist>
+      </div>
+
+      <!-- 小分類 -->
+      <div>
+        <label class="text-xs text-gray-400 sm:hidden mb-0.5 block">小分類</label>
+        <input id="sub-${id}" type="text" placeholder="小分類" list="subList-${id}"
+          class="w-full border rounded-lg px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+        <datalist id="subList-${id}">
+          ${[...new Set(subCategories.map(s => s.sub))].map(s => `<option value="${s}">`).join("")}
+        </datalist>
+      </div>
+
+      <!-- 商品編號 -->
+      <div>
+        <label class="text-xs text-gray-400 sm:hidden mb-0.5 block">商品編號</label>
+        <input id="idnum-${id}" type="number" placeholder="編號"
+          class="w-full border rounded-lg px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+      </div>
+
+      <!-- 刪除 -->
+      <button onclick="removeRow(${id})"
+        class="mt-1 w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 text-lg rounded-lg hover:bg-red-50 transition">
+        ✕
+      </button>
+
+    </div>
+    <div id="rowStatus-${id}" class="text-xs mt-1.5 hidden"></div>
+  `;
+
+  document.getElementById("rowList").appendChild(div);
+}
+
+function removeRow(id) {
+  const el = document.getElementById(`row-${id}`);
+  if (el) el.remove();
+}
+
+function updateSubList(id) {
+  const selectedMain = document.getElementById(`main-${id}`).value.trim();
+  const subs = [...new Set(
+    subCategories
+      .filter(s => !selectedMain || s.main === selectedMain)
+      .map(s => s.sub)
+  )];
+  const datalist = document.getElementById(`subList-${id}`);
+  if (datalist) {
+    datalist.innerHTML = subs.map(s => `<option value="${s}">`).join("");
+  }
+}
+
+// ── 全部送出 ─────────────────────────────────────────
+async function submitAll() {
+  // 收集所有列
+  const rows = [];
+  document.querySelectorAll("[id^='row-']").forEach(el => {
+    const id = el.id.replace("row-", "");
+    const name  = document.getElementById(`name-${id}`)?.value.trim();
+    const price = document.getElementById(`jprice-${id}`)?.value.trim();
+    if (!name && !price) return; // 完全空的跳過
+    rows.push({ id, name, price,
+      main:  document.getElementById(`main-${id}`)?.value.trim() || "",
+      sub:   document.getElementById(`sub-${id}`)?.value.trim()  || "",
+      idnum: document.getElementById(`idnum-${id}`)?.value.trim() || "",
+    });
+  });
+
+  if (!rows.length) { alert("請至少填寫一筆商品"); return; }
+
+  // 驗證
+  const invalid = rows.filter(r => !r.name || !r.price);
+  if (invalid.length) {
+    alert(`有 ${invalid.length} 筆商品未填寫名稱或日幣售價，請補齊後再送出`);
+    return;
+  }
+
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true;
+  btn.textContent = "送出中...";
+
+  document.getElementById("progressWrap").classList.remove("hidden");
+  let success = 0, fail = 0;
+
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    updateProgress(i, rows.length);
+
+    const statusEl = document.getElementById(`rowStatus-${r.id}`);
+    const rowEl    = document.getElementById(`row-${r.id}`);
+    statusEl.classList.remove("hidden");
+    statusEl.textContent = "⏳ 送出中...";
+    statusEl.className   = "text-xs mt-1.5 text-purple-500";
+    rowEl.classList.add("bg-purple-50");
+
+    try {
+      const res  = await fetch(ADD_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tname:        r.name,
+          jprice:       Number(r.price) || 0,
+          jsprice:      0,
+          mainCategory: r.main,
+          category:     r.sub,
+          idnumber:     r.idnum ? Number(r.idnum) : null,
+          isView:       true,
+          isNew:        false,
+          isHot:        false,
+          isSale:       false,
+          image:        "",
+          images:       "",
+          description:  "",
+          weight:       0,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "新增失敗");
+
+      statusEl.textContent = "✅ 已上架";
+      statusEl.className   = "text-xs mt-1.5 text-green-600 font-medium";
+      rowEl.classList.remove("bg-purple-50");
+      rowEl.classList.add("bg-green-50");
+      success++;
+    } catch (err) {
+      statusEl.textContent = `❌ ${err.message}`;
+      statusEl.className   = "text-xs mt-1.5 text-red-500";
+      rowEl.classList.remove("bg-purple-50");
+      rowEl.classList.add("bg-red-50");
+      fail++;
+    }
+
+    document.getElementById("statSuccess").textContent = success;
+    document.getElementById("statFail").textContent    = fail;
+
+    // 間隔 500ms 避免 API 過載
+    if (i < rows.length - 1) await new Promise(r => setTimeout(r, 500));
+  }
+
+  updateProgress(rows.length, rows.length);
+  btn.disabled = false;
+  btn.textContent = "✅ 全部送出";
+}
+
+function updateProgress(current, total) {
+  const pct = total ? Math.round(current / total * 100) : 0;
+  document.getElementById("progressText").textContent = `${current} / ${total}`;
+  document.getElementById("progressPct").textContent  = `${pct}%`;
+  document.getElementById("progressBar").style.width  = `${pct}%`;
+}
+</script>
+</body>
+</html>
