@@ -9,9 +9,19 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "API Key 未設定" });
     }
 
-    const { productName } = req.body;
-    if (!productName) {
-      return res.status(400).json({ error: "請提供商品名稱" });
+    const { productName, jname, idnumber } = req.body;
+
+    // 組合固定格式：コストコ + jname + idnumber
+    let keyword = productName || "";
+    if (jname || idnumber) {
+      const parts = ["コストコ"];
+      if (jname)    parts.push(jname);
+      if (idnumber) parts.push(String(idnumber));
+      keyword = parts.join(" ");
+    }
+
+    if (!keyword) {
+      return res.status(400).json({ error: "請提供商品資訊" });
     }
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -28,7 +38,7 @@ export default async function handler(req, res) {
           role: "user",
           content: `你是一個日本好市多代購的商品編輯，請根據以下資訊產出商品資料。
 
-商品：${productName}
+商品：${keyword}
 
 請按照以下格式輸出，不要加其他說明、不要加 markdown 符號：
 
@@ -41,9 +51,7 @@ export default async function handler(req, res) {
 • [特點四]
 • [特點五]
 
-重量：[重量，例如 1.5kg]
 產地：[產地]
-內容量：[內容量或數量]
 保存方式：[常溫／冷藏／冷凍]`,
         }],
       }),
