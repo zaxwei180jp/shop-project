@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     };
 
     // ── GET：用 email 或 customerId 查詢客戶 ───────────
-    if (req.method === "GET") {
+    if (req.method === "GET" && (req.query.email || req.query.customerId)) {
       const { email, customerId } = req.query;
 
       let filter;
@@ -58,7 +58,7 @@ export default async function handler(req, res) {
     }
 
     // ── GET list：所有客戶 ──────────────────────────────
-    if (req.method === "GET" && req.query.type === "list") {
+    if (req.method === "GET") {
       const response = await fetch(
         `https://api.notion.com/v1/databases/${CUSTOMER_DATABASE_ID}/query`,
         {
