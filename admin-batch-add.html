@@ -142,8 +142,7 @@ function removeImgSlot(rowId, slotIdx, e) {
   try {
     const res  = await fetch(PRODUCTS_API);
     const data = await res.json();
-    const allMains = [...new Set(data.map(p => p.mainCategory).filter(Boolean))];
-    mainCategories = ["日本好市多", ...allMains.filter(m => m !== "日本好市多")];
+    mainCategories = [...new Set(data.map(p => p.mainCategory).filter(Boolean))].sort();
     subCategories  = data.map(p => ({ main: p.mainCategory, sub: p.category })).filter(p => p.sub);
   } catch {}
   // 預設加 3 列
@@ -262,14 +261,15 @@ function onMainInput(id) {
 }
 
 function renderSubBtns(id, selectedMain) {
-  const el = document.getElementById(`subBtns-${id}`);
-  if (!selectedMain) { el.classList.add("hidden"); return; }
-
   const subs = [...new Set(
-    subCategories.filter(s => s.main === selectedMain).map(s => s.sub)
+    subCategories
+      .filter(s => !selectedMain || s.main === selectedMain)
+      .map(s => s.sub)
   )].sort();
 
+  const el = document.getElementById(`subBtns-${id}`);
   if (!subs.length) { el.classList.add("hidden"); return; }
+
   el.classList.remove("hidden");
   el.innerHTML = subs.map(s => `
     <button type="button" onclick="selectSub(${id}, '${s}')"

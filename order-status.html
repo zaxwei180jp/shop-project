@@ -207,7 +207,7 @@ window.queryByCustomer = async () => {
                   <div class="text-xs text-gray-400 truncate max-w-[200px]">${firstItem}</div>
                 </div>
                 <div class="text-right shrink-0 ml-2">
-                  <div class="font-bold text-red-500 text-sm">NT$ ${Math.round(o.total||0).toLocaleString()}</div>
+                  <div class="font-bold text-red-500 text-sm">NT$ ${o.total.toLocaleString()}</div>
                   <div class="text-xs text-gray-400">${dateStr}</div>
                 </div>
               </div>

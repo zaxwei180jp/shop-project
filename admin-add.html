@@ -117,9 +117,11 @@
         <input id="mainCategory" type="text" placeholder="或直接輸入新分類"
           class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
       </div>
-      <div id="subCatSection" class="hidden">
+      <div>
         <label class="text-xs text-gray-500 mb-2 block">小分類</label>
-        <div id="categoryBtns" class="flex flex-wrap gap-2 mb-2 min-h-[28px]"></div>
+        <div id="categoryBtns" class="flex flex-wrap gap-2 mb-2 min-h-[28px]">
+          <span class="text-xs text-gray-300 self-center">請先選大分類</span>
+        </div>
         <input id="category" type="text" placeholder="或直接輸入新分類"
           class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
       </div>
@@ -234,8 +236,7 @@ const BTN_ACTIVE = "px-3 py-1.5 rounded-full border text-xs transition bg-black 
 })();
 
 function renderMainBtns() {
-  const allMains = [...new Set(allProductData.map(p => p.mainCategory).filter(Boolean))];
-  const mains = ["日本好市多", ...allMains.filter(m => m !== "日本好市多")];
+  const mains = [...new Set(allProductData.map(p => p.mainCategory).filter(Boolean))].sort();
   const el = document.getElementById("mainCategoryBtns");
   el.innerHTML = "";
   if (!mains.length) { el.innerHTML = '<span class="text-xs text-gray-300">尚無大分類</span>'; return; }
@@ -247,12 +248,9 @@ function renderMainBtns() {
 }
 
 function renderSubBtns(selectedMain) {
-  const section = document.getElementById("subCatSection");
-  if (!selectedMain) { section.classList.add("hidden"); return; }
-  const subs = [...new Set(allProductData.filter(p => p.mainCategory === selectedMain).map(p => p.category).filter(Boolean))].sort();
+  const subs = [...new Set(allProductData.filter(p => !selectedMain || p.mainCategory === selectedMain).map(p => p.category).filter(Boolean))].sort();
   const el = document.getElementById("categoryBtns"); el.innerHTML = "";
-  if (!subs.length) { section.classList.add("hidden"); return; }
-  section.classList.remove("hidden");
+  if (!subs.length) { el.innerHTML = `<span class="text-xs text-gray-300">${selectedMain ? "此大分類尚無小分類" : "請先選大分類"}</span>`; return; }
   subs.forEach(s => {
     const btn = document.createElement("button"); btn.type = "button"; btn.textContent = s; btn.className = BTN_NORMAL;
     btn.onclick = () => { document.getElementById("category").value = s; el.querySelectorAll("button").forEach(b => b.className = BTN_NORMAL); btn.className = BTN_ACTIVE; };
