@@ -183,7 +183,8 @@ async function init() {
 // ── 分類按鈕 ─────────────────────────────────────────
 function renderCatBtns() {
   // 大分類
-  const mains = ["全部", ...new Set(allProducts.map(p => p.mainCategory).filter(Boolean))].sort((a,b) => a==="全部"?-1:b==="全部"?1:a.localeCompare(b));
+  const allMains = [...new Set(allProducts.map(p => p.mainCategory).filter(Boolean))];
+  const mains = ["全部", "日本好市多", ...allMains.filter(m => m !== "日本好市多")];
   const mainEl = document.getElementById("mainCatBtns");
   mainEl.innerHTML = "";
   mains.forEach(m => {

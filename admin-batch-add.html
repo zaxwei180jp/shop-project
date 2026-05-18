@@ -142,7 +142,8 @@ function removeImgSlot(rowId, slotIdx, e) {
   try {
     const res  = await fetch(PRODUCTS_API);
     const data = await res.json();
-    mainCategories = [...new Set(data.map(p => p.mainCategory).filter(Boolean))].sort();
+    const allMains = [...new Set(data.map(p => p.mainCategory).filter(Boolean))];
+    mainCategories = ["日本好市多", ...allMains.filter(m => m !== "日本好市多")];
     subCategories  = data.map(p => ({ main: p.mainCategory, sub: p.category })).filter(p => p.sub);
   } catch {}
   // 預設加 3 列

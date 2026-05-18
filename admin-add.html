@@ -234,7 +234,8 @@ const BTN_ACTIVE = "px-3 py-1.5 rounded-full border text-xs transition bg-black 
 })();
 
 function renderMainBtns() {
-  const mains = [...new Set(allProductData.map(p => p.mainCategory).filter(Boolean))].sort();
+  const allMains = [...new Set(allProductData.map(p => p.mainCategory).filter(Boolean))];
+  const mains = ["日本好市多", ...allMains.filter(m => m !== "日本好市多")];
   const el = document.getElementById("mainCategoryBtns");
   el.innerHTML = "";
   if (!mains.length) { el.innerHTML = '<span class="text-xs text-gray-300">尚無大分類</span>'; return; }
