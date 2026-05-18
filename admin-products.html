@@ -184,7 +184,7 @@ async function init() {
 function renderCatBtns() {
   // 大分類
   const allMains = [...new Set(allProducts.map(p => p.mainCategory).filter(Boolean))];
-  const pinned = "日本好市多";
+  const pinned = "JC日本好市多";
   const mains = ["全部", ...(allMains.includes(pinned) ? [pinned] : []), ...allMains.filter(m => m !== pinned)];
   const mainEl = document.getElementById("mainCatBtns");
   mainEl.innerHTML = "";
