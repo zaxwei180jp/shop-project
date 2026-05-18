@@ -48,16 +48,15 @@ async function init() {
 
 // ── 大分類 Tab ────────────────────────────────────────
 function renderMainTabs() {
-  const mains = ["全部", ...new Set(
-    allData.map(p => p.mainCategory).filter(Boolean)
-  )];
+  const allMainSet = [...new Set(allData.map(p => p.mainCategory).filter(Boolean))];
+  const mains = ["全部", "日本好市多", ...allMainSet.filter(m => m !== "日本好市多")];
 
   mainTabs.innerHTML = "";
   mains.forEach(cat => {
-    const btn = makeTab(cat, cat === activeMain, false);
+    const btn = makeTab(cat, cat === (activeMain || "全部"), false);
     btn.addEventListener("click", () => {
-      activeMain = cat;
-      activeSub  = "全部";
+      activeMain = cat === "全部" ? "" : cat;
+      activeSub  = "";
       renderMainTabs();
       renderSubTabs();
       renderList();
@@ -70,9 +69,9 @@ function renderMainTabs() {
 // ── 小分類 Tab ────────────────────────────────────────
 function renderSubTabs() {
   // ⭐ 未選大分類時隱藏小分類
-  if (activeMain === "全部") {
+  if (!activeMain) {
     subWrap.classList.add("hidden");
-    activeSub = "全部";
+    activeSub = "";
     return;
   }
 
@@ -92,7 +91,7 @@ function renderSubTabs() {
   subs.forEach(cat => {
     const btn = makeTab(cat, cat === activeSub, true);
     btn.addEventListener("click", () => {
-      activeSub = cat;
+      activeSub = cat === "全部" ? "" : cat;
       renderSubTabs();
       renderList();
       scrollToList();
@@ -105,10 +104,10 @@ function renderSubTabs() {
 function renderList() {
   let data = allData;
 
-  if (activeMain !== "全部")
+  if (activeMain)
     data = data.filter(p => p.mainCategory === activeMain);
 
-  if (activeSub !== "全部")
+  if (activeSub)
     data = data.filter(p => p.category === activeSub);
 
   el.innerHTML = data.length
