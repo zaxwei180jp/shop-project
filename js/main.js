@@ -17,8 +17,8 @@ async function init() {
   allData   = await res.json();
 
   // ⭐ 記錄大分類出現的順序（Tab 順序）
-  // ⭐ 固定「日本好市多」在第一位
-  const mainOrder = ["日本好市多"];
+  // ⭐ 固定「JC日本好市多」在第一位
+  const mainOrder = ["JC日本好市多"];
   allData.forEach(p => {
     if (p.mainCategory && !mainOrder.includes(p.mainCategory))
       mainOrder.push(p.mainCategory);
