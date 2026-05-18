@@ -181,7 +181,7 @@ function renderOrders() {
             <div class="text-xs text-gray-400 truncate">${firstItem}</div>
           </div>
           <div class="text-right shrink-0 ml-3">
-            <div class="font-bold text-red-500 text-sm">NT$ ${o.total.toLocaleString()}</div>
+            <div class="font-bold text-red-500 text-sm">NT$ ${Math.round(o.total||0).toLocaleString()}</div>
             <div class="text-xs text-gray-400 mt-0.5">${date}</div>
           </div>
         </div>
@@ -200,7 +200,7 @@ function openModal(orderId) {
   document.getElementById("modalOrderId").textContent    = o.orderId;
   document.getElementById("modalDate").textContent       = date;
   document.getElementById("modalCustomerId").textContent = o.customerId || "—";
-  document.getElementById("modalTotal").textContent      = `NT$ ${o.total.toLocaleString()}`;
+  document.getElementById("modalTotal").textContent      = `NT$ ${Math.round(o.total||0).toLocaleString()}`;
 
   // ⭐ 用 customerId 的 email 查詢客戶資料
   const infoEl = document.getElementById("customerInfo");
