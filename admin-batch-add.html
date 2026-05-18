@@ -261,15 +261,14 @@ function onMainInput(id) {
 }
 
 function renderSubBtns(id, selectedMain) {
+  const el = document.getElementById(`subBtns-${id}`);
+  if (!selectedMain) { el.classList.add("hidden"); return; }
+
   const subs = [...new Set(
-    subCategories
-      .filter(s => !selectedMain || s.main === selectedMain)
-      .map(s => s.sub)
+    subCategories.filter(s => s.main === selectedMain).map(s => s.sub)
   )].sort();
 
-  const el = document.getElementById(`subBtns-${id}`);
   if (!subs.length) { el.classList.add("hidden"); return; }
-
   el.classList.remove("hidden");
   el.innerHTML = subs.map(s => `
     <button type="button" onclick="selectSub(${id}, '${s}')"
