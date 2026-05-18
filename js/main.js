@@ -49,7 +49,7 @@ async function init() {
 // ── 大分類 Tab ────────────────────────────────────────
 function renderMainTabs() {
   const allMainSet = [...new Set(allData.map(p => p.mainCategory).filter(Boolean))];
-  const mains = ["全部", "日本好市多", ...allMainSet.filter(m => m !== "日本好市多")];
+  const mains = ["全部", "JC日本好市多", ...allMainSet.filter(m => m !== "JC日本好市多")];
 
   mainTabs.innerHTML = "";
   mains.forEach(cat => {
