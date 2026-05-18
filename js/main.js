@@ -17,8 +17,7 @@ async function init() {
   allData   = await res.json();
 
   // ⭐ 記錄大分類出現的順序（Tab 順序）
-  // ⭐ 固定「JC日本好市多」在第一位
-  const mainOrder = ["JC日本好市多"];
+  const mainOrder = [];
   allData.forEach(p => {
     if (p.mainCategory && !mainOrder.includes(p.mainCategory))
       mainOrder.push(p.mainCategory);
@@ -48,15 +47,16 @@ async function init() {
 
 // ── 大分類 Tab ────────────────────────────────────────
 function renderMainTabs() {
-  const allMainSet = [...new Set(allData.map(p => p.mainCategory).filter(Boolean))];
-  const mains = ["全部", "JC日本好市多", ...allMainSet.filter(m => m !== "JC日本好市多")];
+  const mains = ["全部", ...new Set(
+    allData.map(p => p.mainCategory).filter(Boolean)
+  )];
 
   mainTabs.innerHTML = "";
   mains.forEach(cat => {
-    const btn = makeTab(cat, cat === (activeMain || "全部"), false);
+    const btn = makeTab(cat, cat === activeMain, false);
     btn.addEventListener("click", () => {
-      activeMain = cat === "全部" ? "" : cat;
-      activeSub  = "";
+      activeMain = cat;
+      activeSub  = "全部";
       renderMainTabs();
       renderSubTabs();
       renderList();
@@ -68,14 +68,9 @@ function renderMainTabs() {
 
 // ── 小分類 Tab ────────────────────────────────────────
 function renderSubTabs() {
-  // ⭐ 未選大分類時隱藏小分類
-  if (!activeMain) {
-    subWrap.classList.add("hidden");
-    activeSub = "";
-    return;
-  }
-
-  const pool = allData.filter(p => p.mainCategory === activeMain);
+  const pool = activeMain === "全部"
+    ? allData
+    : allData.filter(p => p.mainCategory === activeMain);
 
   const subs = ["全部", ...new Set(
     pool.map(p => p.category).filter(Boolean)
@@ -91,7 +86,7 @@ function renderSubTabs() {
   subs.forEach(cat => {
     const btn = makeTab(cat, cat === activeSub, true);
     btn.addEventListener("click", () => {
-      activeSub = cat === "全部" ? "" : cat;
+      activeSub = cat;
       renderSubTabs();
       renderList();
       scrollToList();
@@ -104,10 +99,10 @@ function renderSubTabs() {
 function renderList() {
   let data = allData;
 
-  if (activeMain)
+  if (activeMain !== "全部")
     data = data.filter(p => p.mainCategory === activeMain);
 
-  if (activeSub)
+  if (activeSub !== "全部")
     data = data.filter(p => p.category === activeSub);
 
   el.innerHTML = data.length

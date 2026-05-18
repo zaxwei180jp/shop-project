@@ -11,8 +11,7 @@ async function init() {
     const data = await res.json();
 
     // 與首頁相同排序：大分類 Tab 順序 → 各自 sort
-    // ⭐ 固定「日本好市多」在第一位
-    const mainOrder = ["日本好市多"];
+    const mainOrder = [];
     data.forEach(p => {
       if (p.mainCategory && !mainOrder.includes(p.mainCategory))
         mainOrder.push(p.mainCategory);

@@ -9,8 +9,7 @@ async function init() {
     let data = await res.json();
 
     data = data.filter(p => p.isNew === true);
-    // ⭐ 固定「日本好市多」在第一位
-    const mainOrder = ["日本好市多"];
+    const mainOrder = [];
     data.forEach(p => {
       if (p.mainCategory && !mainOrder.includes(p.mainCategory))
         mainOrder.push(p.mainCategory);
