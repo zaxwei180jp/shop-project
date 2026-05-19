@@ -107,7 +107,7 @@ function renderSubTabs() {
 }
 
 // ── 商品列表 ──────────────────────────────────────────
-const PREVIEW_COUNT = 5; // 每列預覽張數
+const PREVIEW_COUNT = 4; // 每列預覽張數（+看更多卡片 = 5 欄）
 
 function renderList() {
   let data = allData;
@@ -142,31 +142,28 @@ function renderList() {
     const items = data.filter(p => p.mainCategory === main);
     if (!items.length) return "";
 
-    const preview  = items.slice(0, PREVIEW_COUNT);
-    const hasMore  = items.length > PREVIEW_COUNT;
-    const moreUrl  = `index.html?main=${encodeURIComponent(main)}`;
+    const preview = items.slice(0, PREVIEW_COUNT);
+    const moreUrl = `index.html?main=${encodeURIComponent(main)}`;
 
     return `
       <div class="category-row">
         <!-- 標題 -->
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-base sm:text-lg font-bold text-gray-800">${main}</h2>
-          ${hasMore ? `
-            <a href="${moreUrl}"
-              class="text-xs text-gray-400 hover:text-black flex items-center gap-1 shrink-0">
-              看更多 <span class="text-gray-300">›</span>
-            </a>` : ""}
+          <a href="${moreUrl}"
+            class="text-xs text-gray-400 hover:text-black flex items-center gap-1 shrink-0">
+            全部 ${items.length} 件 <span>›</span>
+          </a>
         </div>
-        <!-- 商品列 -->
+        <!-- 商品列 + 看更多卡片 -->
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
           ${preview.map(renderCard).join("")}
-          ${hasMore ? `
-            <a href="${moreUrl}"
-              class="flex flex-col items-center justify-center bg-gray-50 border border-dashed border-gray-200 rounded-2xl min-h-[180px] hover:bg-gray-100 transition text-gray-400 hover:text-gray-600">
-              <span class="text-2xl mb-1">›</span>
-              <span class="text-xs">看更多</span>
-              <span class="text-xs text-gray-300 mt-0.5">${items.length} 件商品</span>
-            </a>` : ""}
+          <a href="${moreUrl}"
+            class="flex flex-col items-center justify-center bg-gray-50 border border-dashed border-gray-200 rounded-2xl min-h-[180px] hover:bg-gray-100 transition text-gray-400 hover:text-gray-600">
+            <span class="text-3xl mb-1">›</span>
+            <span class="text-xs font-medium">看更多</span>
+            <span class="text-xs text-gray-300 mt-0.5">${items.length} 件</span>
+          </a>
         </div>
       </div>`;
   }).join("");
