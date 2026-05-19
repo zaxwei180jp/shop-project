@@ -219,7 +219,7 @@ async function loadCustomerOrders(customerId, email) {
             <div class="text-xs text-gray-400 truncate max-w-[180px]">${firstItem}</div>
           </div>
           <div class="text-right shrink-0 ml-2">
-            <div class="text-sm font-bold text-red-500">NT$ ${o.total.toLocaleString()}</div>
+            <div class="text-sm font-bold text-red-500">NT$ ${Math.round(o.total||0).toLocaleString()}</div>
             <div class="text-xs text-gray-400">${dateStr}</div>
           </div>
         </div>`;

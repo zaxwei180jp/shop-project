@@ -117,11 +117,9 @@
         <input id="mainCategory" type="text" placeholder="或直接輸入新分類"
           class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
       </div>
-      <div>
+      <div id="subCatSection" class="hidden">
         <label class="text-xs text-gray-500 mb-2 block">小分類</label>
-        <div id="categoryBtns" class="flex flex-wrap gap-2 mb-2 min-h-[28px]">
-          <span class="text-xs text-gray-300 self-center">請先選大分類</span>
-        </div>
+        <div id="categoryBtns" class="flex flex-wrap gap-2 mb-2 min-h-[28px]"></div>
         <input id="category" type="text" placeholder="或直接輸入新分類"
           class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
       </div>
@@ -248,9 +246,12 @@ function renderMainBtns() {
 }
 
 function renderSubBtns(selectedMain) {
-  const subs = [...new Set(allProductData.filter(p => !selectedMain || p.mainCategory === selectedMain).map(p => p.category).filter(Boolean))].sort();
+  const section = document.getElementById("subCatSection");
+  if (!selectedMain) { section.classList.add("hidden"); return; }
+  const subs = [...new Set(allProductData.filter(p => p.mainCategory === selectedMain).map(p => p.category).filter(Boolean))].sort();
   const el = document.getElementById("categoryBtns"); el.innerHTML = "";
-  if (!subs.length) { el.innerHTML = `<span class="text-xs text-gray-300">${selectedMain ? "此大分類尚無小分類" : "請先選大分類"}</span>`; return; }
+  if (!subs.length) { section.classList.add("hidden"); return; }
+  section.classList.remove("hidden");
   subs.forEach(s => {
     const btn = document.createElement("button"); btn.type = "button"; btn.textContent = s; btn.className = BTN_NORMAL;
     btn.onclick = () => { document.getElementById("category").value = s; el.querySelectorAll("button").forEach(b => b.className = BTN_NORMAL); btn.className = BTN_ACTIVE; };
@@ -303,7 +304,13 @@ function pickFile(idx, slot) {
 }
 
 function clearSlot(idx, slot) {
-  detailUrls[idx] = ""; slot.querySelector(".slot-img").classList.add("hidden"); slot.querySelector(".slot-del").classList.add("hidden"); slot.querySelector(".slot-ph").classList.remove("hidden"); slot.classList.add("cursor-pointer","hover:border-gray-400"); slot.onclick = () => pickFile(idx, slot);
+  detailUrls[idx] = "";
+  const imgEl = slot.querySelector(".slot-img");
+  imgEl.src = ""; imgEl.classList.add("hidden"); imgEl.style.display = "none";
+  slot.querySelector(".slot-del").classList.add("hidden");
+  slot.querySelector(".slot-ph").classList.remove("hidden");
+  slot.classList.add("cursor-pointer","hover:border-gray-400");
+  slot.onclick = () => pickFile(idx, slot);
 }
 
 async function uploadToCloudinary(file) {
@@ -357,7 +364,6 @@ async function generateDescription() {
     if (!res.ok) throw new Error(data.error || "生成失敗");
 
     const text = data.text || "";
-    console.log("AI 生成內容：", text);
 
     // 解析並填入欄位
     const nameMatch = text.match(/商品名稱[：:]\s*(.+)/);

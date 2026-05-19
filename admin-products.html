@@ -467,15 +467,10 @@ function pickEditSlot(slotIdx, slot) {
       const data = await res.json();
       if (!data.secure_url) throw new Error("失敗");
       editImgUrls[slotIdx] = data.secure_url;
-      const imgEl = slot.querySelector(".slot-img");
-      if (imgEl) {
-        imgEl.src = data.secure_url;
-        imgEl.style.cssText = "display:block !important; position:absolute; inset:0; width:100%; height:100%; object-fit:cover;";
-      }
-      const phEl = slot.querySelector(".slot-ph");
-      if (phEl) phEl.style.display = "none";
-      const delEl = slot.querySelector(".slot-del");
-      if (delEl) { delEl.style.display = "flex"; }
+      slot.querySelector(".slot-img").src = data.secure_url;
+      slot.querySelector(".slot-img").style.display = "block";
+      slot.querySelector(".slot-ph").style.display = "none";
+      slot.querySelector(".slot-del").style.display = "flex";
       slot.onclick = null;
     } catch { alert("上傳失敗"); slot.querySelector(".slot-ph").classList.remove("hidden"); }
     finally { slot.querySelector(".slot-load").classList.add("hidden"); }
@@ -487,9 +482,9 @@ function removeEditSlot(slotIdx, e) {
   e.stopPropagation();
   editImgUrls[slotIdx] = "";
   const slot = document.getElementById("editSlot-"+slotIdx);
-  slot.querySelector(".slot-img").classList.add("hidden");
-  slot.querySelector(".slot-del").classList.add("hidden");
-  slot.querySelector(".slot-ph").classList.remove("hidden");
+  slot.querySelector(".slot-img").style.display = "none";
+  slot.querySelector(".slot-del").style.display = "none";
+  slot.querySelector(".slot-ph").style.display = "";
   slot.onclick = () => pickEditSlot(slotIdx, slot);
 }
 
