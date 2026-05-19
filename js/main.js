@@ -38,10 +38,21 @@ async function init() {
   renderSubTabs();
   renderList();
 
-  // ⭐ 首頁如果帶 ?q= 參數，轉到 search.html
-  const urlQ = new URLSearchParams(location.search).get("q");
+  // ⭐ ?q= 參數轉到搜尋頁
+  const urlParams = new URLSearchParams(location.search);
+  const urlQ    = urlParams.get("q");
+  const urlMain = urlParams.get("main");
+
   if (urlQ) {
     window.location.replace("search.html?q=" + encodeURIComponent(urlQ));
+  } else if (urlMain) {
+    // 自動選大分類
+    activeMain = urlMain;
+    activeSub  = "全部";
+    renderMainTabs();
+    renderSubTabs();
+    renderList();
+    scrollToList();
   }
 }
 
@@ -96,18 +107,69 @@ function renderSubTabs() {
 }
 
 // ── 商品列表 ──────────────────────────────────────────
+const PREVIEW_COUNT = 5; // 每列預覽張數
+
 function renderList() {
   let data = allData;
 
   if (activeMain !== "全部")
     data = data.filter(p => p.mainCategory === activeMain);
-
   if (activeSub !== "全部")
     data = data.filter(p => p.category === activeSub);
 
-  el.innerHTML = data.length
-    ? data.map(renderCard).join("")
-    : `<div class="col-span-2 text-center text-gray-400 py-10">此分類沒有商品</div>`;
+  if (!data.length) {
+    el.innerHTML = `<div class="text-center text-gray-400 py-10">此分類沒有商品</div>`;
+    return;
+  }
+
+  // ── 選了大分類或小分類：正常 grid 顯示 ──────────────
+  if (activeMain !== "全部") {
+    el.innerHTML = `<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+      ${data.map(renderCard).join("")}
+    </div>`;
+    return;
+  }
+
+  // ── 全部：每個大分類一列 ──────────────────────────────
+  // 取大分類順序
+  const mainOrder = [];
+  allData.forEach(p => {
+    if (p.mainCategory && !mainOrder.includes(p.mainCategory))
+      mainOrder.push(p.mainCategory);
+  });
+
+  el.innerHTML = mainOrder.map(main => {
+    const items = data.filter(p => p.mainCategory === main);
+    if (!items.length) return "";
+
+    const preview  = items.slice(0, PREVIEW_COUNT);
+    const hasMore  = items.length > PREVIEW_COUNT;
+    const moreUrl  = `index.html?main=${encodeURIComponent(main)}`;
+
+    return `
+      <div class="category-row">
+        <!-- 標題 -->
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-base sm:text-lg font-bold text-gray-800">${main}</h2>
+          ${hasMore ? `
+            <a href="${moreUrl}"
+              class="text-xs text-gray-400 hover:text-black flex items-center gap-1 shrink-0">
+              看更多 <span class="text-gray-300">›</span>
+            </a>` : ""}
+        </div>
+        <!-- 商品列 -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+          ${preview.map(renderCard).join("")}
+          ${hasMore ? `
+            <a href="${moreUrl}"
+              class="flex flex-col items-center justify-center bg-gray-50 border border-dashed border-gray-200 rounded-2xl min-h-[180px] hover:bg-gray-100 transition text-gray-400 hover:text-gray-600">
+              <span class="text-2xl mb-1">›</span>
+              <span class="text-xs">看更多</span>
+              <span class="text-xs text-gray-300 mt-0.5">${items.length} 件商品</span>
+            </a>` : ""}
+        </div>
+      </div>`;
+  }).join("");
 }
 
 // ── Tab 按鈕（回傳 DOM 元素，不用 outerHTML）────────────
