@@ -404,7 +404,8 @@ async function saveEdit() {
     });
 
     closeEdit();
-    renderList();
+    // ⭐ 重新從 API 載入最新資料（確保圖片等欄位同步）
+    await init();
   } catch (err) {
     alert("儲存失敗：" + err.message);
   } finally {
