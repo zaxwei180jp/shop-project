@@ -362,11 +362,10 @@ async function saveEdit() {
   if (jsp) payload.jsprice = Number(jsp);
 
   // ⭐ 圖片
+  // 不管有無圖片都送，讓 Notion 可以被清空
   const validImgs = editImgUrls.filter(Boolean);
-  if (validImgs.length) {
-    payload.image  = validImgs[0];
-    payload.images = validImgs.join(",");
-  }
+  payload.image  = validImgs[0]  || "";
+  payload.images = validImgs.join(",");
 
   const btn = document.querySelector("#editModal .sticky button:first-child");
   btn.textContent = "儲存中..."; btn.disabled = true;
@@ -382,12 +381,19 @@ async function saveEdit() {
 
     // 本地更新
     Object.assign(editingProduct, {
-      name: payload.tname, mainCategory: payload.mainCategory,
-      category: payload.category, description: payload.description,
-      weight: payload.weight, isView: payload.isView,
-      isNew: payload.isNew, isHot: payload.isHot, isSale: payload.isSale,
-      sort:     payload.sort,
-      idnumber: payload.idnumber,
+      name:         payload.tname,
+      mainCategory: payload.mainCategory,
+      category:     payload.category,
+      description:  payload.description,
+      weight:       payload.weight,
+      isView:       payload.isView,
+      isNew:        payload.isNew,
+      isHot:        payload.isHot,
+      isSale:       payload.isSale,
+      sort:         payload.sort,
+      idnumber:     payload.idnumber,
+      image:        payload.image,
+      images:       payload.images,
     });
 
     // ⭐ 重新排序（sort 小的排前面，沒有 sort 排最後）
