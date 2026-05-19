@@ -94,12 +94,15 @@
       <!-- 狀態 -->
       <div>
         <div class="text-xs text-gray-500 mb-2">訂單狀態</div>
-        <div class="grid grid-cols-2 gap-2">
-          ${["待處理","處理中","已完成","已取消"].map(s => `
-            <button onclick="updateStatus('${s}')" id="statusBtn-${s}"
-              class="py-2 rounded-xl border text-sm font-medium transition">
-              ${s}
-            </button>`).join("")}
+        <div class="grid grid-cols-2 gap-2" id="statusBtns">
+          <button onclick="updateStatus('待處理')" id="statusBtn-待處理"
+            class="py-2 rounded-xl border text-sm font-medium transition">待處理</button>
+          <button onclick="updateStatus('處理中')" id="statusBtn-處理中"
+            class="py-2 rounded-xl border text-sm font-medium transition">處理中</button>
+          <button onclick="updateStatus('已完成')" id="statusBtn-已完成"
+            class="py-2 rounded-xl border text-sm font-medium transition">已完成</button>
+          <button onclick="updateStatus('已取消')" id="statusBtn-已取消"
+            class="py-2 rounded-xl border text-sm font-medium transition">已取消</button>
         </div>
       </div>
 
