@@ -43,8 +43,9 @@ export default async function handler(req, res) {
           source:      props.source?.select?.name || "",
           quantity:    props.quantity?.number || 1,
           price:       props.price?.number || 0,
+          weight:      props.weight?.number || 0,
           note:        getText(props.note),
-          status:      props.status?.select?.name || "待處理",
+          status:      props.status?.status?.name || "待處理",
           createdAt:   page.created_time,
         };
       });
@@ -80,7 +81,7 @@ export default async function handler(req, res) {
             quantity:    { number:    Number(quantity) || 1 },
             price:       { number:    Number(price) || 0 },
             note:        { rich_text: [{ text: { content: note || "" } }] },
-            status:      { select:    { name: "待處理" } },
+            status:      { status:    { name: "待處理" } },
           },
         }),
       });
@@ -92,12 +93,13 @@ export default async function handler(req, res) {
 
     // ── PATCH：更新狀態 / 價格 ───────────────────────
     if (req.method === "PATCH") {
-      const { pageId, status, price } = req.body;
+      const { pageId, status, price, weight } = req.body;
       if (!pageId) return res.status(400).json({ error: "缺少 pageId" });
 
       const properties = {};
-      if (status !== undefined) properties.status = { select: { name: status } };
+      if (status !== undefined) properties.status = { status: { name: status } };
       if (price  !== undefined) properties.price  = { number: Number(price) };
+      if (weight !== undefined) properties.weight = { number: Number(weight) };
 
       const response = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
         method: "PATCH",
