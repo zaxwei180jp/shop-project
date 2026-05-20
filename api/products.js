@@ -2,19 +2,32 @@ export default async function handler(req, res) {
   try {
     const { NOTION_TOKEN, DATABASE_ID } = process.env;
 
-    const response = await fetch(
-      `https://api.notion.com/v1/databases/${DATABASE_ID}/query`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${NOTION_TOKEN}`,
-          "Notion-Version": "2022-06-28",
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    // ⭐ 分頁讀取全部商品（Notion 每次最多 100 筆）
+    const headers = {
+      Authorization: `Bearer ${NOTION_TOKEN}`,
+      "Notion-Version": "2022-06-28",
+      "Content-Type": "application/json",
+    };
 
-    const data = await response.json();
+    let allResults = [];
+    let hasMore    = true;
+    let cursor     = undefined;
+
+    while (hasMore) {
+      const body = { page_size: 100 };
+      if (cursor) body.start_cursor = cursor;
+
+      const response = await fetch(
+        `https://api.notion.com/v1/databases/${DATABASE_ID}/query`,
+        { method: "POST", headers, body: JSON.stringify(body) }
+      );
+      const data = await response.json();
+      allResults = allResults.concat(data.results || []);
+      hasMore    = data.has_more || false;
+      cursor     = data.next_cursor || undefined;
+    }
+
+    const data = { results: allResults };
 
     // ⭐ 文字
     const getText = (prop) => {
