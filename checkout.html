@@ -178,7 +178,7 @@ async function init() {
     return;
   }
 
-  const res = await fetch(PRODUCTS_API);
+  const res = await fetch(PRODUCTS_API, { cache: "no-store" });
   const products = await res.json();
 
   orderItems    = [];
