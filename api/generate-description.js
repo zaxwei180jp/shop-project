@@ -5,65 +5,58 @@ export default async function handler(req, res) {
 
   try {
     const { ANTHROPIC_API_KEY } = process.env;
-    if (!ANTHROPIC_API_KEY) {
-      return res.status(500).json({ error: "API Key 未設定" });
-    }
+    if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: "API Key 未設定" });
 
     const { productName, jname, idnumber } = req.body;
 
-    // 組合固定格式：コストコ + jname + idnumber
-    let keyword = productName || "";
-    if (jname || idnumber) {
-      const parts = ["コストコ"];
-      if (jname)    parts.push(jname);
-      if (idnumber) parts.push(String(idnumber));
-      keyword = parts.join(" ");
-    }
+    // 組合搜尋關鍵字
+    const searchQuery = [jname, idnumber].filter(Boolean).join(" ") || productName;
+    if (!searchQuery) return res.status(400).json({ error: "請提供商品資訊" });
 
-    if (!keyword) {
-      return res.status(400).json({ error: "請提供商品資訊" });
-    }
+    const prompt = `搜尋 costco.co.jp 商品「${searchQuery}」，整理商品詳細資訊。
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type":            "application/json",
-        "x-api-key":               ANTHROPIC_API_KEY,
-        "anthropic-version":       "2023-06-01",
-      },
-      body: JSON.stringify({
-        model:      "claude-sonnet-4-5",
-        max_tokens: 1024,
-        messages: [{
-          role: "user",
-          content: `你是一個日本好市多代購的商品編輯，請根據以下資訊產出商品資料。
+格式輸出（不加說明和markdown）：
 
-商品：${keyword}
-
-請按照以下格式輸出，不要加其他說明、不要加 markdown 符號：
-
-商品名稱：[繁體中文商品名稱，簡潔清楚]
+商品名稱：[繁體中文名稱]
+日文名稱：[日文名稱]
+商品編號：[編號]
 
 商品內容跟特點
 • [特點一]
 • [特點二]
 • [特點三]
 • [特點四]
-• [特點五]
+• [特點五]`;
 
-產地：[產地]
-保存方式：[常溫／冷藏／冷凍]`,
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type":      "application/json",
+        "x-api-key":         ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model:      "claude-sonnet-4-5",
+        max_tokens: 800,
+        tools: [{
+          type: "web_search_20250305",
+          name: "web_search",
         }],
+        messages: [{ role: "user", content: prompt }],
       }),
     });
 
     const data = await response.json();
+    if (!response.ok) return res.status(500).json({ error: data.error?.message || "生成失敗" });
 
-    if (!response.ok) {
-      return res.status(500).json({ error: data.error?.message || "生成失敗" });
-    }
+    // 組合所有 text 內容
+    const text = (data.content || [])
+      .filter(b => b.type === "text")
+      .map(b => b.text)
+      .join("\n")
+      .trim();
 
-    const text = data.content?.[0]?.text || "";
+
     res.status(200).json({ text });
 
   } catch (err) {

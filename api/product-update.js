@@ -26,9 +26,9 @@ export default async function handler(req, res) {
     if (fields.description !== undefined)
       properties.description = { rich_text: [{ text: { content: fields.description } }] };
     if (fields.image !== undefined)
-      properties.image = { rich_text: [{ text: { content: fields.image } }] };
+      properties.image = { rich_text: fields.image ? [{ text: { content: fields.image } }] : [] };
     if (fields.images !== undefined)
-      properties.images = { rich_text: [{ text: { content: fields.images } }] };
+      properties.images = { rich_text: fields.images ? [{ text: { content: fields.images } }] : [] };
     if (fields.sort     !== undefined) properties.sort     = { number: Number(fields.sort) };
     if (fields.idnumber !== undefined) properties.idnumber = { rich_text: [{ text: { content: fields.idnumber ? String(fields.idnumber) : '' } }] };
     if (fields.isView  !== undefined) properties.isView  = { checkbox: !!fields.isView  };
