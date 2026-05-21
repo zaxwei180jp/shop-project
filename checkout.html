@@ -171,6 +171,7 @@ let orderShipping = 0;
 
 // ── 初始化：讀購物車 + 抓商品資料 ──────────────────────
 async function init() {
+  const mergeOrders = [];
   const cart = JSON.parse(localStorage.getItem("cart") || "{}");
   if (!Object.keys(cart).length) {
     location.href = "cart.html";
@@ -192,6 +193,7 @@ async function init() {
     totalWeight   += (p.weight || 0) * qty;
     orderItems.push({ name: p.name, qty, price: formatPrice(p.price), sub });
   });
+
 
   // ⭐ 運費計算
   const baseShipping = Math.ceil(totalWeight * RATE);
@@ -292,6 +294,18 @@ window.submitOrder = async () => {
     if (!data.success) throw new Error(data.error || "送出失敗");
 
     localStorage.removeItem("cart");
+
+    // ⭐ 更新合併的客製化訂單狀態為「處理中」
+    for (const co of mergeOrders) {
+      try {
+        await fetch("https://shop-project-azure.vercel.app/api/custom-order", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pageId: co.pageId, status: "處理中" }),
+        });
+      } catch {}
+    }
+    sessionStorage.removeItem("mergeCustomOrders");
 
     document.getElementById("displayOrderId").textContent = orderId;
     document.getElementById("displayCustomerId").textContent = customerId;

@@ -362,11 +362,10 @@ async function saveEdit() {
   if (jsp) payload.jsprice = Number(jsp);
 
   // ⭐ 圖片
+  // 不管有無圖片都送，讓 Notion 可以被清空
   const validImgs = editImgUrls.filter(Boolean);
-  if (validImgs.length) {
-    payload.image  = validImgs[0];
-    payload.images = validImgs.join(",");
-  }
+  payload.image  = validImgs[0]  || "";
+  payload.images = validImgs.join(",");
 
   const btn = document.querySelector("#editModal .sticky button:first-child");
   btn.textContent = "儲存中..."; btn.disabled = true;
@@ -382,12 +381,19 @@ async function saveEdit() {
 
     // 本地更新
     Object.assign(editingProduct, {
-      name: payload.tname, mainCategory: payload.mainCategory,
-      category: payload.category, description: payload.description,
-      weight: payload.weight, isView: payload.isView,
-      isNew: payload.isNew, isHot: payload.isHot, isSale: payload.isSale,
-      sort:     payload.sort,
-      idnumber: payload.idnumber,
+      name:         payload.tname,
+      mainCategory: payload.mainCategory,
+      category:     payload.category,
+      description:  payload.description,
+      weight:       payload.weight,
+      isView:       payload.isView,
+      isNew:        payload.isNew,
+      isHot:        payload.isHot,
+      isSale:       payload.isSale,
+      sort:         payload.sort,
+      idnumber:     payload.idnumber,
+      image:        payload.image,
+      images:       payload.images,
     });
 
     // ⭐ 重新排序（sort 小的排前面，沒有 sort 排最後）
@@ -398,7 +404,8 @@ async function saveEdit() {
     });
 
     closeEdit();
-    renderList();
+    // ⭐ 重新從 API 載入最新資料（確保圖片等欄位同步）
+    await init();
   } catch (err) {
     alert("儲存失敗：" + err.message);
   } finally {
@@ -467,15 +474,10 @@ function pickEditSlot(slotIdx, slot) {
       const data = await res.json();
       if (!data.secure_url) throw new Error("失敗");
       editImgUrls[slotIdx] = data.secure_url;
-      const imgEl = slot.querySelector(".slot-img");
-      if (imgEl) {
-        imgEl.src = data.secure_url;
-        imgEl.style.cssText = "display:block !important; position:absolute; inset:0; width:100%; height:100%; object-fit:cover;";
-      }
-      const phEl = slot.querySelector(".slot-ph");
-      if (phEl) phEl.style.display = "none";
-      const delEl = slot.querySelector(".slot-del");
-      if (delEl) { delEl.style.display = "flex"; }
+      slot.querySelector(".slot-img").src = data.secure_url;
+      slot.querySelector(".slot-img").style.display = "block";
+      slot.querySelector(".slot-ph").style.display = "none";
+      slot.querySelector(".slot-del").style.display = "flex";
       slot.onclick = null;
     } catch { alert("上傳失敗"); slot.querySelector(".slot-ph").classList.remove("hidden"); }
     finally { slot.querySelector(".slot-load").classList.add("hidden"); }
@@ -487,9 +489,9 @@ function removeEditSlot(slotIdx, e) {
   e.stopPropagation();
   editImgUrls[slotIdx] = "";
   const slot = document.getElementById("editSlot-"+slotIdx);
-  slot.querySelector(".slot-img").classList.add("hidden");
-  slot.querySelector(".slot-del").classList.add("hidden");
-  slot.querySelector(".slot-ph").classList.remove("hidden");
+  slot.querySelector(".slot-img").style.display = "none";
+  slot.querySelector(".slot-del").style.display = "none";
+  slot.querySelector(".slot-ph").style.display = "";
   slot.onclick = () => pickEditSlot(slotIdx, slot);
 }
 
@@ -529,13 +531,11 @@ async function generateEditDesc() {
 
     const text = data.text || "";
 
-    // 填入商品名稱
     const nameMatch = text.match(/商品名稱[：:]\s*(.+)/);
     if (nameMatch && !document.getElementById("editName").value.trim()) {
       document.getElementById("editName").value = nameMatch[1].trim();
     }
 
-    // 填入描述
     const descMatch = text.match(/商品內容跟特點[\s\S]*/);
     if (descMatch) {
       document.getElementById("editDesc").value = descMatch[0].trim();
