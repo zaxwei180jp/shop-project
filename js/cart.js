@@ -1,5 +1,6 @@
 import { formatPrice } from "./utils.js";
 
+
 const API_URL     = "https://shop-project-azure.vercel.app/api/products";
 const el          = document.getElementById("cart");
 

@@ -75,6 +75,7 @@ function renderMainTabs() {
     });
     mainTabs.appendChild(btn);
   });
+
 }
 
 // ── 小分類 Tab ────────────────────────────────────────
@@ -260,7 +261,7 @@ function showDropdown(results) {
           <div class="text-sm font-medium text-gray-800 truncate">${highlight(p.name)}</div>
           <div class="text-xs text-gray-400">${highlight(p.mainCategory || "")}${p.mainCategory && p.category ? " · " : ""}${highlight(p.category || "")}</div>
         </div>
-        <div class="text-sm font-bold text-red-500 shrink-0">NT$ ${p.price?.toLocaleString()}</div>
+        <div class="text-sm font-bold text-red-500 shrink-0">NT$ ${Math.round(p.price||0).toLocaleString()}</div>
       </a>`;
   }).join("");
 
