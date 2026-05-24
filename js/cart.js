@@ -1,7 +1,117 @@
 import { formatPrice } from "./utils.js";
 
+// ── 優惠碼設定 ────────────────────────────────────────
+const COUPONS = {
+  "hinamecute": { type: "jprice_rate", rate: 0.3, label: "特別優惠價" },
+};
+let appliedCoupon = null;
+
 
 const API_URL     = "https://shop-project-azure.vercel.app/api/products";
+
+// ── 集運功能 ─────────────────────────────────────────
+const ORDERS_API_CART = "https://shop-project-azure.vercel.app/api/orders-manage";
+const CUSTOMER_API_CART = "https://shop-project-azure.vercel.app/api/customer";
+let bundleOrders = []; // 選取的集運訂單
+let selectedBundleIds = new Set();
+
+window.toggleBundle = (checked) => {
+  document.getElementById("bundleSection").classList.toggle("hidden", !checked);
+  if (!checked) {
+    selectedBundleIds.clear();
+    bundleOrders = [];
+    document.getElementById("bundleOrderList").innerHTML = "";
+    document.getElementById("bundleTotal").classList.add("hidden");
+    sessionStorage.removeItem("bundleOrders");
+  }
+};
+
+window.searchBundleOrders = async () => {
+  const email = document.getElementById("bundleEmail").value.trim();
+  const listEl = document.getElementById("bundleOrderList");
+  if (!email) { listEl.innerHTML = '<div class="text-xs text-red-400">請輸入 Email</div>'; return; }
+
+  listEl.innerHTML = '<div class="text-xs text-gray-400">查詢中...</div>';
+  try {
+    // 查客戶
+    const custRes  = await fetch(CUSTOMER_API_CART + "?email=" + encodeURIComponent(email));
+    const custData = await custRes.json();
+    if (!custData.found) { listEl.innerHTML = '<div class="text-xs text-red-400">找不到此 Email 的客戶</div>'; return; }
+
+    // 查訂單
+    const ordRes  = await fetch(ORDERS_API_CART + "?type=customer&customerId=" + encodeURIComponent(custData.customerId) + "&email=" + encodeURIComponent(email));
+    const ordData = await ordRes.json();
+    const orders  = (ordData.orders || []).filter(o => o.status === "待處理" && !o.bundleId);
+
+    if (!orders.length) { listEl.innerHTML = '<div class="text-xs text-gray-400">沒有可合併的待處理訂單</div>'; return; }
+
+    bundleOrders = orders;
+    renderBundleList();
+  } catch (err) {
+    listEl.innerHTML = `<div class="text-xs text-red-400">查詢失敗：${err.message}</div>`;
+  }
+};
+
+function renderBundleList() {
+  const listEl = document.getElementById("bundleOrderList");
+  listEl.innerHTML = bundleOrders.map(o => `
+    <label class="flex items-center gap-2 border rounded-lg p-2 cursor-pointer hover:bg-gray-50">
+      <input type="checkbox" value="${o.pageId}" onchange="toggleBundleOrder('${o.pageId}', this.checked)"
+        class="w-4 h-4 accent-black shrink-0">
+      <div class="flex-1 min-w-0">
+        <div class="text-xs font-medium">${o.orderId}</div>
+        <div class="text-xs text-gray-400">NT$ ${Math.floor(Number(o.total)||0).toLocaleString()}</div>
+      </div>
+    </label>`).join("");
+  updateBundleTotal();
+}
+
+window.toggleBundleOrder = (pageId, checked) => {
+  if (checked) selectedBundleIds.add(pageId);
+  else selectedBundleIds.delete(pageId);
+  updateBundleTotal();
+  // 存到 sessionStorage
+  const selected = bundleOrders.filter(o => selectedBundleIds.has(o.pageId));
+  sessionStorage.setItem("bundleOrders", JSON.stringify(selected));
+};
+
+function updateBundleTotal() {
+  const totalEl = document.getElementById("bundleTotal");
+  if (!selectedBundleIds.size) { totalEl.classList.add("hidden"); return; }
+
+  const selected = bundleOrders.filter(o => selectedBundleIds.has(o.pageId));
+  // 取得當前購物車小計（全域 subtotal 在 renderCart scope 裡，用近似值）
+  const cartSubtotal = window._cartSubtotal || 0;
+  const bundleSubtotal = selected.reduce((s, o) => s + (Number(o.total) || 0), 0);
+  const combinedTotal = cartSubtotal + bundleSubtotal;
+  const shipping = combinedTotal >= 5000 ? 0 : 200;
+
+  totalEl.textContent = `合併後小計 NT$${Math.floor(combinedTotal).toLocaleString()} → 運費 ${shipping === 0 ? "免運 🎉" : "NT$" + shipping}`;
+  totalEl.classList.remove("hidden");
+}
+
+function applyCoupon() {
+  const code   = document.getElementById("couponInput")?.value.trim().toLowerCase();
+  const status = document.getElementById("couponStatus");
+  if (!code) return;
+  const coupon = COUPONS[code];
+  if (!coupon) {
+    status.textContent = "❌ 優惠碼無效";
+    status.className   = "text-xs mb-3 text-red-500";
+    status.classList.remove("hidden");
+    appliedCoupon = null;
+    sessionStorage.removeItem("appliedCoupon");
+  } else {
+    appliedCoupon = coupon;
+    sessionStorage.setItem("appliedCoupon", code);
+    status.textContent = `✅ 已套用「${coupon.label}」`;
+    status.className   = "text-xs mb-3 text-green-600";
+    status.classList.remove("hidden");
+  }
+  init();
+}
+
+window.applyCoupon = applyCoupon;
 const el          = document.getElementById("cart");
 
 
@@ -24,6 +134,7 @@ async function init() {
 
   let subtotal   = 0;
   let totalWeight = 0;
+  window._cartSubtotal = 0;
 
   const rows = ids.map(cartKey => {
     const [id, variant] = cartKey.split(":");
@@ -31,7 +142,12 @@ async function init() {
     const p   = products.find(x => x.id === id);
     if (!p) return "";
 
-    const sub    = p.price * qty;
+    // 優惠碼：hinamecute → jprice * 0.3
+    let unitPrice = p.price;
+    if (appliedCoupon?.type === "jprice_rate" && p.jprice) {
+      unitPrice = Math.round(p.jprice * appliedCoupon.rate);
+    }
+    const sub    = Math.round(unitPrice * qty);
     const weight = (p.weight || 0) * qty;
     subtotal    += sub;
     totalWeight += weight;
@@ -50,7 +166,7 @@ async function init() {
         <div class="flex-1 min-w-0">
           <div class="text-sm sm:text-base font-semibold leading-snug line-clamp-2 text-gray-800">${p.name}</div>
           ${variant ? `<div class="text-xs text-gray-500 mt-0.5">規格：${variant}</div>` : ""}
-          <div class="text-red-500 text-sm mt-1 font-medium">${formatPrice(p.price)}</div>
+          <div class="text-red-500 text-sm mt-1 font-medium">${formatPrice(unitPrice)}${appliedCoupon && p.jprice ? `<span class="text-xs text-gray-400 line-through ml-1">${formatPrice(p.price)}</span>` : ""}</div>
           ${weightNote}
 
           <div class="flex items-center mt-2 border rounded-lg overflow-hidden w-fit">
@@ -74,7 +190,8 @@ async function init() {
   const FLAT_SHIPPING = 200;   // 固定運費（台幣）
   const FREE_AMOUNT   = 5000;  // 免運門檻（台幣）
 
-  const isFreeShipping = subtotal >= FREE_AMOUNT;
+  window._cartSubtotal = subtotal;
+  const isFreeShipping = appliedCoupon ? true : subtotal >= FREE_AMOUNT;
   const shipping       = isFreeShipping ? 0 : FLAT_SHIPPING;
   const grandTotal     = subtotal + shipping;
 
@@ -98,7 +215,7 @@ async function init() {
       <!-- 小計 -->
       <div class="flex justify-between items-center text-sm text-gray-500 pt-1">
         <span>商品小計</span>
-        <span>${formatPrice(subtotal)}</span>
+        <span id="cart-subtotal-val" data-val="${subtotal}">${formatPrice(subtotal)}</span>
       </div>
 
       <!-- 運費明細 -->
@@ -112,6 +229,44 @@ async function init() {
         <span class="text-gray-700 font-medium">總計</span>
         <span class="text-xl sm:text-2xl font-bold">${formatPrice(grandTotal)}</span>
       </div>
+
+      <!-- 集運選項 -->
+      <div class="border rounded-xl p-3 mb-3">
+        <label class="flex items-center gap-3 cursor-pointer">
+          <input type="checkbox" id="bundleCheck" onchange="toggleBundle(this.checked)"
+            class="w-4 h-4 accent-black">
+          <div>
+            <div class="text-sm font-medium">集運合併</div>
+            <div class="text-xs text-gray-400">與其他待處理訂單合併計算運費</div>
+          </div>
+        </label>
+        <div id="bundleSection" class="hidden mt-3">
+          <div class="text-xs text-gray-500 mb-2">輸入 Email 查詢可合併的訂單</div>
+          <div class="flex gap-2">
+            <input id="bundleEmail" type="email" placeholder="your@email.com"
+              class="flex-1 border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              onkeydown="if(event.key==='Enter') searchBundleOrders()">
+            <button onclick="searchBundleOrders()"
+              class="px-3 py-2 border rounded-xl text-sm hover:bg-gray-50 transition shrink-0">
+              查詢
+            </button>
+          </div>
+          <div id="bundleOrderList" class="mt-2 space-y-2"></div>
+          <div id="bundleTotal" class="hidden mt-2 text-xs text-green-600 font-medium"></div>
+        </div>
+      </div>
+
+      <!-- 優惠碼 -->
+      <div class="flex gap-2 mb-3">
+        <input id="couponInput" type="text" placeholder="輸入優惠碼"
+          class="flex-1 border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+          onkeydown="if(event.key==='Enter') applyCoupon()">
+        <button onclick="applyCoupon()"
+          class="px-4 py-2.5 border rounded-xl text-sm hover:bg-gray-50 transition shrink-0">
+          套用
+        </button>
+      </div>
+      <div id="couponStatus" class="text-xs mb-3 hidden"></div>
 
       <a href="checkout.html"
          class="block w-full py-3 bg-black text-white font-medium rounded-xl active:bg-gray-800 transition text-center">
