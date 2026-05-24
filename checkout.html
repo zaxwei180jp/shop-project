@@ -111,10 +111,16 @@
   </div>
 
   <!-- 送出按鈕 -->
-  <button id="submitBtn" onclick="submitOrder()"
-    class="w-full py-3.5 bg-black text-white font-medium rounded-xl active:bg-gray-800 transition text-base">
-    確認送出訂單
-  </button>
+  <div class="flex gap-3">
+    <a href="cart.html"
+      class="flex-1 py-3.5 border border-gray-300 text-gray-600 font-medium rounded-xl text-center hover:bg-gray-50 active:bg-gray-100 transition text-base">
+      ← 回到購物車
+    </a>
+    <button id="submitBtn" onclick="submitOrder()"
+      class="flex-1 py-3.5 bg-black text-white font-medium rounded-xl active:bg-gray-800 transition text-base">
+      確認送出訂單
+    </button>
+  </div>
 
   <p class="text-xs text-center text-gray-400 mt-3">送出後將建立訂單，我們會盡快與您聯繫</p>
 
@@ -171,7 +177,6 @@ let orderShipping = 0;
 
 // ── 初始化：讀購物車 + 抓商品資料 ──────────────────────
 async function init() {
-  const mergeOrders = [];
   const cart = JSON.parse(localStorage.getItem("cart") || "{}");
   if (!Object.keys(cart).length) {
     location.href = "cart.html";
@@ -185,21 +190,24 @@ async function init() {
   orderSubtotal = 0;
   let totalWeight = 0;
 
-  Object.entries(cart).forEach(([id, qty]) => {
+  Object.entries(cart).forEach(([cartKey, qty]) => {
+    const [id, variant] = cartKey.split(":");
     const p = products.find(x => x.id === id);
     if (!p) return;
-    const sub = p.price * qty;
+    const sub  = p.price * qty;
     orderSubtotal += sub;
     totalWeight   += (p.weight || 0) * qty;
-    orderItems.push({ name: p.name, qty, price: formatPrice(p.price), sub });
+    const name = variant ? `${p.name}（${variant}）` : p.name;
+    orderItems.push({ name, qty, price: formatPrice(p.price), sub });
   });
 
 
   // ⭐ 運費計算
-  const baseShipping = Math.ceil(totalWeight * RATE);
-  const needSurcharge = totalWeight < FREE_KG;
-  orderShipping      = baseShipping + (needSurcharge ? SURCHARGE : 0);
-  orderTotal         = orderSubtotal + orderShipping;
+  const FLAT_SHIPPING  = 200;
+  const FREE_AMOUNT    = 5000;
+  const isFreeShipping = orderSubtotal >= FREE_AMOUNT;
+  orderShipping        = isFreeShipping ? 0 : FLAT_SHIPPING;
+  orderTotal           = orderSubtotal + orderShipping;
 
   // 訂單明細
   document.getElementById("orderItems").innerHTML = orderItems.map(i => `
@@ -215,9 +223,7 @@ async function init() {
   const shippingRow = document.getElementById("orderShippingRow");
   shippingRow.className = "flex justify-between items-center mt-1 text-sm text-gray-500";
 
-  let shippingText = formatPrice(baseShipping) + "（" + totalWeight.toFixed(2).replace(/\.?0+$/, "") + "kg × NT$" + RATE + "）";
-  if (needSurcharge) shippingText += " + NT$" + SURCHARGE + " 附加費";
-  shippingEl.textContent = shippingText;
+  shippingEl.textContent = isFreeShipping ? "免運費" : "NT$200";
 
   document.getElementById("orderTotal").textContent = formatPrice(orderTotal);
 }
@@ -295,17 +301,6 @@ window.submitOrder = async () => {
 
     localStorage.removeItem("cart");
 
-    // ⭐ 更新合併的客製化訂單狀態為「處理中」
-    for (const co of mergeOrders) {
-      try {
-        await fetch("https://shop-project-azure.vercel.app/api/custom-order", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pageId: co.pageId, status: "處理中" }),
-        });
-      } catch {}
-    }
-    sessionStorage.removeItem("mergeCustomOrders");
 
     document.getElementById("displayOrderId").textContent = orderId;
     document.getElementById("displayCustomerId").textContent = customerId;
