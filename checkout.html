@@ -274,6 +274,8 @@ window.submitOrder = async () => {
 
   try {
     // ⭐ Step 1：查詢或建立客戶
+    const isCouponOrder = sessionStorage.getItem("appliedCoupon") === "hinamecute";
+
     const custCheck = await fetch(
       CUSTOMER_API + "?email=" + encodeURIComponent(email)
     );
@@ -283,10 +285,12 @@ window.submitOrder = async () => {
     if (custData.found) {
       customerId = custData.customerId;
     } else {
+      // hinamecute 用 C-161 開頭，尾數從 A 開始
+      const prefix = isCouponOrder ? "C-161" : "W-82";
       const custCreate = await fetch(CUSTOMER_API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name, phone, address }),
+        body: JSON.stringify({ email, name, phone, address, prefix }),
       });
       const custCreated = await custCreate.json();
       if (!custCreated.customerId) throw new Error("客戶建立失敗");
