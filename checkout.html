@@ -186,6 +186,11 @@ async function init() {
   const res = await fetch(PRODUCTS_API, { cache: "no-store" });
   const products = await res.json();
 
+  // ⭐ 優惠碼（要在使用前宣告）
+  const COUPONS2       = { "hinamecute": { type: "jprice_rate", rate: 0.3 } };
+  const couponCode2    = sessionStorage.getItem("appliedCoupon") || "";
+  const activeCoupon   = COUPONS2[couponCode2] || null;
+
   orderItems    = [];
   orderSubtotal = 0;
   let totalWeight = 0;
@@ -194,18 +199,22 @@ async function init() {
     const [id, variant] = cartKey.split(":");
     const p = products.find(x => x.id === id);
     if (!p) return;
-    const sub  = p.price * qty;
+    let unitPrice = p.price;
+    if (activeCoupon?.type === "jprice_rate" && p.jprice) {
+      unitPrice = Math.floor(p.jprice * activeCoupon.rate);
+    }
+    const sub  = unitPrice * qty;
     orderSubtotal += sub;
     totalWeight   += (p.weight || 0) * qty;
     const name = variant ? `${p.name}（${variant}）` : p.name;
-    orderItems.push({ name, qty, price: formatPrice(p.price), sub });
+    orderItems.push({ id, idnumber: p.idnumber || "", variant: variant || "", name, qty, price: unitPrice, sub });
   });
 
 
   // ⭐ 運費計算
   const FLAT_SHIPPING  = 200;
   const FREE_AMOUNT    = 5000;
-  const isFreeShipping = orderSubtotal >= FREE_AMOUNT;
+  const isFreeShipping = activeCoupon ? true : orderSubtotal >= FREE_AMOUNT;
   orderShipping        = isFreeShipping ? 0 : FLAT_SHIPPING;
   orderTotal           = orderSubtotal + orderShipping;
 
@@ -213,7 +222,7 @@ async function init() {
   document.getElementById("orderItems").innerHTML = orderItems.map(i => `
     <div class="flex justify-between py-2.5">
       <span class="text-gray-700">${i.name} <span class="text-gray-400">× ${i.qty}</span></span>
-      <span class="font-medium">${formatPrice(i.sub)}</span>
+      <span class="font-medium">${formatPrice(i.price * i.qty)}</span>
     </div>
   `).join("");
 
@@ -301,6 +310,23 @@ window.submitOrder = async () => {
 
     localStorage.removeItem("cart");
 
+    // ⭐ 集運：更新所有選取訂單的 bundleId
+    const bundleOrdersRaw = sessionStorage.getItem("bundleOrders");
+    if (bundleOrdersRaw) {
+      const bundleOrders = JSON.parse(bundleOrdersRaw);
+      const bundleId = "BUNDLE" + Date.now().toString().slice(-8);
+      // 更新所有集運訂單（含本筆）
+      const patchPromises = bundleOrders.map(o =>
+        fetch(ORDERS_API, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pageId: o.pageId, bundleId }),
+        })
+      );
+      // 本筆訂單也標記 bundleId（需要 pageId，先查）
+      await Promise.all(patchPromises);
+      sessionStorage.removeItem("bundleOrders");
+    }
 
     document.getElementById("displayOrderId").textContent = orderId;
     document.getElementById("displayCustomerId").textContent = customerId;
