@@ -93,13 +93,28 @@ function updateBundleTotal() {
   if (!selectedBundleIds.size) { totalEl.classList.add("hidden"); return; }
 
   const selected = bundleOrders.filter(o => selectedBundleIds.has(o.pageId));
-  // 取得當前購物車小計（全域 subtotal 在 renderCart scope 裡，用近似值）
-  const cartSubtotal = window._cartSubtotal || 0;
+  const cartSubtotal   = window._cartSubtotal || 0;
   const bundleSubtotal = selected.reduce((s, o) => s + (Number(o.total) || 0), 0);
-  const combinedTotal = cartSubtotal + bundleSubtotal;
-  const shipping = combinedTotal >= 5000 ? 0 : 200;
 
-  totalEl.textContent = `合併後小計 NT$${Math.floor(combinedTotal).toLocaleString()} → 運費 ${shipping === 0 ? "免運 🎉" : "NT$" + shipping}`;
+  // 集運折扣：購物車未折扣（cartSubtotal < 3000），集運後若超過 3000 則折一次
+  // 已折扣過的集運訂單（discount > 0）不再折扣
+  const cartAlreadyDiscounted = cartSubtotal >= 3000; // 購物車本身已有折扣
+  const undiscountedBundle    = selected.filter(o => !(o.discount > 0)).reduce((s, o) => s + (Number(o.total) || 0), 0);
+
+  // 計算集運後新增的折扣
+  let bundleDiscount = 0;
+  if (!appliedCoupon) {
+    if (!cartAlreadyDiscounted && (cartSubtotal + undiscountedBundle) >= 3000) {
+      bundleDiscount = 200; // 合併後首次達到 3000
+    }
+  }
+
+  const combinedSubtotal = cartSubtotal + bundleSubtotal;
+  const combinedAfterDiscount = combinedSubtotal - (cartAlreadyDiscounted ? 0 : bundleDiscount);
+  const shipping = combinedAfterDiscount >= 5000 ? 0 : 200;
+  const combinedTotal = combinedAfterDiscount + shipping;
+
+  totalEl.textContent = `合併後小計 NT$${Math.floor(combinedSubtotal).toLocaleString()}${bundleDiscount > 0 ? " 折NT$200" : ""} → 運費 ${shipping === 0 ? "免手續費 🎉" : "NT$" + shipping} → 總計 NT$${Math.floor(combinedTotal).toLocaleString()}`;
   totalEl.classList.remove("hidden");
 }
 
@@ -202,24 +217,30 @@ async function init() {
   // ⭐ 運費計算邏輯
   const FLAT_SHIPPING = 200;   // 固定運費（台幣）
   const FREE_AMOUNT   = 5000;  // 免運門檻（台幣）
+  const DISCOUNT_MIN  = 3000;  // 折扣門檻
+  const DISCOUNT_AMT  = 200;   // 折扣金額
+
+  // 滿 3000 折 200（hinamecute 不適用）
+  const discount      = (!appliedCoupon && subtotal >= DISCOUNT_MIN) ? DISCOUNT_AMT : 0;
+  const afterDiscount = subtotal - discount;
 
   window._cartSubtotal = subtotal;
-  const isFreeShipping = appliedCoupon ? true : subtotal >= FREE_AMOUNT;
+  const isFreeShipping = appliedCoupon ? true : afterDiscount >= FREE_AMOUNT;
   const shipping       = isFreeShipping ? 0 : FLAT_SHIPPING;
-  const grandTotal     = subtotal + shipping;
+  const grandTotal     = afterDiscount + shipping;
 
-  const amountLeft   = FREE_AMOUNT - subtotal;
+  const amountLeft   = FREE_AMOUNT - afterDiscount;
   const shippingHint = appliedCoupon
     ? `<div class="flex items-center gap-1.5 text-xs text-blue-500 font-medium">
          <span>✨</span><span>已套用hiname折扣碼，價格為商品總價，商品運費請找咩咩另計</span>
        </div>`
     : isFreeShipping
     ? `<div class="flex items-center gap-1.5 text-xs text-green-600 font-medium">
-         <span>✅</span><span>已達 NT$5,000，免運費！</span>
+         <span>✅</span><span>已達 NT$5,000，免出貨手續費！</span>
        </div>`
     : `<div class="flex items-center gap-1.5 text-xs text-gray-400">
          <span>🚚</span>
-         <span>再買 <span class="font-medium text-gray-600">NT$${Math.ceil(amountLeft).toLocaleString()}</span> 即可免運費</span>
+         <span>再買 <span class="font-medium text-gray-600">NT$${Math.ceil(amountLeft).toLocaleString()}</span> 即可免出貨手續費</span>
        </div>`;
 
   el.innerHTML = `
@@ -235,10 +256,20 @@ async function init() {
         <span id="cart-subtotal-val" data-val="${subtotal}">${formatPrice(subtotal)}</span>
       </div>
 
+      ${!appliedCoupon && discount > 0 ? `
+      <div class="flex justify-between items-center text-sm text-green-600">
+        <span>🎉 滿NT$3,000折扣</span>
+        <span>- NT$200</span>
+      </div>` : !appliedCoupon && subtotal > 0 && subtotal < DISCOUNT_MIN ? `
+      <div class="flex items-center gap-1.5 text-xs text-gray-400 mt-1">
+        <span>🎁</span>
+        <span>再買 <span class="font-medium text-gray-600">NT$${(DISCOUNT_MIN - subtotal).toLocaleString()}</span> 可折 NT$200</span>
+      </div>` : ""}
+
       <!-- 運費明細 -->
       <div class="flex justify-between items-center text-sm ${isFreeShipping ? 'text-green-600' : 'text-gray-500'}">
-        <span>運費</span>
-        <span>${isFreeShipping ? '免運' : formatPrice(shipping)}</span>
+        <span>出貨手續費</span>
+        <span>${isFreeShipping ? '免費' : formatPrice(shipping)}</span>
       </div>
 
       <!-- 總計 -->
@@ -254,7 +285,7 @@ async function init() {
             class="w-4 h-4 accent-black">
           <div>
             <div class="text-sm font-medium">集運合併</div>
-            <div class="text-xs text-gray-400">與其他待處理訂單合併計算運費</div>
+            <div class="text-xs text-gray-400">與其他待處理訂單合併計算出貨手續費</div>
           </div>
         </label>
         <div id="bundleHint" class="hidden text-xs text-orange-500 mt-2"></div>
