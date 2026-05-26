@@ -32,9 +32,68 @@
   <!-- 訂單列表 -->
   <div id="orderList" class="space-y-3"></div>
 
+  <!-- 後台集運合併區 -->
+  <div id="adminMergeArea" class="hidden sticky bottom-0 bg-white border rounded-2xl shadow-lg p-4 mt-3">
+    <div class="text-xs font-semibold text-gray-500 mb-2">集運合併</div>
+    <div id="adminMergeSummary" class="text-sm text-gray-600 mb-3"></div>
+    <div class="flex gap-2">
+      <button onclick="adminClearMerge()"
+        class="flex-1 py-2.5 border rounded-xl text-sm text-gray-500 hover:bg-gray-50">
+        取消
+      </button>
+      <button onclick="adminConfirmMerge()"
+        class="flex-1 py-2.5 bg-black text-white font-medium rounded-xl text-sm">
+        確認集運合併
+      </button>
+    </div>
+  </div>
+
 </div>
 
 <!-- 訂單詳情 Modal -->
+<!-- 後台修改商品 Modal -->
+<div id="adminItemsModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-40 flex items-end sm:items-center justify-center">
+  <div class="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[85vh] flex flex-col">
+    <div class="flex justify-between items-center px-5 py-4 border-b shrink-0">
+      <h3 class="font-bold text-base">修改商品</h3>
+      <button onclick="closeAdminItemsModal()" class="text-gray-400 hover:text-black text-xl">✕</button>
+    </div>
+    <div id="adminItemsEditor" class="flex-1 overflow-y-auto px-5 py-4 space-y-3"></div>
+    <div class="px-5 py-4 border-t shrink-0 space-y-2">
+      <div class="flex justify-between text-sm font-bold">
+        <span>新合計</span>
+        <span id="adminItemsNewTotal" class="text-red-500"></span>
+      </div>
+      <p id="adminItemsSaveStatus" class="text-xs text-center hidden"></p>
+      <button id="adminItemsSaveBtn" onclick="adminSaveItems()"
+        class="w-full py-3 bg-black text-white font-medium rounded-xl text-sm">儲存變更</button>
+    </div>
+  </div>
+</div>
+
+<!-- 後台編輯集運 Modal -->
+<div id="adminBundleModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-40 flex items-end sm:items-center justify-center">
+  <div class="bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl max-h-[85vh] flex flex-col">
+    <div class="flex justify-between items-center px-5 py-4 border-b shrink-0">
+      <h3 class="font-bold text-base" id="adminBundleTitle">編輯集運批次</h3>
+      <button onclick="closeAdminBundleModal()" class="text-gray-400 hover:text-black text-xl">✕</button>
+    </div>
+    <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+      <div>
+        <div class="text-xs font-semibold text-blue-500 mb-2">📦 批次內的訂單</div>
+        <div id="adminBundleIn" class="space-y-2"></div>
+      </div>
+      <div>
+        <div class="text-xs font-semibold text-gray-500 mb-2">➕ 可加入的待處理訂單</div>
+        <div id="adminBundleOut" class="space-y-2"></div>
+      </div>
+    </div>
+    <div class="px-5 py-4 border-t shrink-0">
+      <button onclick="closeAdminBundleModal()" class="w-full py-3 border rounded-xl text-sm text-gray-500 hover:bg-gray-50">關閉</button>
+    </div>
+  </div>
+</div>
+
 <div id="modal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-40 flex items-end sm:items-center justify-center p-0 sm:p-4">
   <div class="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto">
 
@@ -42,6 +101,7 @@
     <div class="sticky top-0 bg-white flex justify-between items-center px-4 py-3 border-b rounded-t-2xl">
       <div>
         <div class="font-bold text-base" id="modalOrderId"></div>
+        <div id="modalBundleId" class="hidden text-xs text-blue-500 font-medium mt-0.5"></div>
         <div class="text-xs text-gray-400" id="modalDate"></div>
       </div>
       <div class="flex items-center gap-2">
@@ -74,8 +134,22 @@
 
       <!-- 訂單明細 -->
       <div>
-        <div class="text-xs font-medium text-gray-500 mb-2">訂單明細</div>
+        <div class="flex justify-between items-center mb-2">
+          <div class="text-xs font-medium text-gray-500">訂單明細</div>
+          <button id="adminEditItemsBtn" onclick="openAdminItemsModal()"
+            class="text-xs px-2 py-1 border rounded-lg text-gray-500 hover:bg-gray-50 hidden">
+            ✏️ 修改商品
+          </button>
+        </div>
         <div id="modalItems" class="space-y-1.5"></div>
+        <div id="modalDiscountRow" class="hidden flex justify-between items-center mt-2 text-sm text-green-600">
+          <span>🎉 滿NT$3,000折扣</span>
+          <span id="modalDiscount"></span>
+        </div>
+        <div id="modalShippingRow" class="flex justify-between items-center mt-1 text-sm text-gray-500">
+          <span>出貨手續費</span>
+          <span id="modalShipping"></span>
+        </div>
         <div class="flex justify-between items-center mt-3 pt-3 border-t font-bold">
           <span>合計</span>
           <span class="text-red-500 text-lg" id="modalTotal"></span>
@@ -163,32 +237,92 @@ function renderOrders() {
     return;
   }
 
-  document.getElementById("orderList").innerHTML = list.map(o => {
+  // 群組化：有 bundleId 的放在一起
+  const bundles = {};
+  const singles = [];
+  list.forEach(o => {
+    if (o.bundleId) {
+      if (!bundles[o.bundleId]) bundles[o.bundleId] = [];
+      bundles[o.bundleId].push(o);
+    } else {
+      singles.push(o);
+    }
+  });
+
+  const renderOrderCard = (o, inBundle = false) => {
     const style = STATUS_STYLE[o.status] || "bg-gray-100 text-gray-500";
     const date  = formatDate(o.createdAt);
     const firstItem = Array.isArray(o.items)
       ? (o.items[0] ? `${o.items[0].name}${o.items.length > 1 ? ` 等${o.items.length}件` : ''}` : "")
       : (o.items?.split("\n")[0] || "");
-
+    const canBundle = o.status === "待處理" && !o.bundleId;
     return `
-      <div onclick="openModal('${o.orderId}')"
-        class="bg-white rounded-xl border px-4 py-3.5 cursor-pointer hover:shadow-md active:bg-gray-50 transition">
-        <div class="flex justify-between items-start">
-          <div class="min-w-0">
-            <div class="flex items-center gap-2 mb-1">
-              <span class="font-bold text-sm tracking-wide">${o.orderId}</span>
-              <span class="text-xs px-2 py-0.5 rounded-full font-medium ${style}">${o.status}</span>
+      <div class="${inBundle ? "border-b last:border-0 px-4 py-3" : "bg-white rounded-xl border px-4 py-3.5"} hover:bg-gray-50 active:bg-gray-100 transition">
+        <div class="flex items-start gap-2">
+          ${!inBundle && canBundle ? `
+          <label class="flex flex-col items-center shrink-0 cursor-pointer gap-0.5 mt-1" title="勾選加入集運">
+            <input type="checkbox" value="${o.pageId}" data-total="${o.total}" data-discount="${o.discount || 0}"
+              onchange="adminToggleMerge(this)"
+              class="w-4 h-4 accent-black cursor-pointer">
+            <span class="text-gray-400" style="font-size:9px">集運</span>
+          </label>` : `<div class="w-5 shrink-0"></div>`}
+          <div class="flex-1 min-w-0 cursor-pointer" onclick="openModal('${o.orderId}')">
+            <div class="flex justify-between items-start">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="font-bold text-sm tracking-wide">${o.orderId}</span>
+                  <span class="text-xs px-2 py-0.5 rounded-full font-medium ${style}">${o.status}</span>
+                </div>
+                ${o.customerId ? `<div class="text-xs text-blue-500 font-medium mb-0.5">${o.customerId}</div>` : ""}
+                <div class="text-xs text-gray-400 truncate">${firstItem}</div>
+              </div>
+              <div class="text-right shrink-0 ml-3">
+                <div class="font-bold text-red-500 text-sm">NT$ ${Math.round(o.total||0).toLocaleString()}</div>
+                ${o.discount > 0 ? `<div class="text-xs text-green-600">折 NT$${o.discount}</div>` : ""}
+                ${o.shipping > 0 ? `<div class="text-xs text-gray-400">手續費 NT$${o.shipping}</div>` : o.shipping === 0 && o.total > 0 ? `<div class="text-xs text-green-600">免手續費</div>` : ""}
+                <div class="text-xs text-gray-400 mt-0.5">${date}</div>
+              </div>
             </div>
-            ${o.customerId ? `<div class="text-xs text-blue-500 font-medium mb-0.5">${o.customerId}</div>` : ""}
-            <div class="text-xs text-gray-400 truncate">${firstItem}</div>
-          </div>
-          <div class="text-right shrink-0 ml-3">
-            <div class="font-bold text-red-500 text-sm">NT$ ${Math.round(o.total||0).toLocaleString()}</div>
-            <div class="text-xs text-gray-400 mt-0.5">${date}</div>
           </div>
         </div>
       </div>`;
+  };
+
+  const bundleHtml = Object.entries(bundles).map(([bundleId, orders]) => {
+    const shortId    = bundleId.replace("BUNDLE","");
+    const grandTotal = orders.reduce((s,o) => s + (o.total||0), 0);
+    const custId     = orders[0]?.customerId || "";
+    return `
+      <div class="bg-white rounded-xl border-2 border-blue-200 overflow-hidden">
+        <div class="bg-blue-50 px-4 py-2 flex justify-between items-center">
+          <div class="flex items-center gap-2">
+            <span>📦</span>
+            <span class="text-xs font-bold text-blue-600">集運 #${shortId}</span>
+            <span class="text-xs text-blue-400">${orders.length} 筆</span>
+            ${custId ? `<span class="text-xs text-blue-400">${custId}</span>` : ""}
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-blue-600">合計 NT$ ${Math.floor(grandTotal).toLocaleString()}</span>
+            ${orders.every(o => o.status === "待處理") ? `
+            <button onclick="event.stopPropagation(); adminEditBundle('${bundleId}')"
+              class="text-xs px-2 py-1 bg-white border border-blue-200 text-blue-500 rounded-lg hover:bg-blue-50 shrink-0">✏️ 編輯</button>` : ""}
+          </div>
+        </div>
+        ${orders.map(o => renderOrderCard(o, true)).join("")}
+        <div class="bg-blue-50 px-4 py-2 text-xs text-blue-400 flex justify-between">
+          <span>小計 NT$ ${Math.floor(grandTotal).toLocaleString()}</span>
+          <span>${grandTotal >= 5000 ? "✅ 已達免手續費門檻" : `還差 NT$ ${Math.ceil(5000 - grandTotal).toLocaleString()} 可免手續費`}</span>
+        </div>
+      </div>`;
   }).join("");
+
+  const singlesHtml = singles.map(o => renderOrderCard(o, false)).join("");
+
+  document.getElementById("orderList").innerHTML = bundleHtml + singlesHtml;
+
+  // 重設集運勾選
+  _adminMergeSelected.clear();
+  updateAdminMergeArea();
 }
 
 // ── Modal ─────────────────────────────────────────────
@@ -199,10 +333,42 @@ function openModal(orderId) {
   const o    = currentOrder;
   const date = formatDate(o.createdAt);
 
-  document.getElementById("modalOrderId").textContent    = o.orderId;
+  document.getElementById("modalOrderId").textContent = o.orderId;
+  const bundleEl = document.getElementById("modalBundleId");
+  if (o.bundleId) {
+    bundleEl.textContent = "📦 集運批次 #" + o.bundleId.replace("BUNDLE","");
+    bundleEl.classList.remove("hidden");
+  } else {
+    bundleEl.classList.add("hidden");
+  }
   document.getElementById("modalDate").textContent       = date;
   document.getElementById("modalCustomerId").textContent = o.customerId || "—";
-  document.getElementById("modalTotal").textContent      = `NT$ ${Math.round(o.total||0).toLocaleString()}`;
+  document.getElementById("modalTotal").textContent = `NT$ ${Math.round(o.total||0).toLocaleString()}`;
+  // 待處理才顯示修改商品按鈕
+  const editItemsBtn = document.getElementById("adminEditItemsBtn");
+  if (editItemsBtn) {
+    editItemsBtn.classList.toggle("hidden", o.status !== "待處理" || !Array.isArray(o.items));
+  }
+  // 折扣
+  const discEl = document.getElementById("modalDiscountRow");
+  if (o.discount > 0) {
+    document.getElementById("modalDiscount").textContent = `- NT$${o.discount}`;
+    discEl.classList.remove("hidden");
+  } else {
+    discEl.classList.add("hidden");
+  }
+  // 手續費
+  const shipEl  = document.getElementById("modalShipping");
+  const shipRow = document.getElementById("modalShippingRow");
+  if (o.shipping > 0) {
+    shipEl.textContent = `NT$${o.shipping}`;
+    shipRow.className  = "flex justify-between items-center mt-1 text-sm text-gray-500";
+  } else if (o.shipping === 0 && o.total > 0) {
+    shipEl.textContent = "免手續費";
+    shipRow.className  = "flex justify-between items-center mt-1 text-sm text-green-600";
+  } else {
+    shipRow.className  = "hidden";
+  }
 
   // ⭐ 用 customerId 的 email 查詢客戶資料
   const infoEl = document.getElementById("customerInfo");
@@ -218,16 +384,27 @@ function openModal(orderId) {
 
   // 商品明細
   let itemsArr;
+  let itemsHtml;
   if (Array.isArray(o.items)) {
-    itemsArr = o.items.map(i => `${i.name}${i.variant ? `（${i.variant}）` : ""} × ${i.qty}（NT$${Math.round(i.price * i.qty).toLocaleString()}）`);
+    itemsHtml = o.items.map(i => `
+      <div class="py-2 border-b border-gray-50 last:border-0">
+        <div class="flex justify-between items-start text-sm">
+          <span class="text-gray-700 flex-1 min-w-0 mr-2">${i.name}${i.variant ? ` <span class="text-gray-400">（${i.variant}）</span>` : ""}</span>
+          <span class="text-gray-500 shrink-0">× ${i.qty}</span>
+        </div>
+        <div class="flex justify-between text-xs text-gray-400 mt-0.5">
+          <span>單價 NT$${Math.floor(i.price).toLocaleString()}</span>
+          <span class="text-gray-600 font-medium">NT$${Math.floor(i.price * i.qty).toLocaleString()}</span>
+        </div>
+      </div>`).join("");
   } else {
-    itemsArr = (o.items || "").split("\n").filter(Boolean);
+    itemsHtml = (o.items || "").split("\n").filter(Boolean).map(line => `
+      <div class="flex justify-between text-sm py-1.5 border-b border-gray-50 last:border-0">
+        <span class="text-gray-700">${line.split("（")[0].trim()}</span>
+        <span class="text-gray-500 shrink-0 ml-2">${line.match(/（(.+)）/)?.[1] || ""}</span>
+      </div>`).join("");
   }
-  document.getElementById("modalItems").innerHTML = itemsArr.map(line => `
-    <div class="flex justify-between text-sm py-1.5 border-b border-gray-50 last:border-0">
-      <span class="text-gray-700">${line.split("（")[0].trim()}</span>
-      <span class="text-gray-500 shrink-0 ml-2">${line.match(/（(.+)）/)?.[1] || ""}</span>
-    </div>`).join("");
+  document.getElementById("modalItems").innerHTML = itemsHtml;
 
   // 狀態按鈕
   const statusEl = document.getElementById("statusBtns");
@@ -360,6 +537,222 @@ function formatDate(iso) {
 }
 
 init();
+
+// ── 後台修改商品 ─────────────────────────────────────
+let _adminEditItems = null;
+
+function openAdminItemsModal() {
+  if (!currentOrder || !Array.isArray(currentOrder.items)) return;
+  _adminEditItems = JSON.parse(JSON.stringify(currentOrder.items));
+  document.getElementById("adminItemsSaveStatus").classList.add("hidden");
+  const btn = document.getElementById("adminItemsSaveBtn");
+  btn.disabled = false; btn.textContent = "儲存變更";
+  renderAdminItemsEditor();
+  document.getElementById("adminItemsModal").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
+function closeAdminItemsModal() {
+  document.getElementById("adminItemsModal").classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+function renderAdminItemsEditor() {
+  const items = _adminEditItems;
+  const DISCOUNT_MIN = 3000, DISCOUNT_AMT = 200, FREE = 5000, FLAT = 200;
+  const subtotal  = items.reduce((s, i) => s + i.price * i.qty, 0);
+  const discount  = subtotal >= DISCOUNT_MIN ? DISCOUNT_AMT : 0;
+  const afterDisc = subtotal - discount;
+  const shipping  = afterDisc >= FREE ? 0 : FLAT;
+  const total     = afterDisc + shipping;
+
+  document.getElementById("adminItemsNewTotal").textContent =
+    `NT$${Math.floor(total).toLocaleString()}` +
+    (discount > 0 ? `（折NT$${discount}）` : "") +
+    (shipping === 0 ? "（免出貨手續費）" : `（出貨手續費NT$${shipping}）`);
+
+  document.getElementById("adminItemsEditor").innerHTML = items.map((item, idx) => `
+    <div class="flex items-center gap-3 border rounded-xl p-3 ${item.qty === 0 ? "opacity-40" : ""}">
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-medium">${item.name}${item.variant ? ` <span class="text-xs text-gray-400">（${item.variant}）</span>` : ""}</div>
+        <div class="text-xs text-gray-400 mt-0.5">單價 NT$${Math.floor(item.price).toLocaleString()}</div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="flex items-center border rounded-lg overflow-hidden">
+          <button onclick="adminChangeItemQty(${idx}, -1)" class="w-8 h-8 flex items-center justify-center text-lg hover:bg-gray-100">−</button>
+          <span class="w-8 text-center text-sm font-medium">${item.qty}</span>
+          <button onclick="adminChangeItemQty(${idx}, 1)" class="w-8 h-8 flex items-center justify-center text-lg hover:bg-gray-100">＋</button>
+        </div>
+        <button onclick="adminRemoveItem(${idx})" class="text-gray-300 hover:text-red-400 text-xl transition">✕</button>
+      </div>
+    </div>`).join("");
+}
+
+window.adminChangeItemQty = (idx, delta) => {
+  _adminEditItems[idx].qty = Math.max(0, _adminEditItems[idx].qty + delta);
+  renderAdminItemsEditor();
+};
+
+window.adminRemoveItem = (idx) => {
+  _adminEditItems.splice(idx, 1);
+  renderAdminItemsEditor();
+};
+
+async function adminSaveItems() {
+  const items = _adminEditItems.filter(i => i.qty > 0);
+  if (!items.length) { alert("至少保留一件商品"); return; }
+
+  const FLAT = 200, FREE = 5000, DISCOUNT_MIN = 3000, DISCOUNT_AMT = 200;
+  const subtotal  = items.reduce((s, i) => s + i.price * i.qty, 0);
+  const discount  = subtotal >= DISCOUNT_MIN ? DISCOUNT_AMT : 0;
+  const afterDisc = subtotal - discount;
+  const shipping  = afterDisc >= FREE ? 0 : FLAT;
+  const total     = afterDisc + shipping;
+
+  const btn    = document.getElementById("adminItemsSaveBtn");
+  const status = document.getElementById("adminItemsSaveStatus");
+  btn.disabled = true; btn.textContent = "儲存中...";
+
+  try {
+    const res  = await fetch(ORDERS_API_ADMIN, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pageId: currentOrder.pageId, items, total, shipping, discount }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    status.textContent = "✅ 已更新！";
+    status.className   = "text-xs text-center text-green-600";
+    status.classList.remove("hidden");
+    closeAdminItemsModal();
+    await init();
+    openModal(currentOrder.orderId);
+  } catch (err) {
+    status.textContent = "❌ " + err.message;
+    status.className   = "text-xs text-center text-red-500";
+    status.classList.remove("hidden");
+    btn.disabled = false; btn.textContent = "儲存變更";
+  }
+}
+
+// ── 後台集運功能 ─────────────────────────────────────
+const ORDERS_API_ADMIN = "https://shop-project-azure.vercel.app/api/orders-manage";
+let _adminMergeSelected = new Set();
+
+window.adminToggleMerge = (checkbox) => {
+  if (checkbox.checked) _adminMergeSelected.add(checkbox.value);
+  else _adminMergeSelected.delete(checkbox.value);
+  updateAdminMergeArea();
+};
+
+function updateAdminMergeArea() {
+  const area    = document.getElementById("adminMergeArea");
+  const summary = document.getElementById("adminMergeSummary");
+  if (_adminMergeSelected.size < 2) { area.classList.add("hidden"); return; }
+
+  let total = 0, hasDisc = false;
+  document.querySelectorAll("#orderList input[type=checkbox]:checked").forEach(cb => {
+    total   += Number(cb.dataset.total) || 0;
+    if (Number(cb.dataset.discount) > 0) hasDisc = true;
+  });
+
+  const DISCOUNT_MIN = 3000, DISCOUNT_AMT = 200, FREE = 5000;
+  const discount     = (!hasDisc && total >= DISCOUNT_MIN) ? DISCOUNT_AMT : 0;
+  const afterDisc    = total - discount;
+  const shipping     = afterDisc >= FREE ? 0 : 200;
+  const grandTotal   = afterDisc + shipping;
+
+  summary.innerHTML = `
+    <div class="space-y-1">
+      <div class="flex justify-between text-sm"><span class="text-gray-500">選取 ${_adminMergeSelected.size} 筆</span><span>NT$${Math.floor(total).toLocaleString()}</span></div>
+      ${discount > 0 ? `<div class="flex justify-between text-sm text-green-600"><span>🎉 折扣</span><span>- NT$${discount}</span></div>` : ""}
+      <div class="flex justify-between text-sm ${shipping === 0 ? "text-green-600" : "text-gray-500"}"><span>出貨手續費</span><span>${shipping === 0 ? "免手續費" : "NT$" + shipping}</span></div>
+      <div class="flex justify-between text-sm font-bold pt-1 border-t"><span>合計</span><span class="text-red-500">NT$${Math.floor(grandTotal).toLocaleString()}</span></div>
+      <div class="text-xs text-gray-400">${afterDisc >= FREE ? "✅ 已達免手續費門檻" : `還差 NT$ ${Math.ceil(FREE - afterDisc).toLocaleString()} 可免手續費`}</div>
+    </div>`;
+  area.classList.remove("hidden");
+}
+
+function adminClearMerge() {
+  _adminMergeSelected.clear();
+  document.querySelectorAll("#orderList input[type=checkbox]").forEach(cb => cb.checked = false);
+  updateAdminMergeArea();
+}
+
+async function adminConfirmMerge() {
+  if (_adminMergeSelected.size < 2) return;
+  const btn = document.querySelector("#adminMergeArea button:last-child");
+  btn.disabled = true; btn.textContent = "處理中...";
+  try {
+    const bundleId = "BUNDLE" + Date.now().toString().slice(-8);
+    await Promise.all([..._adminMergeSelected].map(pageId =>
+      fetch(ORDERS_API_ADMIN, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pageId, bundleId }),
+      })
+    ));
+    adminClearMerge();
+    await init();
+  } catch (err) {
+    alert("集運失敗：" + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = "確認集運合併";
+  }
+}
+
+// ── 後台編輯集運批次 ──────────────────────────────────
+window.adminEditBundle = (bundleId) => {
+  const bundleOrders = allOrders.filter(o => o.bundleId === bundleId);
+  const freeOrders   = allOrders.filter(o => !o.bundleId && o.status === "待處理");
+  const shortId      = bundleId.replace("BUNDLE","");
+
+  document.getElementById("adminBundleTitle").textContent = `編輯集運批次 #${shortId}`;
+  document.getElementById("adminBundleIn").innerHTML = bundleOrders.map(o => `
+    <div class="flex items-center justify-between border rounded-xl px-3 py-2.5 bg-blue-50">
+      <div><div class="text-sm font-medium">${o.orderId}</div><div class="text-xs text-gray-400">NT$ ${Math.floor(o.total||0).toLocaleString()}</div></div>
+      <button onclick="adminRemoveFromBundle('${o.pageId}','${bundleId}')"
+        class="text-xs px-2 py-1 border border-red-200 text-red-400 rounded-lg hover:bg-red-50 ml-2">移除</button>
+    </div>`).join("") || '<div class="text-xs text-gray-400 text-center py-2">批次已空</div>';
+
+  document.getElementById("adminBundleOut").innerHTML = freeOrders.length ? freeOrders.map(o => `
+    <div class="flex items-center justify-between border rounded-xl px-3 py-2.5">
+      <div><div class="text-sm font-medium">${o.orderId}</div><div class="text-xs text-gray-400">NT$ ${Math.floor(o.total||0).toLocaleString()}</div></div>
+      <button onclick="adminAddToBundle('${o.pageId}','${bundleId}')"
+        class="text-xs px-2 py-1 border border-blue-200 text-blue-500 rounded-lg hover:bg-blue-50 ml-2">加入</button>
+    </div>`).join("") : '<div class="text-xs text-gray-400 text-center py-2">沒有可加入的訂單</div>';
+
+  document.getElementById("adminBundleModal").classList.remove("hidden");
+};
+
+function closeAdminBundleModal() {
+  document.getElementById("adminBundleModal").classList.add("hidden");
+}
+
+async function adminRemoveFromBundle(pageId, bundleId) {
+  await fetch(ORDERS_API_ADMIN, {
+    method: "PATCH", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pageId, bundleId: "" }),
+  });
+  // 若剩一筆也一起移除
+  const remaining = allOrders.filter(o => o.bundleId === bundleId && o.pageId !== pageId);
+  if (remaining.length === 1) {
+    await fetch(ORDERS_API_ADMIN, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pageId: remaining[0].pageId, bundleId: "" }),
+    });
+  }
+  closeAdminBundleModal();
+  await init();
+}
+
+async function adminAddToBundle(pageId, bundleId) {
+  await fetch(ORDERS_API_ADMIN, {
+    method: "PATCH", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pageId, bundleId }),
+  });
+  closeAdminBundleModal();
+  await init();
+}
+
 </script>
 </body>
 </html>

@@ -219,9 +219,12 @@ window.queryByCustomer = async () => {
               <div class="${inBundle ? "border-b last:border-0 px-4 py-3" : "bg-white rounded-xl border px-4 py-3"} transition ${canBundle && !inBundle ? "hover:border-pink-300" : ""}">
                 <div class="flex items-start gap-3">
                   ${canBundle ? `
-                  <input type="checkbox" value="${o.pageId}" data-total="${o.total}" data-discount="${o.discount || 0}"
-                    onchange="toggleMergeOrder(this)"
-                    class="w-4 h-4 accent-black mt-1 shrink-0 cursor-pointer">` : `<div class="w-4 shrink-0"></div>`}
+                  <label class="flex flex-col items-center shrink-0 cursor-pointer gap-0.5 mt-0.5" title="勾選加入集運">
+                    <input type="checkbox" value="${o.pageId}" data-total="${o.total}" data-discount="${o.discount || 0}"
+                      onchange="toggleMergeOrder(this)"
+                      class="w-4 h-4 accent-black cursor-pointer">
+                    <span class="text-gray-400" style="font-size:9px">集運</span>
+                  </label>` : `<div class="w-5 shrink-0"></div>`}
                   <div class="flex-1 min-w-0 cursor-pointer" onclick="showOrderDetail('${o.orderId}', ${JSON.stringify(data.customer).replace(/"/g,'&quot;')})">
                     <div class="flex justify-between items-start">
                       <div class="min-w-0">
@@ -303,6 +306,9 @@ window.queryByCustomer = async () => {
 
 // ── 點訂單顯示詳細 ────────────────────────────────────
 window.showOrderDetail = async (orderId, customer) => {
+  // 記錄供 refresh 用
+  window._currentDetailOrderId = orderId;
+  window._currentDetailCustomer = customer;
   const el = document.getElementById("result2");
   el.innerHTML = `<div class="text-center text-gray-400 py-8 text-sm">載入中...</div>`;
 
@@ -354,9 +360,12 @@ function renderOrderDetail(data) {
   let itemsHtml = "";
   if (Array.isArray(data.items) && data.items.length) {
     itemsHtml = data.items.map(i => `
-      <div class="flex justify-between py-2 text-sm border-b last:border-0">
-        <span class="text-gray-700">${i.name}${i.variant ? ` <span class="text-xs text-gray-400">（${i.variant}）</span>` : ""} × ${i.qty}</span>
-        <span class="text-gray-500">${formatPrice(i.price * i.qty)}</span>
+      <div class="py-2 border-b last:border-0">
+        <div class="flex justify-between items-start text-sm">
+          <span class="text-gray-700 flex-1 mr-2">${i.name}${i.variant ? ` <span class="text-xs text-gray-400">（${i.variant}）</span>` : ""} × ${i.qty}</span>
+          <span class="text-gray-600 font-medium shrink-0">${formatPrice(i.price * i.qty)}</span>
+        </div>
+        <div class="text-xs text-gray-400 mt-0.5">單價 ${formatPrice(i.price)}</div>
       </div>`).join("");
   } else {
     const text = typeof data.items === "string" ? data.items : "";
@@ -537,7 +546,7 @@ document.addEventListener("click", (e) => {
         <span id="itemsNewTotal" class="text-red-500"></span>
       </div>
       <p id="itemsSaveStatus" class="text-xs text-center hidden"></p>
-      <button onclick="saveItems()" class="w-full py-3 bg-black text-white font-medium rounded-xl text-sm">儲存變更</button>
+      <button id="itemsSaveBtn" onclick="saveItems()" class="w-full py-3 bg-black text-white font-medium rounded-xl text-sm">儲存變更</button>
     </div>
   </div>
 </div>
@@ -593,6 +602,8 @@ let _editData = null, _cancelData = null, _itemsData = null;
 window.openItemsModal = (encoded, itemsJson) => {
   _itemsData = JSON.parse(decodeURIComponent(encoded));
   const rawItems = typeof itemsJson === 'string' ? JSON.parse(itemsJson) : itemsJson;
+  // 記錄來源訂單的 orderId 供儲存後重新查詢用
+  window._lastOpenedOrderId = _itemsData._orderId || "";
   // 直接用訂單裡儲存的 price（下單當時計算好的，含優惠碼）
   _itemsData._editItems = JSON.parse(JSON.stringify(rawItems));
   document.getElementById("itemsSaveStatus").classList.add("hidden");
@@ -604,6 +615,10 @@ window.openItemsModal = (encoded, itemsJson) => {
 function closeItemsModal() {
   document.getElementById("itemsModal").classList.add("hidden");
   document.body.style.overflow = "";
+  // 重置按鈕狀態
+  const btn = document.getElementById("itemsSaveBtn");
+  if (btn) { btn.disabled = false; btn.textContent = "儲存變更"; }
+  document.getElementById("itemsSaveStatus").classList.add("hidden");
 }
 
 function renderItemsEditor() {
@@ -615,7 +630,7 @@ function renderItemsEditor() {
 
   document.getElementById("itemsNewTotal").textContent =
     "NT$" + Math.round(total).toLocaleString() +
-    (shipping === 0 ? "（免手續費）" : `（含運NT$${shipping}）`);
+    (shipping === 0 ? "（免出貨手續費）" : `（含出貨手續費NT$${shipping}）`);
 
   document.getElementById("itemsEditor").innerHTML = items.map((item, idx) => `
     <div class="flex items-center gap-3 border rounded-xl p-3 ${item.qty === 0 ? "opacity-40" : ""}">
@@ -654,25 +669,29 @@ async function saveItems() {
   const items = _itemsData._editItems.filter(i => i.qty > 0);
   if (!items.length) { alert("至少保留一件商品"); return; }
 
-  const FLAT = 200, FREE = 5000;
-  const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
-  const total    = subtotal + (subtotal >= FREE ? 0 : FLAT);
+  const FLAT = 200, FREE = 5000, DISCOUNT_MIN = 3000, DISCOUNT_AMT = 200;
+  const subtotal   = items.reduce((s, i) => s + i.price * i.qty, 0);
+  const discount   = subtotal >= DISCOUNT_MIN ? DISCOUNT_AMT : 0;
+  const afterDisc  = subtotal - discount;
+  const shipping   = afterDisc >= FREE ? 0 : FLAT;
+  const total      = afterDisc + shipping;
 
-  const btn    = document.querySelector("#itemsModal button:last-child");
+  const btn    = document.getElementById("itemsSaveBtn");
   const status = document.getElementById("itemsSaveStatus");
   btn.disabled = true; btn.textContent = "儲存中...";
 
   try {
     const res  = await fetch(ORDERS_API_MOD, {
       method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pageId: _itemsData.pageId, items, total }),
+      body: JSON.stringify({ pageId: _itemsData.pageId, items, total, shipping, discount }),
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.error);
     status.textContent = "✅ 已更新！";
     status.className   = "text-xs text-center text-green-600";
     status.classList.remove("hidden");
-    setTimeout(() => { closeItemsModal(); refreshCurrentOrder(); }, 1000);
+    closeItemsModal();
+    await refreshCurrentOrder();
   } catch (err) {
     status.textContent = "❌ " + err.message;
     status.className   = "text-xs text-center text-red-500";
@@ -683,8 +702,15 @@ async function saveItems() {
 
 // ── 重新載入當前訂單 ─────────────────────────────────
 async function refreshCurrentOrder() {
-  const orderId = document.getElementById("orderInput")?.value.trim();
-  if (orderId) {
+  const orderInput    = document.getElementById("orderInput")?.value.trim();
+  const customerInput = document.getElementById("customerInput")?.value.trim();
+  if (customerInput) {
+    await window.queryByCustomer();
+    // 如果是在訂單詳情頁，重新載入詳情
+    if (window._currentDetailOrderId && window._currentDetailCustomer) {
+      await window.showOrderDetail(window._currentDetailOrderId, window._currentDetailCustomer);
+    }
+  } else if (orderInput) {
     await window.queryByOrder();
   }
 }
@@ -832,10 +858,22 @@ function renderEditBundleModal(bundleId, data) {
 
 async function removeFromBundle(pageId) {
   try {
+    // 移除這筆
     await fetch(ORDERS_API_MOD, {
       method: "PATCH", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ pageId, bundleId: "" }),
     });
+
+    // 如果批次只剩 1 筆，把最後一筆也移除（變回單獨訂單）
+    const remaining = (_editBundleData?.orders || [])
+      .filter(o => o.bundleId === _editBundleId && o.pageId !== pageId);
+    if (remaining.length === 1) {
+      await fetch(ORDERS_API_MOD, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pageId: remaining[0].pageId, bundleId: "" }),
+      });
+    }
+
     closeEditBundleModal();
     window.queryByCustomer();
   } catch (err) { alert("操作失敗：" + err.message); }
