@@ -24,8 +24,8 @@ async function init() {
   });
 
   el.innerHTML = data.length
-    ? data.map(renderCard).join("")
-    : `<div class="col-span-2 text-center text-gray-400 py-10">沒有特價商品</div>`;
+    ? `<div class="product-grid">${data.map(renderCard).join("")}</div>`
+    : `<div style="padding:60px 0;text-align:center;color:var(--gray-400)">沒有特價商品</div>`;
 }
 
 init();
