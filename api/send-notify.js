@@ -66,7 +66,6 @@ export default async function handler(req, res) {
       text: bodyText,
     });
 
-    console.log("✅ 通知信已寄出");
     res.status(200).json({ success: true });
   } catch (err) {
     console.error("寄信失敗:", err.message);

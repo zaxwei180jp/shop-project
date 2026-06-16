@@ -4,94 +4,205 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>訂單查詢</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="js/theme.css?v=2">
+
+<style>
+/* === 覆蓋舊 Tailwind class，套用新設計 === */
+
+
+/* 主容器 */
+.px-4.py-6.max-w-xl.mx-auto { padding: 0 !important; }
+.px-4.py-6 { padding: 0 !important; }
+.max-w-xl.mx-auto { max-width: 640px; margin: 0 auto; }
+
+/* Tab */
+.flex.gap-2.mb-5.border-b {
+  display: flex !important; border-bottom: 2px solid var(--gray-200) !important;
+  background: var(--white); padding: 0 16px !important; margin: 0 !important; gap: 0 !important;
+}
+#tab1, #tab2 {
+  padding: 14px 16px !important; font-size: 15px !important; font-weight: 600 !important;
+  border: none !important; background: none !important; cursor: pointer;
+}
+
+/* 輸入框和按鈕 */
+.flex.gap-2.mb-4 { display: flex; gap: 8px; padding: 16px; background: var(--white); margin-bottom: 0 !important; }
+.flex-1.border.rounded-xl.px-4.py-3 { border: 1px solid var(--gray-200) !important; border-radius: var(--radius) !important; padding: 13px 14px !important; font-size: 16px !important; }
+.space-y-3.mb-4 { display: flex; flex-direction: column; gap: 10px; padding: 16px; background: var(--white); margin-bottom: 0 !important; }
+.w-full.border.rounded-xl.px-4.py-3 { border: 1px solid var(--gray-200) !important; border-radius: var(--radius) !important; padding: 13px 14px !important; font-size: 16px !important; }
+.px-5.py-3.bg-black.text-white.rounded-xl { background: var(--black) !important; color: var(--white) !important; border-radius: var(--radius) !important; padding: 13px 20px !important; border: none !important; cursor: pointer; font-size: 15px !important; font-weight: 600 !important; white-space: nowrap; }
+.w-full.py-3.bg-black.text-white.rounded-xl { background: var(--black) !important; color: var(--white) !important; border-radius: var(--radius) !important; padding: 14px !important; border: none !important; cursor: pointer; font-size: 15px !important; font-weight: 600 !important; width: 100% !important; display: block !important; }
+
+/* 訂單卡片 */
+.bg-white.rounded-xl.border.px-4.py-3 {
+  background: var(--white) !important; border-radius: var(--radius-lg) !important;
+  border: none !important; padding: 12px 16px !important;
+  box-shadow: none !important;
+}
+.space-y-3 { display: flex; flex-direction: column; gap: 8px; }
+.font-bold.text-sm { font-size: 15px !important; font-weight: 700 !important; }
+.text-xs.text-gray-400 { font-size: 13px !important; color: var(--gray-400) !important; }
+.text-sm.font-medium.text-gray-800 { font-size: 15px !important; }
+.font-bold.text-red-500.text-sm { font-size: 15px !important; font-weight: 700 !important; color: var(--black) !important; }
+
+/* 狀態 badge */
+.text-xs.px-2.py-0\.5.rounded-full { font-size: 12px !important; padding: 3px 10px !important; border-radius: var(--radius-sm) !important; }
+
+/* 集運批次 */
+.bg-white.rounded-xl.border-2.border-blue-200.overflow-hidden { border-radius: var(--radius-lg) !important; border: 2px solid #bfdbfe !important; }
+.bg-blue-50.px-4.py-2 { background: #eff6ff !important; padding: 10px 16px !important; }
+.text-xs.font-bold.text-blue-600 { font-size: 13px !important; font-weight: 700 !important; color: #1d4ed8 !important; }
+.text-xs.text-blue-400 { font-size: 12px !important; color: #60a5fa !important; }
+.text-xs.px-2.py-1.bg-white.border.border-blue-200.text-blue-500.rounded-lg { font-size: 12px !important; padding: 5px 10px !important; border: 1px solid #bfdbfe !important; border-radius: var(--radius-sm) !important; color: #2563eb !important; background: var(--white) !important; cursor: pointer; }
+
+/* Modal */
+.fixed.inset-0.z-50.bg-black.bg-opacity-40 { background: rgba(0,0,0,0.5) !important; }
+.bg-white.w-full.sm\:max-w-md.sm\:rounded-2xl.rounded-t-2xl { border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important; max-width: 480px !important; }
+.font-bold.text-base { font-size: 17px !important; font-weight: 700 !important; }
+.px-5.py-4.border-b { padding: 16px 20px !important; }
+.px-5.py-4.border-t { padding: 16px 20px !important; }
+.flex-1.overflow-y-auto.px-5.py-4 { padding: 16px 20px !important; }
+
+/* 修改商品 Modal 商品行 */
+.flex.items-center.gap-3.border.rounded-xl.p-3 { padding: 12px !important; border-radius: var(--radius) !important; border: 1px solid var(--gray-200) !important; }
+
+/* 大按鈕 */
+.w-full.py-3.border.rounded-xl.text-sm { border: 1px solid var(--gray-200) !important; border-radius: var(--radius) !important; padding: 14px !important; font-size: 15px !important; background: var(--white) !important; cursor: pointer; font-weight: 500 !important; }
+.flex-1.py-2\.5.bg-black.text-white { background: var(--black) !important; color: var(--white) !important; padding: 12px !important; border: none !important; border-radius: var(--radius) !important; cursor: pointer; font-size: 15px !important; font-weight: 600 !important; }
+.flex-1.py-2\.5.border.rounded-xl { border: 1px solid var(--gray-200) !important; border-radius: var(--radius) !important; padding: 12px !important; font-size: 15px !important; background: var(--white) !important; cursor: pointer; }
+
+/* 集運合併區 */
+#mergeArea { background: var(--white) !important; border-radius: var(--radius-lg) !important; border: none !important; padding: 16px !important; }
+.text-xs.font-semibold.text-gray-500 { font-size: 13px !important; font-weight: 600 !important; color: var(--gray-600) !important; }
+
+/* panel */
+#panel1, #panel2 { background: transparent; }
+
+/* renderOrderDetail 覆蓋 */
+.text-sm.text-gray-600.mb-3 { font-size:14px; color:var(--gray-600); margin-bottom:12px; }
+.flex.items-center.gap-1.text-sm.text-gray-400 { display:flex; align-items:center; gap:6px; font-size:14px; color:var(--gray-400); margin-bottom:16px; background:none; border:none; cursor:pointer; }
+.flex.flex-col.items-center.flex-1 { display:flex; flex-direction:column; align-items:center; flex:1; }
+.flex.justify-between.items-start.text-sm { display:flex; justify-content:space-between; align-items:flex-start; font-size:15px; }
+.text-gray-700.flex-1.mr-2 { color:var(--black); flex:1; margin-right:8px; }
+.flex.justify-between.py-2.text-sm.border-b { display:flex; justify-content:space-between; padding:8px 0; font-size:14px; border-bottom:1px solid var(--gray-200); }
+.bg-white.rounded-xl.border.px-4.py-4.mb-3 { background:var(--white); border-radius:var(--radius-lg); border:none; padding:16px; margin-bottom:10px; }
+.bg-white.rounded-xl.border.px-4.py-5.mb-3 { background:var(--white); border-radius:var(--radius-lg); border:none; padding:16px; margin-bottom:10px; }
+.flex.justify-between.items-start.mb-3 { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
+.font-bold.tracking-wider { font-weight:700; letter-spacing:0.05em; font-size:20px; }
+.flex.items-start { display:flex; align-items:flex-start; }
+.flex.justify-between.items-center.py-2.text-sm.text-green-600 { display:flex; justify-content:space-between; align-items:center; padding:6px 0; font-size:14px; color:var(--green); }
+.flex.justify-between.items-center.py-2.text-sm { display:flex; justify-content:space-between; align-items:center; padding:6px 0; font-size:14px; }
+.flex.justify-between.items-center.mt-3.pt-3.border-t.font-bold { display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:12px; border-top:1px solid var(--gray-200); font-weight:700; }
+.text-lg { font-size:22px !important; }
+.text-red-500 { color:var(--black) !important; }
+.text-green-600 { color:var(--green) !important; }
+.text-gray-400 { color:var(--gray-400) !important; }
+.text-blue-500 { color:#2563eb !important; }
+.text-gray-600 { color:var(--gray-600) !important; }
+.font-medium { font-weight:500 !important; }
+.font-semibold { font-weight:600 !important; }
+.font-bold { font-weight:700 !important; }
+.text-xl { font-size:20px !important; }
+.text-xs { font-size:12px !important; }
+.text-sm { font-size:14px !important; }
+.text-base { font-size:16px !important; }
+.text-lg { font-size:20px !important; }
+.line-clamp-2 { overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.truncate { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.shrink-0 { flex-shrink:0 !important; }
+.w-full { width:100% !important; }
+.min-w-0 { min-width:0 !important; }
+.mt-2 { margin-top:8px !important; }
+.mt-3 { margin-top:12px !important; }
+.mb-1 { margin-bottom:4px !important; }
+.mb-2 { margin-bottom:8px !important; }
+.mb-3 { margin-bottom:12px !important; }
+.mb-4 { margin-bottom:16px !important; }
+.pt-2 { padding-top:8px !important; }
+.pt-3 { padding-top:12px !important; }
+.pb-2 { padding-bottom:8px !important; }
+.border-t { border-top:1px solid var(--gray-200) !important; }
+.border-b { border-bottom:1px solid var(--gray-200) !important; }
+.rounded-full { border-radius:50% !important; }
+.overflow-hidden { overflow:hidden !important; }
+.cursor-pointer { cursor:pointer !important; }
+.items-center { align-items:center !important; }
+.justify-between { justify-content:space-between !important; }
+.gap-1 { gap:4px !important; }
+.gap-2 { gap:8px !important; }
+.gap-3 { gap:12px !important; }
+.flex-1 { flex:1 !important; }
+</style>
 </head>
-<body class="bg-gray-50">
+<body>
 
-<div class="sticky top-0 z-50 bg-white border-b shadow-sm">
-  <div class="flex justify-between items-center px-4 py-2 max-w-7xl mx-auto">
-    <div class="flex items-center gap-1">
-      <a href="index.html" class="font-bold px-2 py-1.5 rounded-lg hover:bg-gray-100 text-sm">🏠 <span class="hidden lg:inline">首頁</span></a>
-      <a href="new.html"   class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-xs lg:text-sm">🆕 <span class="hidden sm:inline">新品</span></a>
-      <a href="hot.html"   class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-xs lg:text-sm">🔥 <span class="hidden sm:inline">熱賣</span></a>
-      <a href="sale.html"  class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-xs lg:text-sm">🈹 <span class="hidden sm:inline">特價</span></a>
-    </div>
-    <div class="flex items-center gap-1">
-      <div id="searchWrap" class="flex items-center">
-        <div id="searchBox" class="hidden items-center gap-1 bg-gray-50 border rounded-xl px-2 py-1 mr-1 transition-all">
-          <input id="navSearchInput" type="text" placeholder="搜尋商品… (Enter)"
-            class="bg-transparent text-sm outline-none w-36 sm:w-48"
-            onkeydown="if(event.key==='Escape') closeSearch()">
-          <button onclick="closeSearch()" class="text-gray-400 hover:text-black text-sm leading-none">✕</button>
-        </div>
-        <button onclick="toggleSearch()" id="searchToggleBtn"
-          class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-base">🔍</button>
-      </div>
-      <a href="about.html" class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-xs lg:text-sm">ℹ️ <span class="hidden sm:inline">關於我們</span></a>
-      <a href="order-status.html" class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-xs lg:text-sm">📋 <span class="hidden sm:inline">訂單查詢</span></a>
-      <button onclick="history.back()" class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-sm">⬅️</button>
-      <a href="cart.html" class="px-2 py-1.5 rounded-lg hover:bg-gray-100 text-sm">
-        🛒 <span id="cartCount" class="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">0</span>
-      </a>
-    </div>
-  </div>
-  <div id="searchDropdown" class="hidden"></div>
-</div>
+<nav class="top-nav">
+  <a href="index.html" class="nav-icon-btn"><i class="ti ti-arrow-left"></i></a>
+  <span style="font-size:16px;font-weight:600">訂單查詢</span>
+  <a href="cart.html" class="nav-icon-btn">
+    <i class="ti ti-shopping-cart"></i>
+    <span id="cartCount" class="cart-badge" style="display:none">0</span>
+  </a>
+</nav>
 
-<div class="px-4 py-6 max-w-xl mx-auto">
+<div class="page-wrap" style="max-width:640px;margin:0 auto;padding:20px 16px">
 
-  <h1 class="text-xl font-bold mb-1 text-gray-900">訂單查詢</h1>
-  <p class="text-sm text-gray-400 mb-5">查詢您的訂單狀態</p>
-
-  <!-- Tab 切換 -->
-  <div class="flex gap-2 mb-5 border-b">
-    <button id="tab1" onclick="switchTab(1)"
-      class="pb-2.5 px-1 text-sm font-medium border-b-2 border-black text-black transition">
-      訂單編號查詢
-    </button>
-    <button id="tab2" onclick="switchTab(2)"
-      class="pb-2.5 px-1 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition">
-      客戶編號查詢
-    </button>
+  <!-- 說明文字 -->
+  <div style="margin-bottom:24px">
+    <div style="font-size:22px;font-weight:700;margin-bottom:6px">查詢我的訂單</div>
+    <div style="font-size:14px;color:var(--gray-400)">輸入訂單編號 或 客戶編號 + Email</div>
   </div>
 
-  <!-- Tab 1：訂單編號 -->
-  <div id="panel1">
-    <div class="flex gap-2 mb-4">
-      <input id="orderInput" type="text"
-        placeholder="請輸入訂單編號，例如 ORD12345678"
-        class="flex-1 border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black uppercase"
-        oninput="this.value = this.value.toUpperCase()"
+  <!-- 訂單編號查詢 -->
+  <div style="background:var(--white);border-radius:var(--radius-lg);padding:20px;margin-bottom:12px">
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px">用訂單編號查詢</div>
+    <div style="font-size:13px;color:var(--gray-400);margin-bottom:14px">結帳後收到的 ORD 開頭編號</div>
+    <div style="display:flex;gap:8px">
+      <input id="orderInput" type="text" placeholder="例如：ORD12345678"
+        style="flex:1;text-transform:uppercase"
+        oninput="this.value=this.value.toUpperCase()"
         onkeydown="if(event.key==='Enter') queryByOrder()">
-      <button onclick="queryByOrder()"
-        class="px-5 py-3 bg-black text-white rounded-xl text-sm font-medium active:bg-gray-800 shrink-0">
+      <button onclick="queryByOrder()" class="btn-primary" style="width:auto;padding:13px 20px;white-space:nowrap">
         查詢
       </button>
     </div>
-    <div id="result1"></div>
+    <div id="result1" style="margin-top:16px"></div>
   </div>
 
-  <!-- Tab 2：客戶編號 + Email -->
-  <div id="panel2" class="hidden">
-    <div class="space-y-3 mb-4">
-      <input id="customerInput" type="text"
-        placeholder="客戶編號，例如 W-82I"
-        class="w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black uppercase"
-        oninput="this.value = this.value.toUpperCase()"
+  <!-- 分隔 -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <div style="flex:1;height:1px;background:var(--gray-200)"></div>
+    <span style="font-size:13px;color:var(--gray-400)">或</span>
+    <div style="flex:1;height:1px;background:var(--gray-200)"></div>
+  </div>
+
+  <!-- 客戶編號查詢 -->
+  <div style="background:var(--white);border-radius:var(--radius-lg);padding:20px">
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px">用客戶編號查詢所有訂單</div>
+    <div style="font-size:13px;color:var(--gray-400);margin-bottom:14px">結帳後拿到的 W-82 或 C-161 開頭編號</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <input id="customerInput" type="text" placeholder="例如：W-82I"
+        style="text-transform:uppercase"
+        oninput="this.value=this.value.toUpperCase()"
         onkeydown="if(event.key==='Enter') queryByCustomer()">
-      <input id="emailInput" type="email"
-        placeholder="您的 Email"
-        class="w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+      <input id="emailInput" type="email" placeholder="驗證用 Email"
         onkeydown="if(event.key==='Enter') queryByCustomer()">
-      <button onclick="queryByCustomer()"
-        class="w-full py-3 bg-black text-white rounded-xl text-sm font-medium active:bg-gray-800">
-        查詢我的訂單
-      </button>
+      <button onclick="queryByCustomer()" class="btn-primary">查詢所有訂單</button>
     </div>
-    <div id="result2"></div>
+    <div id="result2" style="margin-top:16px"></div>
   </div>
 
 </div>
+
+<!-- 底部導覽 -->
+<nav class="bottom-nav">
+  <a href="index.html"        class="bnav-item"><i class="ti ti-home"></i>首頁</a>
+  <a href="hot.html"          class="bnav-item"><i class="ti ti-flame"></i>熱賣</a>
+  <a href="search.html"       class="bnav-item"><i class="ti ti-search"></i>搜尋</a>
+  <a href="order-status.html" class="bnav-item active"><i class="ti ti-clipboard-list"></i>訂單</a>
+  <a href="about.html"        class="bnav-item"><i class="ti ti-info-circle"></i>關於</a>
+</nav>
 
 <script src="./js/cartCount.js"></script>
 <script type="module">
@@ -101,30 +212,32 @@ const QUERY_API    = "https://shop-project-azure.vercel.app/api/orders-manage?ty
 const CUSTOMER_API_URL = "https://shop-project-azure.vercel.app/api/orders-manage?type=customer";
 
 const STATUS_MAP = {
-  "待處理":   { icon: "🕐", color: "bg-yellow-100 text-yellow-700", bar: 1 },
-  "處理中":   { icon: "📦", color: "bg-blue-100 text-blue-600",    bar: 2 },
-  "已出貨":   { icon: "🚚", color: "bg-purple-100 text-purple-600", bar: 3 },
-  "已完成":   { icon: "✅", color: "bg-green-100 text-green-600",   bar: 4 },
-  "已取消":   { icon: "❌", color: "bg-gray-100 text-gray-400",     bar: 0 },
-  "申請取消中": { icon: "📋", color: "bg-orange-100 text-orange-500", bar: 2 },
+  "待處理":   { icon: "🕐", color: "background:#fef9c3;color:#a16207", bar: 1 },
+  "處理中":   { icon: "📦", color: "background:#dbeafe;color:#1d4ed8", bar: 2 },
+  "已出貨":   { icon: "🚚", color: "background:#ede9fe;color:#6d28d9", bar: 3 },
+  "已完成":   { icon: "✅", color: "background:#dcfce7;color:#15803d", bar: 4 },
+  "已取消":   { icon: "❌", color: "background:#f3f4f6;color:#6b7280", bar: 0 },
+  "申請取消中": { icon: "📋", color: "background:#ffedd5;color:#c2410c", bar: 2 },
 };
 const STEPS = ["待處理", "處理中", "已出貨", "已完成"];
 
 // ── Tab 切換 ─────────────────────────────────────────
 window.switchTab = (n) => {
-  document.getElementById("panel1").classList.toggle("hidden", n !== 1);
-  document.getElementById("panel2").classList.toggle("hidden", n !== 2);
-  document.getElementById("tab1").className = `pb-2.5 px-1 text-sm font-medium border-b-2 transition ${n===1 ? "border-black text-black" : "border-transparent text-gray-400 hover:text-gray-600"}`;
-  document.getElementById("tab2").className = `pb-2.5 px-1 text-sm font-medium border-b-2 transition ${n===2 ? "border-black text-black" : "border-transparent text-gray-400 hover:text-gray-600"}`;
+  document.getElementById("panel1").style.display = n === 1 ? "block" : "none";
+  document.getElementById("panel2").style.display = n === 2 ? "block" : "none";
+  document.getElementById("tab1").style.borderBottom = n===1 ? "2px solid var(--black)" : "2px solid transparent";
+  document.getElementById("tab1").style.color = n===1 ? "var(--black)" : "var(--gray-400)";
+  document.getElementById("tab2").style.borderBottom = n===2 ? "2px solid var(--black)" : "2px solid transparent";
+  document.getElementById("tab2").style.color = n===2 ? "var(--black)" : "var(--gray-400)";
 };
 
 // ── Tab 1：訂單編號查詢 ───────────────────────────────
 window.queryByOrder = async () => {
   const orderId = document.getElementById("orderInput").value.trim();
   const el      = document.getElementById("result1");
-  if (!orderId) { el.innerHTML = `<div class="text-center text-sm text-red-400 py-4">請輸入訂單編號</div>`; return; }
+  if (!orderId) { el.innerHTML = `<div style="padding:16px 0;text-align:center;color:var(--red);font-size:15px">請輸入訂單編號</div>`; return; }
 
-  el.innerHTML = `<div class="text-center text-gray-400 py-8 text-sm">查詢中...</div>`;
+  el.innerHTML = `<div style="padding:40px 0;text-align:center;color:var(--gray-400);font-size:15px">查詢中...</div>`;
 
   try {
     const res  = await fetch(`${QUERY_API}&orderId=${encodeURIComponent(orderId)}`);
@@ -141,7 +254,7 @@ window.queryByOrder = async () => {
     el.innerHTML   = renderOrderDetail(order);
 
   } catch (err) {
-    el.innerHTML = `<div class="text-center text-sm text-red-400 py-4">查詢失敗，請稍後再試</div>`;
+    el.innerHTML = `<div style="padding:16px 0;text-align:center;color:var(--red);font-size:15px">查詢失敗，請稍後再試</div>`;
   }
 };
 
@@ -152,11 +265,11 @@ window.queryByCustomer = async () => {
   const el         = document.getElementById("result2");
 
   if (!customerId || !email) {
-    el.innerHTML = `<div class="text-center text-sm text-red-400 py-4">請填寫客戶編號和 Email</div>`;
+    el.innerHTML = `<div style="padding:16px 0;text-align:center;color:var(--red);font-size:15px">請填寫客戶編號和 Email</div>`;
     return;
   }
 
-  el.innerHTML = `<div class="text-center text-gray-400 py-8 text-sm">驗證中...</div>`;
+  el.innerHTML = `<div style="padding:40px 0;text-align:center;color:var(--gray-400);font-size:15px">驗證中...</div>`;
 
   try {
     const res  = await fetch(
@@ -166,9 +279,9 @@ window.queryByCustomer = async () => {
 
     if (!res.ok) {
       el.innerHTML = `
-        <div class="flex flex-col items-center py-8 text-gray-400">
-          <div class="text-4xl mb-3">🔒</div>
-          <div class="text-sm font-medium text-gray-500">${data.error || "驗證失敗"}</div>
+        <div style="display:flex;flex-direction:column;align-items:center;padding:40px 0;color:var(--gray-400)">
+          <div style="font-size:48px;margin-bottom:12px">🔒</div>
+          <div style="font-size:14px;font-weight:500;color:var(--gray-600)">${data.error || "驗證失敗"}</div>
           <div class="text-xs mt-1">請確認客戶編號和 Email 是否正確</div>
         </div>`;
       return;
@@ -176,18 +289,18 @@ window.queryByCustomer = async () => {
     window._lastCustomerData = data; // 存起來供 editBundle 用
 
     if (!data.orders?.length) {
-      el.innerHTML = `<div class="text-center text-gray-400 py-8 text-sm">目前沒有訂單紀錄</div>`;
+      el.innerHTML = `<div style="padding:40px 0;text-align:center;color:var(--gray-400);font-size:15px">目前沒有訂單紀錄</div>`;
       return;
     }
 
     el.innerHTML = `
       <!-- 客戶資訊 -->
-      <div class="bg-white rounded-xl border px-4 py-3 mb-4">
-        <div class="flex justify-between items-center mb-1">
+      <div style="background:var(--white);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
           <span class="text-xs font-semibold text-gray-500">客戶資料</span>
-          <span class="text-xs text-blue-500 font-bold">${customerId}</span>
+          <span style="font-size:13px;color:#2563eb;font-weight:700">${customerId}</span>
         </div>
-        <div class="text-sm font-medium text-gray-800">${data.customer.name || "—"}</div>
+        <div style="font-size:15px;font-weight:500">${data.customer.name || "—"}</div>
         <div class="text-xs text-gray-400 mt-0.5">${data.customer.address || "—"}</div>
       </div>
 
@@ -217,26 +330,26 @@ window.queryByCustomer = async () => {
             const canBundle = o.status === "待處理" && !o.bundleId;
             return `
               <div class="${inBundle ? "border-b last:border-0 px-4 py-3" : "bg-white rounded-xl border px-4 py-3"} transition ${canBundle && !inBundle ? "hover:border-pink-300" : ""}">
-                <div class="flex items-start gap-3">
+                <div style="display:flex;align-items:flex-start;gap:10px">
                   ${canBundle ? `
-                  <label class="flex flex-col items-center shrink-0 cursor-pointer gap-0.5 mt-0.5" title="勾選加入集運">
+                  <label style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;cursor:pointer;gap:3px;margin-top:2px" title="勾選加入集運">
                     <input type="checkbox" value="${o.pageId}" data-total="${o.total}" data-discount="${o.discount || 0}"
                       onchange="toggleMergeOrder(this)"
                       class="w-4 h-4 accent-black cursor-pointer">
                     <span class="text-gray-400" style="font-size:9px">集運</span>
                   </label>` : `<div class="w-5 shrink-0"></div>`}
-                  <div class="flex-1 min-w-0 cursor-pointer" onclick="showOrderDetail('${o.orderId}', ${JSON.stringify(data.customer).replace(/"/g,'&quot;')})">
-                    <div class="flex justify-between items-start">
-                      <div class="min-w-0">
-                        <div class="flex items-center gap-2 mb-1">
-                          <span class="font-bold text-sm">${o.orderId}</span>
-                          <span class="text-xs px-2 py-0.5 rounded-full ${st.color}">${o.status}</span>
+                  <div style="flex:1;min-width:0;cursor:pointer" onclick="showOrderDetail('${o.orderId}', ${JSON.stringify(data.customer).replace(/"/g,'&quot;')})">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                      <div style="min-width:0">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                          <span style="font-size:15px;font-weight:700">${o.orderId}</span>
+                          <span style="font-size:12px;padding:3px 10px;border-radius:var(--radius-sm);${st.color}">${o.status}</span>
                         </div>
                         <div class="text-xs text-gray-400 truncate max-w-[180px]">${firstItem}</div>
                       </div>
-                      <div class="text-right shrink-0 ml-2">
-                        <div class="font-bold text-red-500 text-sm">NT$ ${Math.round(o.total||0).toLocaleString()}</div>
-                        <div class="text-xs text-gray-400">${dateStr}</div>
+                      <div style="text-align:right;flex-shrink:0;margin-left:8px">
+                        <div style="font-size:15px;font-weight:700;color:var(--black)">NT$ ${Math.round(o.total||0).toLocaleString()}</div>
+                        <div style="font-size:12px;color:var(--gray-400)">${dateStr}</div>
                       </div>
                     </div>
                   </div>
@@ -255,27 +368,27 @@ window.queryByCustomer = async () => {
             const grandTotal   = afterDisc + shipping;
             const shortId      = bundleId.replace("BUNDLE", "");
             return `
-              <div class="bg-white rounded-xl border-2 border-blue-200 overflow-hidden">
-                <div class="bg-blue-50 px-4 py-2 flex justify-between items-center">
-                  <div class="flex items-center gap-2">
-                    <span class="text-sm">📦</span>
-                    <span class="text-xs font-bold text-blue-600">集運批次 #${shortId}</span>
+              <div style="background:var(--white);border-radius:var(--radius-lg);border:2px solid #bfdbfe;overflow:hidden">
+                <div style="background:#eff6ff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span style="font-size:15px">📦</span>
+                    <span style="font-size:13px;font-weight:700;color:#1d4ed8">集運批次 #${shortId}</span>
                     <span class="text-xs text-blue-400">${orders.length} 筆訂單</span>
                   </div>
-                  <div class="flex items-center gap-2">
+                  <div style="display:flex;align-items:center;gap:8px">
                     <div class="text-right">
-                      <div class="text-xs font-bold text-blue-600">NT$ ${Math.floor(grandTotal).toLocaleString()}</div>
+                      <div style="font-size:13px;font-weight:700;color:#1d4ed8">NT$ ${Math.floor(grandTotal).toLocaleString()}</div>
                       <div class="text-xs text-blue-400">${shipping === 0 ? "免手續費 ✅" : "運費 NT$" + shipping}</div>
                     </div>
                     ${orders.every(o => o.status === "待處理") ? `
                     <button onclick="event.stopPropagation(); openEditBundleById('${bundleId}')"
-                      class="text-xs px-2 py-1 bg-white border border-blue-200 text-blue-500 rounded-lg hover:bg-blue-50 transition shrink-0">
+                      style="font-size:12px;padding:5px 10px;border:1px solid #bfdbfe;color:#2563eb;background:var(--white);border-radius:var(--radius-sm);cursor:pointer;flex-shrink:0">
                       ✏️ 編輯
                     </button>` : ""}
                   </div>
                 </div>
                 ${orders.map(o => renderOrder(o, true)).join("")}
-                <div class="bg-blue-50 px-4 py-2 text-xs text-blue-400 flex justify-between">
+                <div style="background:#eff6ff;padding:8px 16px;font-size:12px;color:#60a5fa;display:flex;justify-content:space-between">
                   <span>小計 NT$ ${Math.floor(bundleTotal).toLocaleString()}${discount > 0 ? ` 折 NT$${discount}` : ""}</span>
                   <span>${afterDisc >= FREE_AMOUNT ? "✅ 已達免手續費門檻" : `還差 NT$ ${Math.ceil(FREE_AMOUNT - afterDisc).toLocaleString()} 免手續費`}</span>
                 </div>
@@ -290,17 +403,17 @@ window.queryByCustomer = async () => {
       </div>
 
       <!-- 集運合併區 -->
-      <div id="mergeArea" class="hidden mt-3 bg-white border rounded-xl p-4">
-        <div class="text-xs font-semibold text-gray-500 mb-2">集運合併</div>
+      <div id="mergeArea" style="display:none;margin-top:12px;background:var(--white);border-radius:var(--radius-lg);padding:16px">
+        <div style="font-size:13px;font-weight:700;color:var(--gray-600);margin-bottom:8px">集運合併</div>
         <div id="mergeSummary" class="text-sm text-gray-600 mb-3"></div>
         <button onclick="confirmMerge()"
-          class="w-full py-3 bg-black text-white font-medium rounded-xl text-sm hover:bg-gray-800 transition">
+          style="width:100%;padding:14px;background:#111;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer">
           確認集運合併
         </button>
       </div>`;
 
   } catch (err) {
-    el.innerHTML = `<div class="text-center text-sm text-red-400 py-4">查詢失敗，請稍後再試</div>`;
+    el.innerHTML = `<div style="padding:16px 0;text-align:center;color:var(--red);font-size:15px">查詢失敗，請稍後再試</div>`;
   }
 };
 
@@ -310,7 +423,7 @@ window.showOrderDetail = async (orderId, customer) => {
   window._currentDetailOrderId = orderId;
   window._currentDetailCustomer = customer;
   const el = document.getElementById("result2");
-  el.innerHTML = `<div class="text-center text-gray-400 py-8 text-sm">載入中...</div>`;
+  el.innerHTML = `<div style="padding:40px 0;text-align:center;color:var(--gray-400);font-size:15px">載入中...</div>`;
 
   try {
     const res  = await fetch(`${QUERY_API}&orderId=${encodeURIComponent(orderId)}`);
@@ -362,7 +475,7 @@ function renderOrderDetail(data) {
     itemsHtml = data.items.map(i => `
       <div class="py-2 border-b last:border-0">
         <div class="flex justify-between items-start text-sm">
-          <span class="text-gray-700 flex-1 mr-2">${i.name}${i.variant ? ` <span class="text-xs text-gray-400">（${i.variant}）</span>` : ""} × ${i.qty}</span>
+          <span class="text-gray-700 flex-1 mr-2">${i.name}${i.variant ? ` <span style="font-size:12px;color:var(--gray-400)">（${i.variant}）</span>` : ""} × ${i.qty}</span>
           <span class="text-gray-600 font-medium shrink-0">${formatPrice(i.price * i.qty)}</span>
         </div>
         <div class="text-xs text-gray-400 mt-0.5">單價 ${formatPrice(i.price)}</div>
@@ -387,7 +500,7 @@ function renderOrderDetail(data) {
           ${status.icon} ${data.status}
         </span>
       </div>
-      <div class="text-xs text-gray-400">下單時間：${dateStr}</div>
+      <div style="font-size:12px;color:var(--gray-400)">下單時間：${dateStr}</div>
     </div>
 
     <div class="bg-white rounded-xl border px-4 py-5 mb-3">
@@ -396,7 +509,7 @@ function renderOrderDetail(data) {
     </div>
 
     <div class="bg-white rounded-xl border px-4 py-4 mb-3">
-      <div class="text-xs font-semibold text-gray-500 mb-2">訂單明細</div>
+      <div style="font-size:13px;font-weight:700;color:var(--gray-600);margin-bottom:8px">訂單明細</div>
       ${itemsHtml}
       ${data.discount > 0 ? `
       <div class="flex justify-between items-center py-2 text-sm text-green-600">
@@ -432,13 +545,13 @@ function renderOrderDetail(data) {
 
     <!-- 操作按鈕（待處理或處理中才顯示）-->
     ${["待處理","處理中"].includes(data.status) ? `
-    <div class="flex flex-col gap-2 mt-3">
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
       ${data.status === "待處理" && Array.isArray(data.items) ? `
       <button onclick="openItemsModal('${encodeData({pageId:data.pageId,status:data.status})}', ${JSON.stringify(data.items).replace(/"/g, '&quot;')})"
         class="w-full py-2.5 border rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">
         🛒 修改商品數量 / 刪除商品
       </button>` : ""}
-      <div class="flex gap-2">
+      <div style="display:flex;gap:8px">
         <button onclick="openEditModal('${encodeData({customerId:data.customerId,name:data.name,phone:data.phone,address:data.address,status:data.status})}')"
           class="flex-1 py-2.5 border rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">
           ✏️ 修改收件資料
@@ -458,8 +571,8 @@ function encodeData(obj) {
 function notFoundHTML(msg) {
   return `
     <div class="flex flex-col items-center py-10 text-gray-400">
-      <div class="text-4xl mb-3">🔍</div>
-      <div class="text-sm font-medium text-gray-500">${msg}</div>
+      <div style="font-size:48px;margin-bottom:12px">🔍</div>
+      <div style="font-size:14px;font-weight:500;color:var(--gray-600)">${msg}</div>
     </div>`;
 }
 
@@ -507,25 +620,25 @@ document.addEventListener("click", (e) => {
 </script>
 
 <!-- 編輯集運批次 Modal -->
-<div id="editBundleModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-40 flex items-end sm:items-center justify-center">
-  <div class="bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl max-h-[85vh] flex flex-col">
-    <div class="flex justify-between items-center px-5 py-4 border-b shrink-0">
-      <h3 class="font-bold text-base" id="editBundleTitle">編輯集運批次</h3>
-      <button onclick="closeEditBundleModal()" class="text-gray-400 hover:text-black text-xl">✕</button>
+<div id="editBundleModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:flex-end;justify-content:center">
+  <div style="background:#fff;width:100%;max-width:500px;border-radius:16px 16px 0 0;max-height:88vh;display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #e5e5e5;flex-shrink:0">
+      <h3 style="font-size:17px;font-weight:700;color:#111" id="editBundleTitle">編輯集運批次</h3>
+      <button onclick="closeEditBundleModal()" style="background:none;border:none;cursor:pointer;font-size:24px;color:#aaa;padding:0;line-height:1">✕</button>
     </div>
-    <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+    <div style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px">
       <div>
-        <div class="text-xs font-semibold text-blue-500 mb-2">📦 批次內的訂單</div>
-        <div id="editBundleIn" class="space-y-2"></div>
+        <div style="font-size:13px;font-weight:700;color:#2563eb;margin-bottom:8px">📦 批次內的訂單</div>
+        <div id="editBundleIn" style="display:flex;flex-direction:column;gap:8px"></div>
       </div>
       <div>
-        <div class="text-xs font-semibold text-gray-500 mb-2">➕ 可加入的待處理訂單</div>
-        <div id="editBundleOut" class="space-y-2"></div>
+        <div style="font-size:13px;font-weight:700;color:var(--gray-600);margin-bottom:8px">➕ 可加入的待處理訂單</div>
+        <div id="editBundleOut" style="display:flex;flex-direction:column;gap:8px"></div>
       </div>
     </div>
-    <div class="px-5 py-4 border-t shrink-0">
+    <div style="padding:16px 20px;border-top:1px solid #e5e5e5;flex-shrink:0">
       <button onclick="closeEditBundleModal()"
-        class="w-full py-3 border rounded-xl text-sm text-gray-500 hover:bg-gray-50">
+        style="width:100%;padding:14px;background:#fff;color:#666;border:1px solid #e5e5e5;border-radius:10px;font-size:15px;cursor:pointer">
         關閉
       </button>
     </div>
@@ -533,31 +646,31 @@ document.addEventListener("click", (e) => {
 </div>
 
 <!-- 修改商品 Modal -->
-<div id="itemsModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-40 flex items-end sm:items-center justify-center">
+<div id="itemsModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:flex-end;justify-content:center">
   <div class="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[85vh] flex flex-col">
-    <div class="flex justify-between items-center px-5 py-4 border-b shrink-0">
-      <h3 class="font-bold text-base">修改商品</h3>
-      <button onclick="closeItemsModal()" class="text-gray-400 hover:text-black text-xl">✕</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #e5e5e5;flex-shrink:0">
+      <h3 style="font-size:17px;font-weight:700;color:#111">修改商品</h3>
+      <button onclick="closeItemsModal()" style="background:none;border:none;cursor:pointer;font-size:24px;color:#aaa;padding:0;line-height:1">✕</button>
     </div>
-    <div id="itemsEditor" class="flex-1 overflow-y-auto px-5 py-4 space-y-3"></div>
-    <div class="px-5 py-4 border-t shrink-0 space-y-2">
-      <div class="flex justify-between text-sm font-bold">
+    <div id="itemsEditor" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px"></div>
+    <div style="padding:16px 20px;border-top:1px solid #e5e5e5;flex-shrink:0;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700">
         <span>新合計</span>
         <span id="itemsNewTotal" class="text-red-500"></span>
       </div>
-      <div id="itemsDetail" class="text-xs text-gray-400"></div>
-      <p id="itemsSaveStatus" class="text-xs text-center hidden"></p>
+      <div id="itemsDetail" style="font-size:12px;color:var(--gray-400)"></div>
+      <p id="itemsSaveStatus" style="display:none;font-size:13px;text-align:center"></p>
       <button id="itemsSaveBtn" onclick="saveItems()" class="w-full py-3 bg-black text-white font-medium rounded-xl text-sm">儲存變更</button>
     </div>
   </div>
 </div>
 
 <!-- 修改收件資料 Modal -->
-<div id="editModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-40 flex items-end sm:items-center justify-center">
+<div id="editModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:flex-end;justify-content:center">
   <div class="bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl p-5">
     <div class="flex justify-between items-center mb-4">
-      <h3 class="font-bold text-base">修改收件資料</h3>
-      <button onclick="closeEditModal()" class="text-gray-400 hover:text-black text-xl">✕</button>
+      <h3 style="font-size:17px;font-weight:700;color:#111">修改收件資料</h3>
+      <button onclick="closeEditModal()" style="background:none;border:none;cursor:pointer;font-size:24px;color:#aaa;padding:0;line-height:1">✕</button>
     </div>
     <div class="space-y-3">
       <div>
@@ -579,15 +692,15 @@ document.addEventListener("click", (e) => {
 </div>
 
 <!-- 取消訂單 Modal -->
-<div id="cancelModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-40 flex items-end sm:items-center justify-center">
+<div id="cancelModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:flex-end;justify-content:center">
   <div class="bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl p-5">
     <div class="flex justify-between items-center mb-3">
-      <h3 class="font-bold text-base" id="cancelTitle">取消訂單</h3>
-      <button onclick="closeCancelModal()" class="text-gray-400 hover:text-black text-xl">✕</button>
+      <h3 style="font-size:17px;font-weight:700;color:#111" id="cancelTitle">取消訂單</h3>
+      <button onclick="closeCancelModal()" style="background:none;border:none;cursor:pointer;font-size:24px;color:#aaa;padding:0;line-height:1">✕</button>
     </div>
     <p id="cancelDesc" class="text-sm text-gray-500 mb-4"></p>
     <p id="cancelStatus" class="text-xs text-center hidden mb-2"></p>
-    <div class="flex gap-2">
+    <div style="display:flex;gap:8px">
       <button onclick="closeCancelModal()" class="flex-1 py-2.5 border rounded-xl text-sm text-gray-500">返回</button>
       <button id="cancelConfirmBtn" onclick="submitCancel()" class="flex-1 py-2.5 bg-red-500 text-white font-medium rounded-xl text-sm">確認</button>
     </div>
@@ -608,13 +721,13 @@ window.openItemsModal = (encoded, itemsJson) => {
   // 直接用訂單裡儲存的 price（下單當時計算好的，含優惠碼）
   _itemsData._editItems = JSON.parse(JSON.stringify(rawItems));
   document.getElementById("itemsSaveStatus").classList.add("hidden");
-  document.getElementById("itemsModal").classList.remove("hidden");
+  document.getElementById("itemsModal").style.display="flex";
   document.body.style.overflow = "hidden";
   renderItemsEditor();
 };
 
 function closeItemsModal() {
-  document.getElementById("itemsModal").classList.add("hidden");
+  document.getElementById("itemsModal").style.display="none";
   document.body.style.overflow = "";
   // 重置按鈕狀態
   const btn = document.getElementById("itemsSaveBtn");
@@ -640,22 +753,22 @@ function renderItemsEditor() {
 
   document.getElementById("itemsEditor").innerHTML = items.map((item, idx) => `
     <div class="flex items-center gap-3 border rounded-xl p-3 ${item.qty === 0 ? "opacity-40" : ""}">
-      <div class="flex-1 min-w-0">
-        <div class="text-sm font-medium">${item.name}${item.variant ? ` <span class="text-xs text-gray-400">（${item.variant}）</span>` : ""}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:15px;font-weight:600">${item.name}${item.variant ? ` <span style="font-size:12px;color:var(--gray-400)">（${item.variant}）</span>` : ""}</div>
         <div class="text-xs text-gray-400 mt-0.5">
           ${item.idnumber ? `<span class="text-gray-300">#${item.idnumber}</span> · ` : ""}NT$${Math.floor(item.price).toLocaleString()} / 件
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <div class="flex items-center border rounded-lg overflow-hidden">
+        <div style="display:flex;align-items:center;border:1px solid var(--gray-200);border-radius:var(--radius-sm);overflow:hidden">
           <button onclick="changeItemQty(${idx}, -1)"
             class="w-8 h-8 flex items-center justify-center text-lg hover:bg-gray-100 transition">−</button>
-          <span class="w-8 text-center text-sm font-medium">${item.qty}</span>
+          <span style="width:36px;text-align:center;font-size:15px;font-weight:600;border-left:1px solid var(--gray-200);border-right:1px solid var(--gray-200)">${item.qty}</span>
           <button onclick="changeItemQty(${idx}, 1)"
             class="w-8 h-8 flex items-center justify-center text-lg hover:bg-gray-100 transition">＋</button>
         </div>
         <button onclick="removeItem2(${idx})"
-          class="text-gray-300 hover:text-red-400 text-xl transition">✕</button>
+          style="background:none;border:none;cursor:pointer;color:var(--gray-400);font-size:20px;padding:4px">✕</button>
       </div>
     </div>`).join("");
 }
@@ -728,11 +841,11 @@ window.openEditModal = (encoded) => {
   document.getElementById("editPhone").value   = _editData.phone   || "";
   document.getElementById("editAddress").value = _editData.address || "";
   document.getElementById("editStatus").classList.add("hidden");
-  document.getElementById("editModal").classList.remove("hidden");
+  document.getElementById("editModal").style.display="flex";
   document.body.style.overflow = "hidden";
 };
 function closeEditModal() {
-  document.getElementById("editModal").classList.add("hidden");
+  document.getElementById("editModal").style.display="none";
   document.body.style.overflow = "";
 }
 async function submitEditCustomer() {
@@ -773,11 +886,11 @@ window.openCancelModal = (encoded) => {
   document.getElementById("cancelStatus").classList.add("hidden");
   document.getElementById("cancelConfirmBtn").disabled = false;
   document.getElementById("cancelConfirmBtn").textContent = "確認";
-  document.getElementById("cancelModal").classList.remove("hidden");
+  document.getElementById("cancelModal").style.display="flex";
   document.body.style.overflow = "hidden";
 };
 function closeCancelModal() {
-  document.getElementById("cancelModal").classList.add("hidden");
+  document.getElementById("cancelModal").style.display="none";
   document.body.style.overflow = "";
 }
 async function submitCancel() {
@@ -824,7 +937,7 @@ window.openEditBundleById = async (bundleId) => {
   if (!window._lastCustomerData) return;
   _editBundleData = window._lastCustomerData;
   renderEditBundleModal(bundleId, window._lastCustomerData);
-  document.getElementById("editBundleModal").classList.remove("hidden");
+  document.getElementById("editBundleModal").style.display="flex";
   document.body.style.overflow = "hidden";
 };
 
@@ -838,10 +951,10 @@ function renderEditBundleModal(bundleId, data) {
 
   // 批次內的訂單
   document.getElementById("editBundleIn").innerHTML = bundleOrders.map(o => `
-    <div class="flex items-center justify-between border rounded-xl px-3 py-2.5 bg-blue-50">
-      <div class="min-w-0">
-        <div class="text-sm font-medium">${o.orderId}</div>
-        <div class="text-xs text-gray-400">NT$ ${Math.floor(o.total||0).toLocaleString()}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;border:1px solid #bfdbfe;border-radius:var(--radius);padding:10px 12px;background:#eff6ff">
+      <div style="min-width:0">
+        <div style="font-size:15px;font-weight:600">${o.orderId}</div>
+        <div style="font-size:12px;color:var(--gray-400)">NT$ ${Math.floor(o.total||0).toLocaleString()}</div>
       </div>
       <button onclick="removeFromBundle('${o.pageId}')"
         class="text-xs px-2 py-1 border border-red-200 text-red-400 rounded-lg hover:bg-red-50 ml-2 shrink-0">
@@ -851,10 +964,10 @@ function renderEditBundleModal(bundleId, data) {
 
   // 可加入的訂單
   document.getElementById("editBundleOut").innerHTML = freeOrders.length ? freeOrders.map(o => `
-    <div class="flex items-center justify-between border rounded-xl px-3 py-2.5">
-      <div class="min-w-0">
-        <div class="text-sm font-medium">${o.orderId}</div>
-        <div class="text-xs text-gray-400">NT$ ${Math.floor(o.total||0).toLocaleString()}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;border:1px solid var(--gray-200);border-radius:var(--radius);padding:10px 12px">
+      <div style="min-width:0">
+        <div style="font-size:15px;font-weight:600">${o.orderId}</div>
+        <div style="font-size:12px;color:var(--gray-400)">NT$ ${Math.floor(o.total||0).toLocaleString()}</div>
       </div>
       <button onclick="addToBundle('${o.pageId}')"
         class="text-xs px-2 py-1 border border-blue-200 text-blue-500 rounded-lg hover:bg-blue-50 ml-2 shrink-0">
@@ -898,7 +1011,7 @@ async function addToBundle(pageId) {
 }
 
 function closeEditBundleModal() {
-  document.getElementById("editBundleModal").classList.add("hidden");
+  document.getElementById("editBundleModal").style.display="none";
   document.body.style.overflow = "";
 }
 
