@@ -194,33 +194,41 @@ if (sessionStorage.getItem("adminAuth") !== "1") location.href = "admin.html";
 
 <!-- 客戶詳情 Modal -->
 <div id="modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);align-items:flex-end;justify-content:center">
-  <div class="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto">
+  <div style="background:#fff;width:100%;max-width:520px;border-radius:20px 20px 0 0;max-height:90vh;display:flex;flex-direction:column">
 
-    <div class="admin-topbar">
-      <span class="topbar-title">客戶管理</span>
-      <div style="font-size:12px;color:#aaa;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
-        <span id="modalCustomerId" style="font-weight:700;color:#1d4ed8"></span>
-        <span id="modalEmail" style="font-size:11px"></span>
-      </div>
-    </div>
-    <div class="admin-content">
-      <div class="flex items-center gap-2">
-        <button onclick="openEdit()"
-          class="text-xs px-3 py-1.5 border rounded-lg hover:bg-gray-50 font-medium">編輯</button>
-        <button onclick="closeModal()" class="text-gray-400 hover:text-black text-xl w-8 h-8 flex items-center justify-center">✕</button>
-      </div>
+    <!-- Handle -->
+    <div style="display:flex;justify-content:center;padding:12px 0 4px">
+      <div style="width:36px;height:4px;border-radius:2px;background:#e5e5e5"></div>
     </div>
 
-    <div class="px-4 py-4 space-y-4">
-
-      <!-- 客戶資料 -->
-      <div id="customerDetail" class="bg-gray-50 rounded-xl p-3 space-y-2"></div>
-
-      <!-- 訂單列表 -->
+    <!-- Header -->
+    <div style="padding:8px 20px 16px;display:flex;justify-content:space-between;align-items:flex-start">
       <div>
-        <div class="text-xs font-semibold text-gray-500 mb-2">訂單紀錄</div>
-        <div id="orderList" class="space-y-2">
-          <div class="text-xs text-gray-400 text-center py-3">載入中...</div>
+        <div style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.5px;margin-bottom:4px">客戶資料</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="modalCustomerId" style="font-size:15px;font-weight:700;color:#1d4ed8"></span>
+          <span id="modalEmail" style="font-size:12px;color:#aaa"></span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button onclick="openEdit()" style="display:flex;align-items:center;gap:5px;padding:8px 14px;background:#111;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">
+          ✏️ 編輯
+        </button>
+        <button onclick="closeModal()" style="width:34px;height:34px;border-radius:50%;background:#f2f2f2;border:none;font-size:18px;color:#666;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+      </div>
+    </div>
+
+    <!-- 內容 -->
+    <div style="flex:1;overflow-y:auto;padding:0 16px 32px;display:flex;flex-direction:column;gap:12px">
+
+      <!-- 客戶資料磚塊 -->
+      <div id="customerDetail" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div>
+
+      <!-- 訂單紀錄 -->
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#aaa;letter-spacing:0.5px;margin-bottom:8px">訂單紀錄</div>
+        <div id="orderList" style="display:flex;flex-direction:column;gap:8px">
+          <div style="text-align:center;color:#aaa;font-size:13px;padding:16px">載入中...</div>
         </div>
       </div>
 
@@ -230,34 +238,42 @@ if (sessionStorage.getItem("adminAuth") !== "1") location.href = "admin.html";
 
 <!-- 編輯 Modal -->
 <div id="editModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);align-items:flex-end;justify-content:center">
-  <div class="bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl">
-    <div class="sticky top-0 bg-white flex justify-between items-center px-4 py-3 border-b rounded-t-2xl">
-      <h2 class="font-bold text-sm">編輯客戶資料</h2>
-      <div class="flex items-center gap-2">
-        <button id="saveCustomerBtn" onclick="saveCustomer()"
-          class="px-3 py-1.5 bg-black text-white text-xs font-medium rounded-lg active:bg-gray-800">
-          儲存
-        </button>
-        <button onclick="closeEdit()" class="text-gray-400 hover:text-black text-xl w-8 h-8 flex items-center justify-center">✕</button>
+  <div style="background:#fff;width:100%;max-width:520px;border-radius:20px 20px 0 0">
+
+    <!-- Handle -->
+    <div style="display:flex;justify-content:center;padding:12px 0 4px">
+      <div style="width:36px;height:4px;border-radius:2px;background:#e5e5e5"></div>
+    </div>
+
+    <!-- Header -->
+    <div style="padding:8px 20px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f2f2f2">
+      <div style="font-size:17px;font-weight:700">編輯客戶資料</div>
+      <button onclick="closeEdit()" style="width:34px;height:34px;border-radius:50%;background:#f2f2f2;border:none;font-size:18px;color:#666;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+
+    <!-- 欄位磚塊 -->
+    <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+      <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+        <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">姓名</div>
+        <input id="editName" type="text" style="background:transparent;border:none;outline:none;font-size:16px;font-weight:500;color:#111;width:100%;padding:0">
+      </div>
+      <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+        <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">電話</div>
+        <input id="editPhone" type="tel" style="background:transparent;border:none;outline:none;font-size:16px;font-weight:500;color:#111;width:100%;padding:0">
+      </div>
+      <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+        <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">地址</div>
+        <input id="editAddress" type="text" style="background:transparent;border:none;outline:none;font-size:16px;font-weight:500;color:#111;width:100%;padding:0">
       </div>
     </div>
-    <div class="px-4 py-4 space-y-3">
-      <div>
-        <label class="text-xs text-gray-500 mb-1 block">姓名</label>
-        <input id="editName" type="text"
-          class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
-      </div>
-      <div>
-        <label class="text-xs text-gray-500 mb-1 block">電話</label>
-        <input id="editPhone" type="tel"
-          class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
-      </div>
-      <div>
-        <label class="text-xs text-gray-500 mb-1 block">地址</label>
-        <input id="editAddress" type="text"
-          class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
-      </div>
+
+    <!-- 儲存按鈕 -->
+    <div style="padding:8px 16px 32px">
+      <button id="saveCustomerBtn" onclick="saveCustomer()" style="width:100%;padding:16px;background:#111;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer">
+        儲存
+      </button>
     </div>
+
   </div>
 </div>
 
@@ -340,23 +356,21 @@ async function openModal(pageId) {
   document.getElementById("modalEmail").textContent      = c.email;
 
   document.getElementById("customerDetail").innerHTML = `
-    <div class="space-y-2 text-sm">
-      <div class="flex justify-between">
-        <span class="text-gray-500">姓名</span>
-        <span class="font-medium">${c.name || "—"}</span>
-      </div>
-      <div class="flex justify-between">
-        <span class="text-gray-500">電話</span>
-        <a href="tel:${c.phone}" class="font-medium text-blue-500">${c.phone || "—"}</a>
-      </div>
-      <div class="flex justify-between">
-        <span class="text-gray-500">Email</span>
-        <a href="mailto:${c.email}" class="font-medium text-blue-500 text-xs">${c.email}</a>
-      </div>
-      <div class="text-sm">
-        <span class="text-gray-500">地址　</span>
-        <span class="font-medium">${c.address || "—"}</span>
-      </div>
+    <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+      <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:4px">姓名</div>
+      <div style="font-size:16px;font-weight:600;color:#111">${c.name || "—"}</div>
+    </div>
+    <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+      <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:4px">電話</div>
+      <a href="tel:${c.phone}" style="font-size:16px;font-weight:600;color:#1d4ed8;text-decoration:none">${c.phone || "—"}</a>
+    </div>
+    <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px;grid-column:span 2">
+      <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:4px">Email</div>
+      <a href="mailto:${c.email}" style="font-size:14px;font-weight:500;color:#1d4ed8;text-decoration:none">${c.email}</a>
+    </div>
+    <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px;grid-column:span 2">
+      <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:4px">地址</div>
+      <div style="font-size:14px;font-weight:500;color:#111">${c.address || "—"}</div>
     </div>`;
 
   document.getElementById("modal").style.display="flex";
