@@ -323,12 +323,12 @@ if (sessionStorage.getItem("adminAuth") !== "1") location.href = "admin.html";
         <div class="flex justify-between items-center mb-2">
           <div class="text-xs font-medium text-gray-500">訂單明細</div>
           <button id="adminEditItemsBtn" onclick="openAdminItemsModal()"
-            class="text-xs px-2 py-1 border rounded-lg text-gray-500 hover:bg-gray-50 hidden">
+            class="text-xs px-2 py-1 border rounded-lg text-gray-500 hover:bg-gray-50" style="display:none">
             ✏️ 修改商品
           </button>
         </div>
         <div id="modalItems" class="space-y-1.5"></div>
-        <div id="modalDiscountRow" class="hidden flex justify-between items-center mt-2 text-sm text-green-600">
+        <div id="modalDiscountRow" style="display:none" class="flex justify-between items-center mt-2 text-sm text-green-600">
           <span>🎉 滿NT$3,000折扣</span>
           <span id="modalDiscount"></span>
         </div>
