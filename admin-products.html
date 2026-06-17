@@ -206,6 +206,8 @@ if (sessionStorage.getItem("adminAuth") !== "1") location.href = "admin.html";
       <option value="on">上架中</option>
       <option value="off">已下架</option>
       <option value="sale">特價中</option>
+      <option value="hot">熱賣中</option>
+      <option value="new">新品</option>
     </select>
   </div>
 
@@ -453,6 +455,8 @@ function renderList() {
   if (status==="on")   list = list.filter(p => p.isView);
   if (status==="off")  list = list.filter(p => !p.isView);
   if (status==="sale") list = list.filter(p => p.isSale);
+  if (status==="hot")  list = list.filter(p => p.isHot);
+  if (status==="new")  list = list.filter(p => p.isNew);
   if (activeMain)     list = list.filter(p => p.mainCategory === activeMain);
   if (activeSub)      list = list.filter(p => p.category     === activeSub);
 
@@ -466,29 +470,26 @@ function renderList() {
 
   document.getElementById("productList").innerHTML = list.map(p => {
     const img = p.image || p.images?.[0] || "";
-    const tags = [
-      p.isView  ? `<span style="font-size:11px;padding:4px 8px;border-radius:6px;font-weight:700;background:#dcfce7;color:#15803d">上架</span>` : `<span style="font-size:11px;padding:4px 8px;border-radius:6px;font-weight:700;background:#f2f2f2;color:#aaa">下架</span>`,
-      p.isSale  ? `<span style="font-size:11px;padding:4px 8px;border-radius:6px;font-weight:700;background:#fee2e2;color:#e24b4a">🈹特價</span>` : "",
-      p.isHot   ? `<span style="font-size:11px;padding:4px 8px;border-radius:6px;font-weight:700;background:#ffedd5;color:#c2410c">🔥熱賣</span>` : "",
-      p.isNew   ? `<span style="font-size:11px;padding:4px 8px;border-radius:6px;font-weight:700;background:#f0f9ff;color:#0284c7">🆕新品</span>` : "",
+    const sideTags = [
+      p.isSale ? `<span style="font-size:11px;padding:3px 7px;border-radius:6px;font-weight:700;background:#fee2e2;color:#e24b4a">🈹特價</span>` : "",
+      p.isHot  ? `<span style="font-size:11px;padding:3px 7px;border-radius:6px;font-weight:700;background:#ffedd5;color:#c2410c">🔥熱賣</span>` : "",
+      p.isNew  ? `<span style="font-size:11px;padding:3px 7px;border-radius:6px;font-weight:700;background:#f0f9ff;color:#0284c7">🆕新品</span>` : "",
     ].filter(Boolean).join("");
     return `
       <div style="background:#fff;border-radius:14px;padding:14px;display:flex;gap:12px;align-items:flex-start">
-        <!-- 圖片 -->
         <div onclick="openEdit('${p.id}')" style="cursor:pointer;flex-shrink:0">
           ${img
             ? `<img src="${img}" style="width:68px;height:68px;object-fit:cover;border-radius:10px">`
             : `<div style="width:68px;height:68px;background:#f2f2f2;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px">📷</div>`}
         </div>
-        <!-- 資訊 -->
-        <div style="flex:1;min-width:0" onclick="openEdit('${p.id}')" style="cursor:pointer">
-          <div style="font-size:14px;font-weight:700;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px;cursor:pointer">${p.name}</div>
-          <div style="font-size:12px;color:#aaa;margin-bottom:4px">${[p.mainCategory,p.category].filter(Boolean).join(" · ")}${p.idnumber ? ` · #${p.idnumber}` : ""}</div>
-          <div style="font-size:16px;font-weight:700;color:#111;margin-bottom:8px">NT$${Math.round(p.price||0).toLocaleString()}</div>
-          <!-- 標籤磚塊 -->
-          <div style="display:flex;flex-wrap:wrap;gap:5px">${tags}</div>
+        <div style="flex:1;min-width:0;cursor:pointer" onclick="openEdit('${p.id}')">
+          <div style="font-size:14px;font-weight:700;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px">${p.name}</div>
+          <div style="font-size:12px;color:#aaa;margin-bottom:6px">${[p.mainCategory,p.category].filter(Boolean).join(" · ")}${p.idnumber ? ` · #${p.idnumber}` : ""}</div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span style="font-size:16px;font-weight:700;color:#111">NT$${Math.round(p.price||0).toLocaleString()}</span>
+            ${sideTags}
+          </div>
         </div>
-        <!-- 按鈕 -->
         <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
           <button onclick="event.stopPropagation();openEdit('${p.id}')"
             style="padding:8px 14px;background:#111;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">
@@ -498,6 +499,8 @@ function renderList() {
             style="padding:8px 14px;background:${p.isView ? "#f2f2f2" : "#dcfce7"};color:${p.isView ? "#666" : "#15803d"};border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">
             ${p.isView ? "⬇️ 下架" : "⬆️ 上架"}
           </button>
+        </div>
+      </div>`;
         </div>
       </div>`;
   }).join("");
