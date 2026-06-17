@@ -662,23 +662,28 @@ function renderItemsEditor() {
   if (detailEl) detailEl.textContent = detailParts.join(" → ");
 
   document.getElementById("itemsEditor").innerHTML = items.map((item, idx) => `
-    <div class="flex items-center gap-3 border rounded-xl p-3 ${item.qty === 0 ? "opacity-40" : ""}">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:15px;font-weight:600">${item.name}${item.variant ? ` <span style="font-size:12px;color:var(--gray-400)">（${item.variant}）</span>` : ""}</div>
-        <div class="text-xs text-gray-400 mt-0.5">
-          ${item.idnumber ? `<span class="text-gray-300">#${item.idnumber}</span> · ` : ""}NT$${Math.floor(item.price).toLocaleString()} / 件
-        </div>
-      </div>
-      <div class="flex items-center gap-2 shrink-0">
-        <div style="display:flex;align-items:center;border:1px solid var(--gray-200);border-radius:var(--radius-sm);overflow:hidden">
-          <button onclick="changeItemQty(${idx}, -1)"
-            class="w-8 h-8 flex items-center justify-center text-lg hover:bg-gray-100 transition">−</button>
-          <span style="width:36px;text-align:center;font-size:15px;font-weight:600;border-left:1px solid var(--gray-200);border-right:1px solid var(--gray-200)">${item.qty}</span>
-          <button onclick="changeItemQty(${idx}, 1)"
-            class="w-8 h-8 flex items-center justify-center text-lg hover:bg-gray-100 transition">＋</button>
+    <div style="background:${item.qty === 0 ? "#fafafa" : "#f9f9f9"};border-radius:14px;padding:14px 16px;opacity:${item.qty === 0 ? "0.45" : "1"}">
+      <!-- 商品名稱 + 刪除 -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div style="flex:1;min-width:0;margin-right:10px">
+          <div style="font-size:14px;font-weight:600;color:#111;line-height:1.4">${item.name}${item.variant ? ` <span style="font-size:12px;color:#aaa">（${item.variant}）</span>` : ""}</div>
+          <div style="font-size:12px;color:#aaa;margin-top:3px">
+            ${item.idnumber ? `#${item.idnumber} · ` : ""}NT$${Math.floor(item.price).toLocaleString()} / 件
+          </div>
         </div>
         <button onclick="removeItem2(${idx})"
-          style="background:none;border:none;cursor:pointer;color:var(--gray-400);font-size:20px;padding:4px">✕</button>
+          style="width:28px;height:28px;border-radius:50%;background:#e5e5e5;border:none;cursor:pointer;font-size:14px;color:#666;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
+      </div>
+      <!-- 數量 + 小計 -->
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:0;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e5e5e5">
+          <button onclick="changeItemQty(${idx}, -1)"
+            style="width:44px;height:44px;background:transparent;border:none;cursor:pointer;font-size:22px;color:#111;display:flex;align-items:center;justify-content:center;font-weight:300">−</button>
+          <span style="min-width:44px;text-align:center;font-size:17px;font-weight:700;color:#111;border-left:1px solid #e5e5e5;border-right:1px solid #e5e5e5;height:44px;display:flex;align-items:center;justify-content:center">${item.qty}</span>
+          <button onclick="changeItemQty(${idx}, 1)"
+            style="width:44px;height:44px;background:transparent;border:none;cursor:pointer;font-size:22px;color:#111;display:flex;align-items:center;justify-content:center;font-weight:300">＋</button>
+        </div>
+        <div style="font-size:16px;font-weight:700;color:#111">NT$${Math.floor(item.price * item.qty).toLocaleString()}</div>
       </div>
     </div>`).join("");
 }
