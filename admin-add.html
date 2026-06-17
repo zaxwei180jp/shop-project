@@ -288,7 +288,7 @@ if (sessionStorage.getItem("adminAuth") !== "1") location.href = "admin.html";
       </div>
       <div>
         <label class="text-xs text-gray-500 mb-2 block">大分類</label>
-        <div id="mainCategoryBtns" class="flex flex-wrap gap-2 mb-2 min-h-[28px]">
+        <div id="mainCategoryBtns" style="display:flex;flex-wrap:nowrap;gap:8px;margin-bottom:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px">
           <span class="text-xs text-gray-300 self-center">載入中...</span>
         </div>
         <input id="mainCategory" type="text" placeholder="或直接輸入新分類"
@@ -296,7 +296,7 @@ if (sessionStorage.getItem("adminAuth") !== "1") location.href = "admin.html";
       </div>
       <div id="subCatSection" class="hidden">
         <label class="text-xs text-gray-500 mb-2 block">小分類</label>
-        <div id="categoryBtns" class="flex flex-wrap gap-2 mb-2 min-h-[28px]"></div>
+        <div id="categoryBtns" style="display:flex;flex-wrap:nowrap;gap:8px;margin-bottom:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px"></div>
         <input id="category" type="text" placeholder="或直接輸入新分類"
           class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
       </div>
