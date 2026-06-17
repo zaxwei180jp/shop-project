@@ -18,7 +18,9 @@
 </nav>
 
 <div class="page-wrap">
-  <div id="saleList" style="padding-bottom:20px"></div>
+  <div id="saleList">
+    <div style="padding:60px 0;text-align:center;color:#aaa">載入中...</div>
+  </div>
 </div>
 
 <nav class="bottom-nav">
@@ -29,7 +31,55 @@
   <a href="about.html"        class="bnav-item"><i class="ti ti-info-circle"></i>關於</a>
 </nav>
 
-<script type="module" src="js/cartCount.js"></script>
-<script type="module" src="js/sale.js"></script>
+<script>
+const API = "https://shop-project-azure.vercel.app/api/products";
+const el  = document.getElementById("saleList");
+
+function formatPrice(n) {
+  return new Intl.NumberFormat("zh-TW", { style:"currency", currency:"TWD", minimumFractionDigits:0 }).format(Math.floor(Number(n||0)));
+}
+
+function renderCard(p) {
+  const img = p.image || "";
+  const imgEl = img
+    ? `<img src="${img}" class="product-card-img" loading="lazy" alt="${p.name}">`
+    : `<div class="product-card-img-placeholder">🛍</div>`;
+  return `
+    <a href="product.html?id=${p.id}" class="product-card">
+      <div style="position:relative">
+        ${imgEl}
+        <div style="position:absolute;top:8px;left:8px"><span class="badge badge-sale">特價</span></div>
+      </div>
+      <div class="product-card-body">
+        <div class="product-card-cat">${p.mainCategory||""}${p.mainCategory&&p.category?" · ":""}${p.category||""}</div>
+        <div class="product-card-name">${p.name}</div>
+        <div>
+          <span class="product-card-price">${formatPrice(p.price)}</span>
+          ${p.originalPrice ? `<span class="product-card-orig">${formatPrice(p.originalPrice)}</span>` : ""}
+        </div>
+      </div>
+    </a>`;
+}
+
+(async () => {
+  try {
+    const res  = await fetch(API, { cache:"no-store" });
+    const all  = await res.json();
+    const data = all.filter(p => p.isSale && p.isView !== false);
+    data.sort((a,b) => (a.sort||9999)-(b.sort||9999));
+    el.innerHTML = data.length
+      ? `<div class="product-grid">${data.map(renderCard).join("")}</div>`
+      : `<div style="padding:60px 0;text-align:center;color:#aaa;font-size:16px">目前沒有特價商品</div>`;
+  } catch(e) {
+    el.innerHTML = `<div style="padding:60px 0;text-align:center;color:#aaa">載入失敗，請重新整理</div>`;
+  }
+})();
+
+// cart count
+const cart = JSON.parse(localStorage.getItem("cart")||"{}");
+const total = Object.values(cart).reduce((a,b)=>a+b,0);
+const badge = document.getElementById("cartCount");
+if (badge && total > 0) { badge.textContent = total; badge.style.display = "flex"; }
+</script>
 </body>
 </html>
