@@ -1,31 +1,19 @@
 import { renderCard } from "./cardUtils.js";
 
 const API_URL = "https://shop-project-azure.vercel.app/api/products";
-const el = document.getElementById("list");
+const el = document.getElementById("saleList");
 
-async function init() {
-  const res = await fetch(API_URL, { cache: "no-store" });
-  let data = await res.json();
-
-  data = data.filter(p => p.isSale);
-  const mainOrder = [];
-  data.forEach(p => {
-    if (p.mainCategory && !mainOrder.includes(p.mainCategory))
-      mainOrder.push(p.mainCategory);
-  });
-  data.sort((a, b) => {
-    const mi = mainOrder.indexOf(a.mainCategory ?? "");
-    const mj = mainOrder.indexOf(b.mainCategory ?? "");
-    if (mi !== mj) return mi - mj;
-    const sa = a.sort || 9999;
-    const sb = b.sort || 9999;
-    if (sa !== sb) return sa - sb;
-    return new Date(b.update || b.createdTime) - new Date(a.update || a.createdTime);
-  });
-
-  el.innerHTML = data.length
-    ? `<div class="product-grid">${data.map(renderCard).join("")}</div>`
-    : `<div style="padding:60px 0;text-align:center;color:var(--gray-400)">沒有特價商品</div>`;
-}
-
-init();
+(async () => {
+  el.innerHTML = `<div style="padding:40px;text-align:center;color:#aaa">載入中...</div>`;
+  try {
+    const res  = await fetch(API_URL, { cache: "no-store" });
+    const all  = await res.json();
+    const data = all.filter(p => p.isSale === true && p.isView !== false);
+    data.sort((a, b) => (a.sort || 9999) - (b.sort || 9999));
+    el.innerHTML = data.length
+      ? `<div class="product-grid">${data.map(renderCard).join("")}</div>`
+      : `<div style="padding:60px 0;text-align:center;color:#aaa;font-size:16px">目前沒有特價商品</div>`;
+  } catch(e) {
+    el.innerHTML = `<div style="padding:60px 0;text-align:center;color:#aaa">載入失敗，請重新整理</div>`;
+  }
+})();
