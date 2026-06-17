@@ -8,131 +8,8 @@
   <link rel="stylesheet" href="js/theme.css?v=2">
 
 <style>
-/* === 覆蓋舊 Tailwind class，套用新設計 === */
-
-
-/* 主容器 */
-.px-4.py-6.max-w-xl.mx-auto { padding: 0 !important; }
-.px-4.py-6 { padding: 0 !important; }
-.max-w-xl.mx-auto { max-width: 640px; margin: 0 auto; }
-
-/* Tab */
-.flex.gap-2.mb-5.border-b {
-  display: flex !important; border-bottom: 2px solid var(--gray-200) !important;
-  background: var(--white); padding: 0 16px !important; margin: 0 !important; gap: 0 !important;
-}
-#tab1, #tab2 {
-  padding: 14px 16px !important; font-size: 15px !important; font-weight: 600 !important;
-  border: none !important; background: none !important; cursor: pointer;
-}
-
-/* 輸入框和按鈕 */
-.flex.gap-2.mb-4 { display: flex; gap: 8px; padding: 16px; background: var(--white); margin-bottom: 0 !important; }
-.flex-1.border.rounded-xl.px-4.py-3 { border: 1px solid var(--gray-200) !important; border-radius: var(--radius) !important; padding: 13px 14px !important; font-size: 16px !important; }
-.space-y-3.mb-4 { display: flex; flex-direction: column; gap: 10px; padding: 16px; background: var(--white); margin-bottom: 0 !important; }
-.w-full.border.rounded-xl.px-4.py-3 { border: 1px solid var(--gray-200) !important; border-radius: var(--radius) !important; padding: 13px 14px !important; font-size: 16px !important; }
-.px-5.py-3.bg-black.text-white.rounded-xl { background: var(--black) !important; color: var(--white) !important; border-radius: var(--radius) !important; padding: 13px 20px !important; border: none !important; cursor: pointer; font-size: 15px !important; font-weight: 600 !important; white-space: nowrap; }
-.w-full.py-3.bg-black.text-white.rounded-xl { background: var(--black) !important; color: var(--white) !important; border-radius: var(--radius) !important; padding: 14px !important; border: none !important; cursor: pointer; font-size: 15px !important; font-weight: 600 !important; width: 100% !important; display: block !important; }
-
-/* 訂單卡片 */
-.bg-white.rounded-xl.border.px-4.py-3 {
-  background: var(--white) !important; border-radius: var(--radius-lg) !important;
-  border: none !important; padding: 12px 16px !important;
-  box-shadow: none !important;
-}
-.space-y-3 { display: flex; flex-direction: column; gap: 8px; }
-.font-bold.text-sm { font-size: 15px !important; font-weight: 700 !important; }
-.text-xs.text-gray-400 { font-size: 13px !important; color: var(--gray-400) !important; }
-.text-sm.font-medium.text-gray-800 { font-size: 15px !important; }
-.font-bold.text-red-500.text-sm { font-size: 15px !important; font-weight: 700 !important; color: var(--black) !important; }
-
-/* 狀態 badge */
-.text-xs.px-2.py-0\.5.rounded-full { font-size: 12px !important; padding: 3px 10px !important; border-radius: var(--radius-sm) !important; }
-
-/* 集運批次 */
-.bg-white.rounded-xl.border-2.border-blue-200.overflow-hidden { border-radius: var(--radius-lg) !important; border: 2px solid #bfdbfe !important; }
-.bg-blue-50.px-4.py-2 { background: #eff6ff !important; padding: 10px 16px !important; }
-.text-xs.font-bold.text-blue-600 { font-size: 13px !important; font-weight: 700 !important; color: #1d4ed8 !important; }
-.text-xs.text-blue-400 { font-size: 12px !important; color: #60a5fa !important; }
-.text-xs.px-2.py-1.bg-white.border.border-blue-200.text-blue-500.rounded-lg { font-size: 12px !important; padding: 5px 10px !important; border: 1px solid #bfdbfe !important; border-radius: var(--radius-sm) !important; color: #2563eb !important; background: var(--white) !important; cursor: pointer; }
-
-/* Modal */
-.fixed.inset-0.z-50.bg-black.bg-opacity-40 { background: rgba(0,0,0,0.5) !important; }
-.bg-white.w-full.sm\:max-w-md.sm\:rounded-2xl.rounded-t-2xl { border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important; max-width: 480px !important; }
-.font-bold.text-base { font-size: 17px !important; font-weight: 700 !important; }
-.px-5.py-4.border-b { padding: 16px 20px !important; }
-.px-5.py-4.border-t { padding: 16px 20px !important; }
-.flex-1.overflow-y-auto.px-5.py-4 { padding: 16px 20px !important; }
-
-/* 修改商品 Modal 商品行 */
-.flex.items-center.gap-3.border.rounded-xl.p-3 { padding: 12px !important; border-radius: var(--radius) !important; border: 1px solid var(--gray-200) !important; }
-
-/* 大按鈕 */
-.w-full.py-3.border.rounded-xl.text-sm { border: 1px solid var(--gray-200) !important; border-radius: var(--radius) !important; padding: 14px !important; font-size: 15px !important; background: var(--white) !important; cursor: pointer; font-weight: 500 !important; }
-.flex-1.py-2\.5.bg-black.text-white { background: var(--black) !important; color: var(--white) !important; padding: 12px !important; border: none !important; border-radius: var(--radius) !important; cursor: pointer; font-size: 15px !important; font-weight: 600 !important; }
-.flex-1.py-2\.5.border.rounded-xl { border: 1px solid var(--gray-200) !important; border-radius: var(--radius) !important; padding: 12px !important; font-size: 15px !important; background: var(--white) !important; cursor: pointer; }
-
-/* 集運合併區 */
-#mergeArea { background: var(--white) !important; border-radius: var(--radius-lg) !important; border: none !important; padding: 16px !important; }
-.text-xs.font-semibold.text-gray-500 { font-size: 13px !important; font-weight: 600 !important; color: var(--gray-600) !important; }
-
-/* panel */
-#panel1, #panel2 { background: transparent; }
-
-/* renderOrderDetail 覆蓋 */
-.text-sm.text-gray-600.mb-3 { font-size:14px; color:var(--gray-600); margin-bottom:12px; }
-.flex.items-center.gap-1.text-sm.text-gray-400 { display:flex; align-items:center; gap:6px; font-size:14px; color:var(--gray-400); margin-bottom:16px; background:none; border:none; cursor:pointer; }
-.flex.flex-col.items-center.flex-1 { display:flex; flex-direction:column; align-items:center; flex:1; }
-.flex.justify-between.items-start.text-sm { display:flex; justify-content:space-between; align-items:flex-start; font-size:15px; }
-.text-gray-700.flex-1.mr-2 { color:var(--black); flex:1; margin-right:8px; }
-.flex.justify-between.py-2.text-sm.border-b { display:flex; justify-content:space-between; padding:8px 0; font-size:14px; border-bottom:1px solid var(--gray-200); }
-.bg-white.rounded-xl.border.px-4.py-4.mb-3 { background:var(--white); border-radius:var(--radius-lg); border:none; padding:16px; margin-bottom:10px; }
-.bg-white.rounded-xl.border.px-4.py-5.mb-3 { background:var(--white); border-radius:var(--radius-lg); border:none; padding:16px; margin-bottom:10px; }
-.flex.justify-between.items-start.mb-3 { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
-.font-bold.tracking-wider { font-weight:700; letter-spacing:0.05em; font-size:20px; }
-.flex.items-start { display:flex; align-items:flex-start; }
-.flex.justify-between.items-center.py-2.text-sm.text-green-600 { display:flex; justify-content:space-between; align-items:center; padding:6px 0; font-size:14px; color:var(--green); }
-.flex.justify-between.items-center.py-2.text-sm { display:flex; justify-content:space-between; align-items:center; padding:6px 0; font-size:14px; }
-.flex.justify-between.items-center.mt-3.pt-3.border-t.font-bold { display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:12px; border-top:1px solid var(--gray-200); font-weight:700; }
-.text-lg { font-size:22px !important; }
-.text-red-500 { color:var(--black) !important; }
-.text-green-600 { color:var(--green) !important; }
-.text-gray-400 { color:var(--gray-400) !important; }
-.text-blue-500 { color:#2563eb !important; }
-.text-gray-600 { color:var(--gray-600) !important; }
-.font-medium { font-weight:500 !important; }
-.font-semibold { font-weight:600 !important; }
-.font-bold { font-weight:700 !important; }
-.text-xl { font-size:20px !important; }
-.text-xs { font-size:12px !important; }
-.text-sm { font-size:14px !important; }
-.text-base { font-size:16px !important; }
-.text-lg { font-size:20px !important; }
-.line-clamp-2 { overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
-.truncate { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.shrink-0 { flex-shrink:0 !important; }
-.w-full { width:100% !important; }
-.min-w-0 { min-width:0 !important; }
-.mt-2 { margin-top:8px !important; }
-.mt-3 { margin-top:12px !important; }
-.mb-1 { margin-bottom:4px !important; }
-.mb-2 { margin-bottom:8px !important; }
-.mb-3 { margin-bottom:12px !important; }
-.mb-4 { margin-bottom:16px !important; }
-.pt-2 { padding-top:8px !important; }
-.pt-3 { padding-top:12px !important; }
-.pb-2 { padding-bottom:8px !important; }
-.border-t { border-top:1px solid var(--gray-200) !important; }
-.border-b { border-bottom:1px solid var(--gray-200) !important; }
-.rounded-full { border-radius:50% !important; }
-.overflow-hidden { overflow:hidden !important; }
-.cursor-pointer { cursor:pointer !important; }
-.items-center { align-items:center !important; }
-.justify-between { justify-content:space-between !important; }
-.gap-1 { gap:4px !important; }
-.gap-2 { gap:8px !important; }
-.gap-3 { gap:12px !important; }
-.flex-1 { flex:1 !important; }
+body { background: var(--gray-100) !important; }
+.order-wrap { max-width: 640px; margin: 0 auto; padding: 16px; padding-bottom: 100px; display: flex; flex-direction: column; gap: 12px; }
 </style>
 </head>
 <body>
@@ -146,51 +23,62 @@
   </a>
 </nav>
 
-<div class="page-wrap" style="max-width:640px;margin:0 auto;padding:20px 16px">
+<div class="order-wrap">
 
-  <!-- 說明文字 -->
-  <div style="margin-bottom:24px">
-    <div style="font-size:22px;font-weight:700;margin-bottom:6px">查詢我的訂單</div>
-    <div style="font-size:14px;color:var(--gray-400)">輸入訂單編號 或 客戶編號 + Email</div>
+  <!-- 說明 -->
+  <div style="padding:4px 0 8px">
+    <div style="font-size:22px;font-weight:700;margin-bottom:4px">查詢我的訂單</div>
+    <div style="font-size:14px;color:#aaa">輸入訂單編號 或 客戶編號 + Email</div>
   </div>
 
   <!-- 訂單編號查詢 -->
-  <div style="background:var(--white);border-radius:var(--radius-lg);padding:20px;margin-bottom:12px">
+  <div style="background:#fff;border-radius:16px;padding:16px">
     <div style="font-size:15px;font-weight:700;margin-bottom:4px">用訂單編號查詢</div>
-    <div style="font-size:13px;color:var(--gray-400);margin-bottom:14px">結帳後收到的 ORD 開頭編號</div>
+    <div style="font-size:13px;color:#aaa;margin-bottom:14px">結帳後收到的 ORD 開頭編號</div>
     <div style="display:flex;gap:8px">
-      <input id="orderInput" type="text" placeholder="例如：ORD12345678"
-        style="flex:1;text-transform:uppercase"
-        oninput="this.value=this.value.toUpperCase()"
-        onkeydown="if(event.key==='Enter') queryByOrder()">
-      <button onclick="queryByOrder()" class="btn-primary" style="width:auto;padding:13px 20px;white-space:nowrap">
+      <div style="flex:1;background:#f9f9f9;border-radius:12px;padding:14px 16px">
+        <input id="orderInput" type="text" placeholder="例如：ORD12345678"
+          style="background:transparent;border:none;outline:none;font-size:15px;font-weight:500;color:#111;width:100%;padding:0;text-transform:uppercase"
+          oninput="this.value=this.value.toUpperCase()"
+          onkeydown="if(event.key==='Enter') queryByOrder()">
+      </div>
+      <button onclick="queryByOrder()" style="padding:14px 20px;background:#111;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap">
         查詢
       </button>
     </div>
-    <div id="result1" style="margin-top:16px"></div>
+    <div id="result1" style="margin-top:12px"></div>
   </div>
 
   <!-- 分隔 -->
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-    <div style="flex:1;height:1px;background:var(--gray-200)"></div>
-    <span style="font-size:13px;color:var(--gray-400)">或</span>
-    <div style="flex:1;height:1px;background:var(--gray-200)"></div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="flex:1;height:1px;background:#e5e5e5"></div>
+    <span style="font-size:13px;color:#aaa">或</span>
+    <div style="flex:1;height:1px;background:#e5e5e5"></div>
   </div>
 
   <!-- 客戶編號查詢 -->
-  <div style="background:var(--white);border-radius:var(--radius-lg);padding:20px">
+  <div style="background:#fff;border-radius:16px;padding:16px">
     <div style="font-size:15px;font-weight:700;margin-bottom:4px">用客戶編號查詢所有訂單</div>
-    <div style="font-size:13px;color:var(--gray-400);margin-bottom:14px">結帳後拿到的 W-82 或 C-161 開頭編號</div>
+    <div style="font-size:13px;color:#aaa;margin-bottom:14px">結帳後拿到的 W-82 或 C-161 開頭編號</div>
     <div style="display:flex;flex-direction:column;gap:10px">
-      <input id="customerInput" type="text" placeholder="例如：W-82I"
-        style="text-transform:uppercase"
-        oninput="this.value=this.value.toUpperCase()"
-        onkeydown="if(event.key==='Enter') queryByCustomer()">
-      <input id="emailInput" type="email" placeholder="驗證用 Email"
-        onkeydown="if(event.key==='Enter') queryByCustomer()">
-      <button onclick="queryByCustomer()" class="btn-primary">查詢所有訂單</button>
+      <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+        <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">客戶編號</div>
+        <input id="customerInput" type="text" placeholder="例如：W-82I"
+          style="background:transparent;border:none;outline:none;font-size:16px;font-weight:500;color:#111;width:100%;padding:0;text-transform:uppercase"
+          oninput="this.value=this.value.toUpperCase()"
+          onkeydown="if(event.key==='Enter') queryByCustomer()">
+      </div>
+      <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+        <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">驗證 Email</div>
+        <input id="emailInput" type="email" placeholder="請輸入 Email"
+          style="background:transparent;border:none;outline:none;font-size:16px;font-weight:500;color:#111;width:100%;padding:0"
+          onkeydown="if(event.key==='Enter') queryByCustomer()">
+      </div>
+      <button onclick="queryByCustomer()" style="width:100%;padding:16px;background:#111;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer">
+        查詢所有訂單
+      </button>
     </div>
-    <div id="result2" style="margin-top:16px"></div>
+    <div id="result2" style="margin-top:12px"></div>
   </div>
 
 </div>
@@ -455,110 +343,124 @@ function renderOrderDetail(data) {
   const date    = new Date(data.createdAt);
   const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,"0")}:${String(date.getMinutes()).padStart(2,"0")}`;
 
+  // 進度條
   const stepsHtml = STEPS.map((step, i) => {
-    const done    = i <= current;
+    const done = i <= current;
     const isCurrent = i === current;
     return `
-      <div class="flex flex-col items-center flex-1">
-        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold mb-1
-          ${done ? "bg-black text-white" : "bg-gray-200 text-gray-400"}
-          ${isCurrent ? "ring-2 ring-black ring-offset-2" : ""}">
+      <div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:6px">
+        <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;
+          background:${done ? "#111" : "#f2f2f2"};color:${done ? "#fff" : "#aaa"};
+          ${isCurrent ? "box-shadow:0 0 0 3px #fff,0 0 0 5px #111" : ""}">
           ${done && !isCurrent ? "✓" : i + 1}
         </div>
-        <span class="text-xs ${isCurrent ? "font-bold text-black" : "text-gray-400"}">${step}</span>
+        <span style="font-size:12px;font-weight:${isCurrent ? "700" : "400"};color:${isCurrent ? "#111" : "#aaa"}">${step}</span>
       </div>
-      ${i < STEPS.length - 1 ? `<div class="flex-1 h-0.5 mt-3.5 ${i < current ? "bg-black" : "bg-gray-200"}"></div>` : ""}`;
+      ${i < STEPS.length - 1 ? `<div style="flex:1;height:2px;margin-top:15px;background:${i < current ? "#111" : "#f2f2f2"};align-self:flex-start"></div>` : ""}`;
   }).join("");
 
-  // 支援 JSON 陣列（新格式）和純文字（舊格式）
+  // 商品明細
   let itemsHtml = "";
   if (Array.isArray(data.items) && data.items.length) {
     itemsHtml = data.items.map(i => `
-      <div class="py-2 border-b last:border-0">
-        <div class="flex justify-between items-start text-sm">
-          <span class="text-gray-700 flex-1 mr-2">${i.name}${i.variant ? ` <span style="font-size:12px;color:var(--gray-400)">（${i.variant}）</span>` : ""} × ${i.qty}</span>
-          <span class="text-gray-600 font-medium shrink-0">${formatPrice(i.price * i.qty)}</span>
+      <div style="background:#f9f9f9;border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:500;color:#111">${i.name}${i.variant ? ` <span style="color:#aaa;font-size:12px">（${i.variant}）</span>` : ""}</div>
+          <div style="font-size:12px;color:#aaa;margin-top:2px">單價 ${formatPrice(i.price)} × ${i.qty}</div>
         </div>
-        <div class="text-xs text-gray-400 mt-0.5">單價 ${formatPrice(i.price)}</div>
+        <div style="font-size:15px;font-weight:700;color:#111;flex-shrink:0">${formatPrice(i.price * i.qty)}</div>
       </div>`).join("");
   } else {
     const text = typeof data.items === "string" ? data.items : "";
     itemsHtml = text.split("\n").filter(Boolean).map(line => `
-      <div class="flex justify-between py-2 text-sm border-b last:border-0">
-        <span class="text-gray-700">${line.split("（")[0].trim()}</span>
-        <span class="text-gray-500">${line.match(/（(.+)）/)?.[1] || ""}</span>
+      <div style="background:#f9f9f9;border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <span style="font-size:14px;color:#111">${line.split("（")[0].trim()}</span>
+        <span style="font-size:13px;color:#666;flex-shrink:0">${line.match(/（(.+)）/)?.[1] || ""}</span>
       </div>`).join("");
   }
 
   return `
-    <div class="bg-white rounded-xl border px-4 py-4 mb-3">
-      <div class="flex justify-between items-start mb-3">
+    <!-- 訂單編號 + 狀態 -->
+    <div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
         <div>
-          <div class="text-xs text-gray-400 mb-0.5">訂單編號</div>
-          <div class="font-bold tracking-wider">${data.orderId}</div>
+          <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:4px">訂單編號</div>
+          <div style="font-size:20px;font-weight:700;color:#111;letter-spacing:1px">${data.orderId}</div>
         </div>
-        <span class="text-xs px-2.5 py-1 rounded-full font-medium ${status.color}">
+        <span style="font-size:13px;padding:6px 12px;border-radius:20px;font-weight:600;${status.color}">
           ${status.icon} ${data.status}
         </span>
       </div>
-      <div style="font-size:12px;color:var(--gray-400)">下單時間：${dateStr}</div>
+      <div style="font-size:12px;color:#aaa">下單時間：${dateStr}</div>
     </div>
 
-    <div class="bg-white rounded-xl border px-4 py-5 mb-3">
-      <div class="text-xs font-semibold text-gray-500 mb-4">訂單進度</div>
-      <div class="flex items-start">${stepsHtml}</div>
-    </div>
+    <!-- 進度條 -->
+    ${data.status !== "已取消" && data.status !== "申請取消中" ? `
+    <div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:10px">
+      <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:16px">訂單進度</div>
+      <div style="display:flex;align-items:flex-start">${stepsHtml}</div>
+    </div>` : ""}
 
-    <div class="bg-white rounded-xl border px-4 py-4 mb-3">
-      <div style="font-size:13px;font-weight:700;color:var(--gray-600);margin-bottom:8px">訂單明細</div>
-      ${itemsHtml}
-      ${data.discount > 0 ? `
-      <div class="flex justify-between items-center py-2 text-sm text-green-600">
-        <span>🎉 滿NT$3,000折扣</span>
-        <span>- NT$200</span>
-      </div>` : ""}
-      ${data.shipping > 0 ? `
-      <div class="flex justify-between items-center py-2 text-sm text-gray-500">
-        <span>出貨手續費</span>
-        <span>NT$${data.shipping}</span>
-      </div>` : data.shipping === 0 && data.total > 0 ? `
-      <div class="flex justify-between items-center py-2 text-sm text-green-600">
-        <span>出貨手續費</span>
-        <span>免手續費</span>
-      </div>` : ""}
-      <div class="flex justify-between items-center pt-3 font-bold border-t">
-        <span>合計</span>
-        <span class="text-red-500">${formatPrice(data.total)}</span>
+    <!-- 訂單明細 -->
+    <div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:10px">
+      <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:12px">訂單明細</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">${itemsHtml}</div>
+      <div style="display:flex;flex-direction:column;gap:6px;padding-top:12px;border-top:1px solid #f2f2f2">
+        ${data.discount > 0 ? `
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:#059669">
+          <span>🎉 滿NT$3,000折扣</span><span>- NT$200</span>
+        </div>` : ""}
+        ${data.shipping > 0 ? `
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:#666">
+          <span>出貨手續費</span><span>NT$${data.shipping}</span>
+        </div>` : data.shipping === 0 && data.total > 0 ? `
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:#059669">
+          <span>出貨手續費</span><span>免手續費</span>
+        </div>` : ""}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#111;border-radius:12px;margin-top:4px">
+          <span style="font-size:14px;font-weight:700;color:#fff">合計</span>
+          <span style="font-size:18px;font-weight:700;color:#f87171">${formatPrice(data.total)}</span>
+        </div>
       </div>
     </div>
 
-    <div class="bg-white rounded-xl border px-4 py-4">
-      <div class="flex justify-between items-center mb-2">
-        <div class="text-xs font-semibold text-gray-500">收件資料</div>
-        ${data.customerId ? `<span class="text-xs text-blue-500 font-medium">${data.customerId}</span>` : ""}
+    <!-- 收件資料 -->
+    <div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px">收件資料</div>
+        ${data.customerId ? `<span style="font-size:12px;font-weight:700;color:#1d4ed8">${data.customerId}</span>` : ""}
       </div>
-      <div class="text-sm text-gray-700 space-y-1">
-        <div>${data.name || "—"}</div>
-        ${data.phone ? `<div class="text-gray-500 text-xs">${data.phone}</div>` : ""}
-        <div class="text-gray-400 text-xs">${data.address || "—"}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:#f9f9f9;border-radius:12px;padding:12px 14px">
+          <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:4px">姓名</div>
+          <div style="font-size:15px;font-weight:600;color:#111">${data.name || "—"}</div>
+        </div>
+        <div style="background:#f9f9f9;border-radius:12px;padding:12px 14px">
+          <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:4px">電話</div>
+          <div style="font-size:14px;font-weight:600;color:#1d4ed8">${data.phone || "—"}</div>
+        </div>
+        <div style="background:#f9f9f9;border-radius:12px;padding:12px 14px;grid-column:span 2">
+          <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:4px">地址</div>
+          <div style="font-size:14px;font-weight:500;color:#111">${data.address || "—"}</div>
+        </div>
       </div>
     </div>
 
-    <!-- 操作按鈕（待處理或處理中才顯示）-->
+    <!-- 操作按鈕 -->
     ${["待處理","處理中"].includes(data.status) ? `
-    <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+    <div style="display:flex;flex-direction:column;gap:8px">
       ${data.status === "待處理" && Array.isArray(data.items) ? `
       <button onclick="openItemsModal('${encodeData({pageId:data.pageId,status:data.status})}', ${JSON.stringify(data.items).replace(/"/g, '&quot;')})"
-        class="w-full py-2.5 border rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">
+        style="width:100%;padding:16px;background:#f9f9f9;color:#111;border:none;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer">
         🛒 修改商品數量 / 刪除商品
       </button>` : ""}
       <div style="display:flex;gap:8px">
         <button onclick="openEditModal('${encodeData({customerId:data.customerId,name:data.name,phone:data.phone,address:data.address,status:data.status})}')"
-          class="flex-1 py-2.5 border rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">
+          style="flex:1;padding:14px;background:#f9f9f9;color:#111;border:none;border-radius:14px;font-size:14px;font-weight:600;cursor:pointer">
           ✏️ 修改收件資料
         </button>
         <button onclick="openCancelModal('${encodeData({pageId:data.pageId,orderId:data.orderId,status:data.status})}')"
-          class="flex-1 py-2.5 border border-red-200 rounded-xl text-sm text-red-400 hover:bg-red-50 transition">
+          style="flex:1;padding:14px;background:#fef2f2;color:#e24b4a;border:none;border-radius:14px;font-size:14px;font-weight:600;cursor:pointer">
           ${data.status === "待處理" ? "❌ 取消訂單" : "📋 申請取消"}
         </button>
       </div>
@@ -648,62 +550,69 @@ document.addEventListener("click", (e) => {
 
 <!-- 修改商品 Modal -->
 <div id="itemsModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:flex-end;justify-content:center">
-  <div class="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[85vh] flex flex-col">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #e5e5e5;flex-shrink:0">
-      <h3 style="font-size:17px;font-weight:700;color:#111">修改商品</h3>
-      <button onclick="closeItemsModal()" style="background:none;border:none;cursor:pointer;font-size:24px;color:#aaa;padding:0;line-height:1">✕</button>
+  <div style="background:#fff;width:100%;max-width:520px;border-radius:20px 20px 0 0;max-height:85vh;display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:center;padding:12px 0 4px"><div style="width:36px;height:4px;border-radius:2px;background:#e5e5e5"></div></div>
+    <div style="padding:8px 20px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f2f2f2">
+      <div style="font-size:17px;font-weight:700">修改商品</div>
+      <button onclick="closeItemsModal()" style="width:34px;height:34px;border-radius:50%;background:#f2f2f2;border:none;font-size:18px;color:#666;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
     </div>
-    <div id="itemsEditor" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px"></div>
-    <div style="padding:16px 20px;border-top:1px solid #e5e5e5;flex-shrink:0;display:flex;flex-direction:column;gap:8px">
-      <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700">
-        <span>新合計</span>
-        <span id="itemsNewTotal" class="text-red-500"></span>
+    <div id="itemsEditor" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px"></div>
+    <div style="padding:16px;border-top:1px solid #f2f2f2;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#f9f9f9;border-radius:12px">
+        <span style="font-size:14px;font-weight:600">新合計</span>
+        <span id="itemsNewTotal" style="font-size:16px;font-weight:700;color:#e24b4a"></span>
       </div>
-      <div id="itemsDetail" style="font-size:12px;color:var(--gray-400)"></div>
+      <div id="itemsDetail" style="font-size:12px;color:#aaa;text-align:center"></div>
       <p id="itemsSaveStatus" style="display:none;font-size:13px;text-align:center"></p>
-      <button id="itemsSaveBtn" onclick="saveItems()" class="w-full py-3 bg-black text-white font-medium rounded-xl text-sm">儲存變更</button>
+      <button id="itemsSaveBtn" onclick="saveItems()" style="width:100%;padding:16px;background:#111;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer">儲存變更</button>
     </div>
   </div>
 </div>
 
 <!-- 修改收件資料 Modal -->
 <div id="editModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:flex-end;justify-content:center">
-  <div class="bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl p-5">
-    <div class="flex justify-between items-center mb-4">
-      <h3 style="font-size:17px;font-weight:700;color:#111">修改收件資料</h3>
-      <button onclick="closeEditModal()" style="background:none;border:none;cursor:pointer;font-size:24px;color:#aaa;padding:0;line-height:1">✕</button>
+  <div style="background:#fff;width:100%;max-width:520px;border-radius:20px 20px 0 0">
+    <div style="display:flex;justify-content:center;padding:12px 0 4px"><div style="width:36px;height:4px;border-radius:2px;background:#e5e5e5"></div></div>
+    <div style="padding:8px 20px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f2f2f2">
+      <div style="font-size:17px;font-weight:700">修改收件資料</div>
+      <button onclick="closeEditModal()" style="width:34px;height:34px;border-radius:50%;background:#f2f2f2;border:none;font-size:18px;color:#666;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
     </div>
-    <div class="space-y-3">
-      <div>
-        <label class="text-xs text-gray-500 mb-1 block">姓名</label>
-        <input id="editName" type="text" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+    <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+      <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+        <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">姓名</div>
+        <input id="editName" type="text" style="background:transparent;border:none;outline:none;font-size:16px;font-weight:500;color:#111;width:100%;padding:0">
       </div>
-      <div>
-        <label class="text-xs text-gray-500 mb-1 block">電話</label>
-        <input id="editPhone" type="tel" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+      <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+        <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">電話</div>
+        <input id="editPhone" type="tel" style="background:transparent;border:none;outline:none;font-size:16px;font-weight:500;color:#111;width:100%;padding:0">
       </div>
-      <div>
-        <label class="text-xs text-gray-500 mb-1 block">地址</label>
-        <input id="editAddress" type="text" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+      <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+        <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">地址</div>
+        <input id="editAddress" type="text" style="background:transparent;border:none;outline:none;font-size:16px;font-weight:500;color:#111;width:100%;padding:0">
       </div>
-      <p id="editStatus" class="text-xs text-center hidden"></p>
-      <button onclick="submitEditCustomer()" class="w-full py-3 bg-black text-white font-medium rounded-xl text-sm">儲存變更</button>
+      <p id="editStatus" style="display:none;font-size:13px;text-align:center"></p>
+      <button onclick="submitEditCustomer()" style="width:100%;padding:16px;background:#111;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer">儲存變更</button>
     </div>
   </div>
 </div>
 
 <!-- 取消訂單 Modal -->
 <div id="cancelModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:flex-end;justify-content:center">
-  <div class="bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl p-5">
-    <div class="flex justify-between items-center mb-3">
-      <h3 style="font-size:17px;font-weight:700;color:#111" id="cancelTitle">取消訂單</h3>
-      <button onclick="closeCancelModal()" style="background:none;border:none;cursor:pointer;font-size:24px;color:#aaa;padding:0;line-height:1">✕</button>
+  <div style="background:#fff;width:100%;max-width:520px;border-radius:20px 20px 0 0">
+    <div style="display:flex;justify-content:center;padding:12px 0 4px"><div style="width:36px;height:4px;border-radius:2px;background:#e5e5e5"></div></div>
+    <div style="padding:8px 20px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f2f2f2">
+      <div style="font-size:17px;font-weight:700" id="cancelTitle">取消訂單</div>
+      <button onclick="closeCancelModal()" style="width:34px;height:34px;border-radius:50%;background:#f2f2f2;border:none;font-size:18px;color:#666;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
     </div>
-    <p id="cancelDesc" class="text-sm text-gray-500 mb-4"></p>
-    <p id="cancelStatus" class="text-xs text-center hidden mb-2"></p>
-    <div style="display:flex;gap:8px">
-      <button onclick="closeCancelModal()" class="flex-1 py-2.5 border rounded-xl text-sm text-gray-500">返回</button>
-      <button id="cancelConfirmBtn" onclick="submitCancel()" class="flex-1 py-2.5 bg-red-500 text-white font-medium rounded-xl text-sm">確認</button>
+    <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+      <div style="background:#fef2f2;border-radius:12px;padding:14px 16px">
+        <p id="cancelDesc" style="font-size:14px;color:#666;line-height:1.6"></p>
+      </div>
+      <p id="cancelStatus" style="display:none;font-size:13px;text-align:center"></p>
+      <div style="display:flex;gap:8px">
+        <button onclick="closeCancelModal()" style="flex:1;padding:14px;background:#f9f9f9;color:#666;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer">返回</button>
+        <button id="cancelConfirmBtn" onclick="submitCancel()" style="flex:1;padding:14px;background:#e24b4a;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer">確認</button>
+      </div>
     </div>
   </div>
 </div>
@@ -721,7 +630,7 @@ window.openItemsModal = (encoded, itemsJson) => {
   window._lastOpenedOrderId = _itemsData._orderId || "";
   // 直接用訂單裡儲存的 price（下單當時計算好的，含優惠碼）
   _itemsData._editItems = JSON.parse(JSON.stringify(rawItems));
-  document.getElementById("itemsSaveStatus").classList.add("hidden");
+  document.getElementById("itemsSaveStatus").style.display="none";
   document.getElementById("itemsModal").style.display="flex";
   document.body.style.overflow = "hidden";
   renderItemsEditor();
@@ -733,7 +642,7 @@ function closeItemsModal() {
   // 重置按鈕狀態
   const btn = document.getElementById("itemsSaveBtn");
   if (btn) { btn.disabled = false; btn.textContent = "儲存變更"; }
-  document.getElementById("itemsSaveStatus").classList.add("hidden");
+  document.getElementById("itemsSaveStatus").style.display="none";
 }
 
 function renderItemsEditor() {
@@ -808,14 +717,14 @@ async function saveItems() {
     const data = await res.json();
     if (!data.success) throw new Error(data.error);
     status.textContent = "✅ 已更新！";
-    status.className   = "text-xs text-center text-green-600";
-    status.classList.remove("hidden");
+    status.style.color = "#059669";
+    status.style.display = "block";
     closeItemsModal();
     await refreshCurrentOrder();
   } catch (err) {
     status.textContent = "❌ " + err.message;
-    status.className   = "text-xs text-center text-red-500";
-    status.classList.remove("hidden");
+    status.style.color = "#e24b4a";
+    status.style.display = "block";
     btn.disabled = false; btn.textContent = "儲存變更";
   }
 }
@@ -856,8 +765,8 @@ async function submitEditCustomer() {
   const status  = document.getElementById("editStatus");
   if (!name || !phone || !address) {
     status.textContent = "請填寫所有欄位";
-    status.className   = "text-xs text-center text-red-500";
-    status.classList.remove("hidden"); return;
+    status.style.color = "#e24b4a";
+    status.style.display = "block"; return;
   }
   try {
     const res  = await fetch(CUSTOMER_API_MOD, {
@@ -867,13 +776,13 @@ async function submitEditCustomer() {
     const data = await res.json();
     if (!data.success) throw new Error(data.error);
     status.textContent = "✅ 已更新！";
-    status.className   = "text-xs text-center text-green-600";
-    status.classList.remove("hidden");
+    status.style.color = "#059669";
+    status.style.display = "block";
     setTimeout(() => { closeEditModal(); refreshCurrentOrder(); }, 1000);
   } catch (err) {
     status.textContent = "❌ " + err.message;
-    status.className   = "text-xs text-center text-red-500";
-    status.classList.remove("hidden");
+    status.style.color = "#e24b4a";
+    status.style.display = "block";
   }
 }
 
@@ -884,7 +793,7 @@ window.openCancelModal = (encoded) => {
   document.getElementById("cancelDesc").textContent  = isPending
     ? `確定要取消訂單 ${_cancelData.orderId}？此操作無法復原。`
     : `訂單 ${_cancelData.orderId} 目前處理中，送出申請後將等待店家確認。`;
-  document.getElementById("cancelStatus").classList.add("hidden");
+  document.getElementById("cancelStatus").style.display = "none";
   document.getElementById("cancelConfirmBtn").disabled = false;
   document.getElementById("cancelConfirmBtn").textContent = "確認";
   document.getElementById("cancelModal").style.display="flex";
@@ -908,8 +817,8 @@ async function submitCancel() {
     const data = await res.json();
     if (!data.success) throw new Error(data.error);
     status.textContent = isPending ? "✅ 訂單已取消" : "✅ 申請已送出，請等待通知";
-    status.className   = "text-xs text-center text-green-600";
-    status.classList.remove("hidden");
+    status.style.color = "#059669";
+    status.style.display = "block";
     btn.textContent = "完成";
     setTimeout(() => {
       closeCancelModal();
@@ -921,8 +830,8 @@ async function submitCancel() {
     }, 1500);
   } catch (err) {
     status.textContent = "❌ " + err.message;
-    status.className   = "text-xs text-center text-red-500";
-    status.classList.remove("hidden");
+    status.style.color = "#e24b4a";
+    status.style.display = "block";
     btn.disabled = false; btn.textContent = "確認";
   }
 }
@@ -1032,7 +941,7 @@ function updateMergeArea() {
   if (!area || !summary) return;
 
   if (_mergeSelected.size < 2) {
-    area.classList.add("hidden");
+    area.style.display="none";
     return;
   }
 
@@ -1058,7 +967,7 @@ function updateMergeArea() {
       <div class="flex justify-between font-bold pt-1 border-t"><span>合計</span><span class="text-red-500">NT$${Math.floor(grandTotal).toLocaleString()}</span></div>
     </div>`;
 
-  area.classList.remove("hidden");
+  area.style.display="block";
 }
 
 async function confirmMerge() {
