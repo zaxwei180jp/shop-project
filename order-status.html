@@ -319,7 +319,7 @@ window.showOrderDetail = async (orderId, customer) => {
     const data = await res.json();
     if (!res.ok) return;
     el.innerHTML = `
-      <button onclick="queryByCustomer()" class="flex items-center gap-1 text-sm text-gray-400 hover:text-black mb-4">
+      <button onclick="queryByCustomer()" style="display:inline-flex;align-items:center;gap:6px;padding:10px 16px;background:#f2f2f2;border:none;border-radius:10px;font-size:14px;font-weight:600;color:#111;cursor:pointer;margin-bottom:12px">
         ← 返回訂單列表
       </button>
       ${renderOrderDetail({ ...customer, ...data, customerPageId: customer.pageId })}`;
