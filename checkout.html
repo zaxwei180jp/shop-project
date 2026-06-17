@@ -8,24 +8,11 @@
   <link rel="stylesheet" href="js/theme.css?v=2">
 
 <style>
-.max-w-xl.mx-auto { max-width: 640px; margin: 0 auto; padding: 16px !important; }
-.bg-white.rounded-2xl.shadow-sm { background: var(--white) !important; border-radius: var(--radius-lg) !important; box-shadow: none !important; }
-.text-sm.font-medium.text-gray-700 { font-size: 14px !important; font-weight: 600 !important; color: var(--black) !important; }
-input, textarea { font-size: 16px !important; border: 1px solid var(--gray-200) !important; border-radius: var(--radius) !important; padding: 13px 14px !important; }
-input:focus, textarea:focus { border-color: var(--black) !important; outline: none !important; }
-label { font-size: 14px !important; font-weight: 600 !important; color: var(--black) !important; margin-bottom: 6px !important; display: block !important; }
-.border-b { border-bottom: 1px solid var(--gray-200) !important; }
-.text-gray-500 { color: var(--gray-600) !important; }
-.text-red-500 { color: var(--red) !important; }
-.text-green-600 { color: var(--green) !important; }
-/* 訂單摘要 */
-.bg-gray-50 { background: var(--gray-50) !important; border-radius: var(--radius) !important; padding: 14px !important; }
-.font-bold.text-lg { font-size: 20px !important; font-weight: 700 !important; }
-/* 送出按鈕 */
-button[type="submit"], #submitBtn { background: var(--black) !important; color: var(--white) !important; border: none !important; border-radius: var(--radius) !important; padding: 16px !important; font-size: 17px !important; font-weight: 600 !important; width: 100% !important; cursor: pointer !important; }
+body { background: var(--gray-100) !important; }
+.checkout-wrap { max-width: 640px; margin: 0 auto; padding: 16px; padding-bottom: 40px; display: flex; flex-direction: column; gap: 12px; }
 </style>
 </head>
-<body class="bg-gray-50">
+<body>
 
 <nav class="top-nav">
   <a href="cart.html" class="nav-icon-btn"><i class="ti ti-arrow-left"></i></a>
@@ -33,125 +20,112 @@ button[type="submit"], #submitBtn { background: var(--black) !important; color: 
   <div style="width:44px"></div>
 </nav>
 
-<div style="max-width:640px;margin:0 auto;padding:16px">
+<div class="checkout-wrap">
 
   <!-- 步驟指示 -->
-  <div class="flex items-center justify-center gap-2 mb-6 text-sm sm:text-base">
-    <span class="text-gray-400">購物車</span>
-    <span class="text-gray-300">›</span>
-    <span class="font-bold text-black">填寫資料</span>
-    <span class="text-gray-300">›</span>
-    <span class="text-gray-400">完成</span>
+  <div style="display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px">
+    <span style="color:#aaa">購物車</span>
+    <span style="color:#ddd">›</span>
+    <span style="font-weight:700;color:#111;background:#111;color:#fff;padding:4px 12px;border-radius:20px">填寫資料</span>
+    <span style="color:#ddd">›</span>
+    <span style="color:#aaa">完成</span>
   </div>
 
   <!-- 訂單摘要 -->
-  <div class="bg-white rounded-xl border mb-4">
-    <button onclick="toggleSummary()"
-      class="w-full flex justify-between items-center px-4 py-3 text-sm font-semibold">
-      <span>📦 訂單明細</span>
-      <span id="summaryArrow" class="text-gray-400 transition-transform">▼</span>
+  <div style="background:#fff;border-radius:16px;overflow:hidden">
+    <button onclick="toggleSummary()" style="width:100%;display:flex;justify-content:space-between;align-items:center;padding:16px;background:transparent;border:none;cursor:pointer">
+      <span style="font-size:15px;font-weight:700">📦 訂單明細</span>
+      <span id="summaryArrow" style="color:#aaa;font-size:12px;transition:transform 0.2s">▼</span>
     </button>
-    <div id="summaryContent" class="border-t px-4 pb-4 hidden">
-      <div id="orderItems" class="divide-y text-sm"></div>
-      <div class="flex justify-between items-center mt-2 text-sm text-gray-500">
-        <span>商品小計</span>
-        <span id="orderSubtotal"></span>
-      </div>
-      <div id="orderDiscountRow" class="hidden flex justify-between items-center mt-1 text-sm text-green-600">
-        <span>🎉 滿NT$3,000折扣</span>
-        <span>- NT$200</span>
-      </div>
-      <div class="flex justify-between items-center mt-1 text-sm" id="orderShippingRow">
-        <span>出貨手續費</span>
-        <span id="orderShipping"></span>
-      </div>
-      <div class="flex justify-between items-center mt-3 pt-2 border-t font-bold">
-        <span>總計</span>
-        <span id="orderTotal" class="text-red-500 text-base"></span>
+    <div id="summaryContent" style="display:none;border-top:1px solid #f2f2f2;padding:12px 16px 16px">
+      <div id="orderItems" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+      <div style="display:flex;flex-direction:column;gap:6px;padding-top:12px;border-top:1px solid #f2f2f2">
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:#666">
+          <span>商品小計</span>
+          <span id="orderSubtotal"></span>
+        </div>
+        <div id="orderDiscountRow" style="display:none;justify-content:space-between;font-size:13px;color:#059669">
+          <span>🎉 滿NT$3,000折扣</span>
+          <span>- NT$200</span>
+        </div>
+        <div id="orderShippingRow" style="display:flex;justify-content:space-between;font-size:13px;color:#666">
+          <span>出貨手續費</span>
+          <span id="orderShipping"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;padding:12px 14px;background:#111;border-radius:12px">
+          <span style="font-size:14px;font-weight:700;color:#fff">總計</span>
+          <span id="orderTotal" style="font-size:18px;font-weight:700;color:#f87171"></span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- 填寫資料表單 -->
-  <div class="bg-white rounded-xl border px-4 py-4 mb-4">
-    <h2 class="font-bold mb-4">收件資料</h2>
+  <!-- 收件資料 -->
+  <div style="background:#fff;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px">
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px">收件資料</div>
 
-    <div class="space-y-3">
+    <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+      <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">姓名 <span style="color:#e24b4a">*</span></div>
+      <input id="name" type="text" placeholder="請輸入姓名" style="background:transparent;border:none;outline:none;font-size:16px;font-weight:500;color:#111;width:100%;padding:0">
+    </div>
 
-      <div>
-        <label class="text-xs text-gray-500 mb-1 block">姓名 <span class="text-red-500">*</span></label>
-        <input id="name" type="text" placeholder="請輸入姓名"
-          class="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
-      </div>
+    <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+      <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">電話 <span style="color:#e24b4a">*</span></div>
+      <input id="phone" type="tel" placeholder="請輸入電話" style="background:transparent;border:none;outline:none;font-size:16px;font-weight:500;color:#111;width:100%;padding:0">
+    </div>
 
-      <div>
-        <label class="text-xs text-gray-500 mb-1 block">電話 <span class="text-red-500">*</span></label>
-        <input id="phone" type="tel" placeholder="請輸入電話"
-          class="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
-      </div>
+    <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+      <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">Email <span style="color:#e24b4a">*</span></div>
+      <input id="email" type="email" placeholder="請輸入 Email" style="background:transparent;border:none;outline:none;font-size:16px;font-weight:500;color:#111;width:100%;padding:0">
+    </div>
 
-      <div>
-        <label class="text-xs text-gray-500 mb-1 block">Email <span class="text-red-500">*</span></label>
-        <input id="email" type="email" placeholder="請輸入 Email"
-          class="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
-      </div>
-
-      <div>
-        <label class="text-xs text-gray-500 mb-1 block">地址 <span class="text-red-500">*</span></label>
-        <input id="address" type="text" placeholder="請輸入收件地址"
-          class="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
-      </div>
-
-
+    <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+      <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">地址 <span style="color:#e24b4a">*</span></div>
+      <input id="address" type="text" placeholder="請輸入收件地址" style="background:transparent;border:none;outline:none;font-size:16px;font-weight:500;color:#111;width:100%;padding:0">
     </div>
   </div>
 
-  <!-- 送出按鈕 -->
-  <div class="flex gap-3">
-    <a href="cart.html"
-      class="flex-1 py-3.5 border border-gray-300 text-gray-600 font-medium rounded-xl text-center hover:bg-gray-50 active:bg-gray-100 transition text-base">
-      ← 回到購物車
-    </a>
-    <button id="submitBtn" onclick="submitOrder()"
-      class="flex-1 py-3.5 bg-black text-white font-medium rounded-xl active:bg-gray-800 transition text-base">
+  <!-- 按鈕 -->
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <button id="submitBtn" onclick="submitOrder()" style="width:100%;padding:18px;background:#111;color:#fff;border:none;border-radius:14px;font-size:17px;font-weight:700;cursor:pointer">
       確認送出訂單
     </button>
+    <a href="cart.html" style="display:block;width:100%;padding:14px;background:#f9f9f9;color:#666;border:none;border-radius:14px;font-size:15px;font-weight:500;text-align:center;text-decoration:none">
+      ← 回到購物車
+    </a>
   </div>
 
-  <p class="text-xs text-center text-gray-400 mt-3">送出後將建立訂單，我們會盡快與您聯繫</p>
+  <p style="font-size:12px;text-align:center;color:#aaa">送出後將建立訂單，我們會盡快與您聯繫</p>
 
 </div>
 
-<!-- 成功畫面（預設隱藏）-->
-<div id="successScreen" style="display:none;position:fixed;inset:0;background:#fff;z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:0 24px">
-  <div class="text-6xl mb-4">🎉</div>
-  <h1 class="text-2xl font-bold mb-2">訂單已送出！</h1>
-  <p class="text-gray-500 text-sm mb-6">感謝您的購買，我們將盡快與您聯繫</p>
+<!-- 成功畫面 -->
+<div id="successScreen" style="display:none;position:fixed;inset:0;background:#f2f2f2;z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:24px">
+  <div style="font-size:64px;margin-bottom:16px">🎉</div>
+  <div style="font-size:24px;font-weight:700;margin-bottom:8px">訂單已送出！</div>
+  <div style="font-size:14px;color:#aaa;margin-bottom:24px">感謝您的購買，我們將盡快與您聯繫</div>
 
-  <div class="bg-gray-50 border rounded-xl px-6 py-4 w-full max-w-xs text-center mb-6 space-y-3">
-    <div>
-      <div class="text-xs text-gray-400 mb-0.5">您的訂單編號</div>
-      <div id="displayOrderId" class="text-xl font-bold tracking-widest text-black"></div>
-      <button onclick="copyOrderId()"
-        class="mt-1 text-xs text-gray-400 underline active:text-black">
-        點擊複製
-      </button>
+  <div style="width:100%;max-width:360px;display:flex;flex-direction:column;gap:10px;margin-bottom:24px">
+    <div style="background:#fff;border-radius:16px;padding:20px;text-align:center">
+      <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:8px">訂單編號</div>
+      <div id="displayOrderId" style="font-size:22px;font-weight:700;color:#111;letter-spacing:2px"></div>
+      <button onclick="copyOrderId()" style="margin-top:8px;font-size:12px;color:#aaa;background:none;border:none;cursor:pointer;text-decoration:underline">點擊複製</button>
     </div>
-    <div class="border-t pt-3">
-      <div class="text-xs text-gray-400 mb-0.5">您的客戶編號</div>
-      <div id="displayCustomerId" class="text-base font-bold text-gray-700"></div>
-      <div class="text-xs text-gray-400 mt-0.5">下次購物可用此編號查詢訂單</div>
+    <div style="background:#fff;border-radius:16px;padding:20px;text-align:center">
+      <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:8px">客戶編號</div>
+      <div id="displayCustomerId" style="font-size:18px;font-weight:700;color:#1d4ed8"></div>
+      <div style="font-size:12px;color:#aaa;margin-top:6px">下次購物可用此編號查詢訂單</div>
     </div>
   </div>
 
-  <a id="queryLink" href="order-status.html"
-    class="w-full max-w-xs py-3 bg-black text-white text-center font-medium rounded-xl active:bg-gray-800 block mb-3">
-    查詢訂單狀態
-  </a>
-  <a href="index.html"
-    class="w-full max-w-xs py-3 text-center text-sm text-gray-400 underline block">
-    繼續逛逛
-  </a>
+  <div style="width:100%;max-width:360px;display:flex;flex-direction:column;gap:8px">
+    <a id="queryLink" href="order-status.html" style="display:block;width:100%;padding:18px;background:#111;color:#fff;text-align:center;font-size:16px;font-weight:700;border-radius:14px;text-decoration:none">
+      查詢訂單狀態
+    </a>
+    <a href="index.html" style="display:block;width:100%;padding:14px;background:#fff;color:#666;text-align:center;font-size:15px;font-weight:500;border-radius:14px;text-decoration:none">
+      繼續逛逛
+    </a>
+  </div>
 </div>
 
 <script src="./js/cartCount.js"></script>
@@ -223,9 +197,12 @@ async function init() {
 
   // 訂單明細
   document.getElementById("orderItems").innerHTML = orderItems.map(i => `
-    <div class="flex justify-between py-2.5">
-      <span class="text-gray-700">${i.name} <span class="text-gray-400">× ${i.qty}</span></span>
-      <span class="font-medium">${formatPrice(i.price * i.qty)}</span>
+    <div style="background:#f9f9f9;border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:500;color:#111">${i.name}</div>
+        <div style="font-size:12px;color:#aaa;margin-top:2px">× ${i.qty}</div>
+      </div>
+      <div style="font-size:15px;font-weight:700;color:#111;flex-shrink:0">${formatPrice(i.price * i.qty)}</div>
     </div>
   `).join("");
 
@@ -233,13 +210,18 @@ async function init() {
 
   const shippingEl  = document.getElementById("orderShipping");
   const shippingRow = document.getElementById("orderShippingRow");
-  shippingRow.className = "flex justify-between items-center mt-1 text-sm text-gray-500";
 
   if (orderDiscount > 0) {
     const discEl = document.getElementById("orderDiscountRow");
-    if (discEl) discEl.classList.remove("hidden");
+    if (discEl) discEl.style.display = "flex";
   }
-  shippingEl.textContent = isFreeShipping ? "免出貨手續費" : "NT$200";
+  if (isFreeShipping) {
+    shippingEl.textContent = "免出貨手續費";
+    shippingRow.style.color = "#059669";
+  } else {
+    shippingEl.textContent = "NT$200";
+    shippingRow.style.color = "#666";
+  }
 
   document.getElementById("orderTotal").textContent = formatPrice(orderTotal);
 }
@@ -248,8 +230,8 @@ async function init() {
 window.toggleSummary = () => {
   const content = document.getElementById("summaryContent");
   const arrow   = document.getElementById("summaryArrow");
-  const isHidden = content.classList.contains("hidden");
-  content.classList.toggle("hidden", !isHidden);
+  const isHidden = content.style.display === "none" || content.style.display === "";
+  content.style.display = isHidden ? "block" : "none";
   arrow.style.transform = isHidden ? "rotate(180deg)" : "";
 };
 
