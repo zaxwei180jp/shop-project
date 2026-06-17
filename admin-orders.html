@@ -286,7 +286,11 @@ if (sessionStorage.getItem("adminAuth") !== "1") location.href = "admin.html";
 
     <!-- Modal Header -->
     <div class="admin-topbar">
-      <span class="topbar-title">訂單管理</span>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <span id="modalOrderId" style="font-size:15px;font-weight:700;color:#111"></span>
+        <span id="modalDate" style="font-size:12px;color:#aaa"></span>
+        <span id="modalBundleId" style="font-size:11px;color:#1d4ed8;display:none"></span>
+      </div>
       <div class="topbar-actions" id="topbarActions"></div>
     </div>
     <div class="admin-content">
