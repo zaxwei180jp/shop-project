@@ -434,7 +434,7 @@ function renderSubBtns(selectedMain) {
   const subs = [...new Set(allProductData.filter(p => p.mainCategory === selectedMain).map(p => p.category).filter(Boolean))].sort();
   const el = document.getElementById("categoryBtns"); el.innerHTML = "";
   if (!subs.length) { section.style.display="none"; return; }
-  section.style.display="flex";
+  section.style.display="block";
   subs.forEach(s => {
     const btn = document.createElement("button"); btn.type = "button"; btn.textContent = s; btn.style.cssText = BTN_NORMAL_STYLE;
     btn.onclick = () => { document.getElementById("category").value = s; el.querySelectorAll("button").forEach(b => b.className = BTN_NORMAL); btn.style.cssText = BTN_ACTIVE_STYLE; };
