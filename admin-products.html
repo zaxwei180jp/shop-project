@@ -224,130 +224,125 @@ if (sessionStorage.getItem("adminAuth") !== "1") location.href = "admin.html";
 
 <!-- 編輯 Modal -->
 <div id="editModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);align-items:flex-end;justify-content:center">
-  <div class="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto">
-    <div class="admin-topbar">
-      <span class="topbar-title">商品管理</span>
-      <div class="topbar-actions" id="topbarActions"></div>
+  <div style="background:#fff;width:100%;max-width:520px;border-radius:20px 20px 0 0;max-height:90vh;overflow-y:auto">
+
+    <!-- Handle -->
+    <div style="display:flex;justify-content:center;padding:12px 0 4px;position:sticky;top:0;background:#fff;z-index:1">
+      <div style="width:36px;height:4px;border-radius:2px;background:#e5e5e5"></div>
     </div>
-    <div class="admin-content">
-    <div class="px-4 py-4 space-y-3">
-      <div>
-        <label class="text-xs text-gray-500 mb-1 block">商品名稱</label>
-        <input id="editName" type="text" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
-      </div>
-      <div>
-        <label class="text-xs text-gray-500 mb-1 block">商品編號</label>
-        <input id="editIdnumber" type="text" placeholder="idnumber"
-          class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+
+    <!-- Header -->
+    <div style="padding:8px 20px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f2f2f2;position:sticky;top:28px;background:#fff;z-index:1">
+      <div style="font-size:17px;font-weight:700">編輯商品</div>
+      <div style="display:flex;gap:8px;align-items:center" id="topbarActions"></div>
+    </div>
+
+    <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+      <!-- 商品名稱 -->
+      <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+        <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">商品名稱</div>
+        <input id="editName" type="text" style="background:transparent;border:none;outline:none;font-size:15px;font-weight:500;color:#111;width:100%;padding:0">
       </div>
 
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="text-xs text-gray-500 mb-1 block">日幣原價</label>
-          <input id="editJprice" type="number" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+      <!-- 商品編號 -->
+      <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+        <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">商品編號</div>
+        <input id="editIdnumber" type="text" placeholder="idnumber" style="background:transparent;border:none;outline:none;font-size:15px;font-weight:500;color:#111;width:100%;padding:0">
+      </div>
+
+      <!-- 價格 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+          <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">日幣原價</div>
+          <input id="editJprice" type="number" style="background:transparent;border:none;outline:none;font-size:15px;font-weight:500;color:#111;width:100%;padding:0">
         </div>
-        <div>
-          <label class="text-xs text-gray-500 mb-1 block">日幣特價</label>
-          <input id="editJsprice" type="number" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+        <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+          <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">日幣特價</div>
+          <input id="editJsprice" type="number" style="background:transparent;border:none;outline:none;font-size:15px;font-weight:500;color:#111;width:100%;padding:0">
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="text-xs text-gray-500 mb-1 block">大分類</label>
-          <input id="editMainCat" type="text" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+
+      <!-- 分類 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+          <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">大分類</div>
+          <input id="editMainCat" type="text" style="background:transparent;border:none;outline:none;font-size:15px;font-weight:500;color:#111;width:100%;padding:0">
         </div>
-        <div>
-          <label class="text-xs text-gray-500 mb-1 block">小分類</label>
-          <input id="editCat" type="text" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
-        </div>
-      </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="text-xs text-gray-500 mb-1 block">重量（kg）</label>
-          <input id="editWeight" type="number" step="0.01" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
-        </div>
-        <div>
-          <label class="text-xs text-gray-500 mb-1 block">排序 <span class="text-gray-300">（數字小的排前面）</span></label>
-          <input id="editSort" type="number" placeholder="例：1" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+        <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+          <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">小分類</div>
+          <input id="editCat" type="text" style="background:transparent;border:none;outline:none;font-size:15px;font-weight:500;color:#111;width:100%;padding:0">
         </div>
       </div>
+
+      <!-- 重量 / 排序 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+          <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">重量（kg）</div>
+          <input id="editWeight" type="number" step="0.01" style="background:transparent;border:none;outline:none;font-size:15px;font-weight:500;color:#111;width:100%;padding:0">
+        </div>
+        <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+          <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">排序</div>
+          <input id="editSort" type="number" placeholder="數字小排前面" style="background:transparent;border:none;outline:none;font-size:15px;font-weight:500;color:#111;width:100%;padding:0">
+        </div>
+      </div>
+
       <!-- 特價結束日期 -->
-      <div>
-        <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block">特價結束日期 <span style="font-size:12px;color:#aaa">（填入後到期自動關閉）</span></label>
-        <input id="editSaleEnd" type="date" style="width:100%;border:1px solid #e5e5e5;border-radius:8px;padding:10px 12px;font-size:15px">
+      <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+        <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">特價結束日期 <span style="font-size:11px;color:#ccc">（到期自動關閉）</span></div>
+        <input id="editSaleEnd" type="date" style="background:transparent;border:none;outline:none;font-size:15px;font-weight:500;color:#111;width:100%;padding:0">
       </div>
 
       <!-- 圖片上傳 -->
-      <div>
-        <label class="text-xs text-gray-500 mb-2 block">圖片（第一張為主圖）</label>
+      <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+        <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:10px">圖片（第一張為主圖）</div>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px" id="editImgSlots"></div>
-        <button type="button" onclick="addEditImgSlot()"
-          class="w-full py-2 border border-dashed border-gray-300 rounded-xl text-xs text-gray-400 hover:border-gray-500 transition">
-          ＋ 新增圖片
-        </button>
+        <button type="button" onclick="addEditImgSlot()" style="width:100%;padding:10px;border:2px dashed #e5e5e5;border-radius:8px;font-size:13px;color:#aaa;background:#fff;cursor:pointer">＋ 新增圖片</button>
       </div>
 
       <!-- AI 生成 -->
-      <div class="bg-purple-50 rounded-xl p-3 border border-purple-100">
-        <div class="text-xs font-medium text-purple-700 mb-2">🤖 AI 生成描述</div>
-        <div class="flex gap-2">
+      <div style="background:#f5f3ff;border-radius:12px;padding:14px 16px;border:1px solid #ede9fe">
+        <div style="font-size:11px;color:#7c3aed;font-weight:700;letter-spacing:0.5px;margin-bottom:10px">🤖 AI 生成描述</div>
+        <div style="display:flex;gap:8px">
           <input id="editAiName" type="text" placeholder="輸入日文名稱或編號"
-            class="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
+            style="flex:1;border:1px solid #ede9fe;border-radius:8px;padding:10px 12px;font-size:14px;outline:none;background:#fff"
             onkeydown="if(event.key==='Enter') generateEditDesc()">
-          <button id="editAiBtn" onclick="generateEditDesc()"
-            class="px-3 py-2 bg-purple-600 text-white text-xs font-medium rounded-lg hover:bg-purple-700 transition shrink-0">
-            ✨ 生成
-          </button>
+          <button id="editAiBtn" onclick="generateEditDesc()" style="padding:10px 16px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0">✨ 生成</button>
         </div>
-        <p id="editAiStatus" class="text-xs mt-1.5 hidden"></p>
+        <p id="editAiStatus" style="font-size:12px;margin-top:8px;display:none"></p>
       </div>
 
-      <div>
-        <label class="text-xs text-gray-500 mb-1 block">商品描述</label>
-        <textarea id="editDesc" rows="5"
-          class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black resize-none"></textarea>
-      </div>
-      <div class="grid grid-cols-2 gap-2">
-        <label class="flex items-center gap-2 border rounded-xl px-3 py-2.5 cursor-pointer hover:bg-gray-50">
-          <input id="editIsView" type="checkbox" class="w-4 h-4 accent-black">
-          <span class="text-sm">上架</span>
-        </label>
-        <label class="flex items-center gap-2 border rounded-xl px-3 py-2.5 cursor-pointer hover:bg-gray-50">
-          <input id="editIsNew" type="checkbox" class="w-4 h-4 accent-black">
-          <span class="text-sm">🆕 新品</span>
-        </label>
-        <label class="flex items-center gap-2 border rounded-xl px-3 py-2.5 cursor-pointer hover:bg-gray-50">
-          <input id="editIsHot" type="checkbox" class="w-4 h-4 accent-black">
-          <span class="text-sm">🔥 熱賣</span>
-        </label>
-        <label class="flex items-center gap-2 border rounded-xl px-3 py-2.5 cursor-pointer hover:bg-gray-50">
-          <input id="editIsSale" type="checkbox" class="w-4 h-4 accent-black">
-          <span class="text-sm">🈹 特價</span>
-        </label>
+      <!-- 商品描述 -->
+      <div style="background:#f9f9f9;border-radius:12px;padding:14px 16px">
+        <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.5px;margin-bottom:6px">商品描述</div>
+        <textarea id="editDesc" rows="5" style="background:transparent;border:none;outline:none;font-size:14px;color:#111;width:100%;padding:0;resize:none;line-height:1.6"></textarea>
       </div>
 
-      <!-- 圖片上傳 -->
-      <div>
-        <label class="text-xs text-gray-500 mb-2 block">圖片（第一張為主圖）</label>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px" id="editImgSlots"></div>
-        <button type="button" onclick="addEditImgSlot()"
-          style="width:100%;padding:10px;border:2px dashed #e5e5e5;border-radius:8px;font-size:13px;color:#aaa;background:#fff;cursor:pointer">
-          ＋ 新增圖片
-        </button>
+      <!-- 標籤 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <label style="display:flex;align-items:center;gap:10px;background:#f9f9f9;border-radius:12px;padding:14px 16px;cursor:pointer">
+          <input id="editIsView" type="checkbox" style="width:18px;height:18px;accent-color:#111;flex-shrink:0">
+          <span style="font-size:14px;font-weight:500">上架</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;background:#f9f9f9;border-radius:12px;padding:14px 16px;cursor:pointer">
+          <input id="editIsNew" type="checkbox" style="width:18px;height:18px;accent-color:#111;flex-shrink:0">
+          <span style="font-size:14px;font-weight:500">🆕 新品</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;background:#f9f9f9;border-radius:12px;padding:14px 16px;cursor:pointer">
+          <input id="editIsHot" type="checkbox" style="width:18px;height:18px;accent-color:#111;flex-shrink:0">
+          <span style="font-size:14px;font-weight:500">🔥 熱賣</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;background:#f9f9f9;border-radius:12px;padding:14px 16px;cursor:pointer">
+          <input id="editIsSale" type="checkbox" style="width:18px;height:18px;accent-color:#111;flex-shrink:0">
+          <span style="font-size:14px;font-weight:500">🈹 特價</span>
+        </label>
       </div>
 
     </div>
 
     <!-- 儲存按鈕 -->
-    <div style="padding:16px 20px;border-top:1px solid #e5e5e5;background:#fff;position:sticky;bottom:0">
-      <button id="editSaveBtn" onclick="saveEdit()"
-        style="width:100%;padding:16px;background:#111;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer">
-        儲存變更
-      </button>
-      <button onclick="closeEdit()"
-        style="width:100%;padding:12px;background:#fff;color:#666;border:1px solid #e5e5e5;border-radius:10px;font-size:15px;cursor:pointer;margin-top:8px">
-        取消
-      </button>
+    <div style="padding:16px;border-top:1px solid #f2f2f2;background:#fff;position:sticky;bottom:0;display:flex;flex-direction:column;gap:8px">
+      <button id="editSaveBtn" onclick="saveEdit()" style="width:100%;padding:16px;background:#111;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer">儲存變更</button>
+      <button onclick="closeEdit()" style="width:100%;padding:14px;background:#f9f9f9;color:#666;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer">取消</button>
     </div>
   </div>
 </div>

@@ -239,110 +239,113 @@ if (sessionStorage.getItem("adminAuth") !== "1") location.href = "admin.html";
 <!-- 訂單詳情 Modal -->
 <!-- 後台修改商品 Modal -->
 <div id="adminItemsModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);align-items:flex-end;justify-content:center">
-  <div class="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[85vh] flex flex-col">
-    <div class="flex justify-between items-center px-5 py-4 border-b shrink-0">
-      <h3 class="font-bold text-base">修改商品</h3>
-      <button onclick="closeAdminItemsModal()" class="text-gray-400 hover:text-black text-xl">✕</button>
+  <div style="background:#fff;width:100%;max-width:520px;border-radius:20px 20px 0 0;max-height:85vh;display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:center;padding:12px 0 4px"><div style="width:36px;height:4px;border-radius:2px;background:#e5e5e5"></div></div>
+    <div style="padding:8px 20px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f2f2f2">
+      <div style="font-size:17px;font-weight:700">修改商品</div>
+      <button onclick="closeAdminItemsModal()" style="width:34px;height:34px;border-radius:50%;background:#f2f2f2;border:none;font-size:18px;color:#666;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
     </div>
-    <div id="adminItemsEditor" class="flex-1 overflow-y-auto px-5 py-4 space-y-3"></div>
-    <div class="px-5 py-4 border-t shrink-0 space-y-2">
-      <div class="flex justify-between text-sm font-bold">
-        <span>新合計</span>
-        <span id="adminItemsNewTotal" class="text-red-500"></span>
+    <div id="adminItemsEditor" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px"></div>
+    <div style="padding:16px;border-top:1px solid #f2f2f2;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#f9f9f9;border-radius:12px">
+        <span style="font-size:14px;font-weight:600">新合計</span>
+        <span id="adminItemsNewTotal" style="font-size:16px;font-weight:700;color:#e24b4a"></span>
       </div>
-      <div id="adminItemsDetail" class="text-xs text-gray-400"></div>
-      <p id="adminItemsSaveStatus" class="text-xs text-center hidden"></p>
-      <button id="adminItemsSaveBtn" onclick="adminSaveItems()"
-        class="w-full py-3 bg-black text-white font-medium rounded-xl text-sm">儲存變更</button>
+      <div id="adminItemsDetail" style="font-size:12px;color:#aaa;text-align:center"></div>
+      <p id="adminItemsSaveStatus" style="font-size:12px;text-align:center;display:none"></p>
+      <button id="adminItemsSaveBtn" onclick="adminSaveItems()" style="width:100%;padding:16px;background:#111;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer">儲存變更</button>
     </div>
   </div>
 </div>
 
 <!-- 後台編輯集運 Modal -->
 <div id="adminBundleModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);align-items:flex-end;justify-content:center">
-  <div class="bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl max-h-[85vh] flex flex-col">
-    <div class="flex justify-between items-center px-5 py-4 border-b shrink-0">
-      <h3 class="font-bold text-base" id="adminBundleTitle">編輯集運批次</h3>
-      <button onclick="closeAdminBundleModal()" class="text-gray-400 hover:text-black text-xl">✕</button>
+  <div style="background:#fff;width:100%;max-width:520px;border-radius:20px 20px 0 0;max-height:85vh;display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:center;padding:12px 0 4px"><div style="width:36px;height:4px;border-radius:2px;background:#e5e5e5"></div></div>
+    <div style="padding:8px 20px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f2f2f2">
+      <div style="font-size:17px;font-weight:700" id="adminBundleTitle">編輯集運批次</div>
+      <button onclick="closeAdminBundleModal()" style="width:34px;height:34px;border-radius:50%;background:#f2f2f2;border:none;font-size:18px;color:#666;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
     </div>
-    <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+    <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px">
       <div>
-        <div class="text-xs font-semibold text-blue-500 mb-2">📦 批次內的訂單</div>
-        <div id="adminBundleIn" class="space-y-2"></div>
+        <div style="font-size:11px;font-weight:700;color:#1d4ed8;letter-spacing:0.5px;margin-bottom:8px">📦 批次內的訂單</div>
+        <div id="adminBundleIn" style="display:flex;flex-direction:column;gap:8px"></div>
       </div>
       <div>
-        <div class="text-xs font-semibold text-gray-500 mb-2">➕ 可加入的待處理訂單</div>
-        <div id="adminBundleOut" class="space-y-2"></div>
+        <div style="font-size:11px;font-weight:700;color:#aaa;letter-spacing:0.5px;margin-bottom:8px">➕ 可加入的待處理訂單</div>
+        <div id="adminBundleOut" style="display:flex;flex-direction:column;gap:8px"></div>
       </div>
     </div>
-    <div class="px-5 py-4 border-t shrink-0">
-      <button onclick="closeAdminBundleModal()" class="w-full py-3 border rounded-xl text-sm text-gray-500 hover:bg-gray-50">關閉</button>
+    <div style="padding:16px">
+      <button onclick="closeAdminBundleModal()" style="width:100%;padding:14px;background:#f9f9f9;color:#666;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer">關閉</button>
     </div>
   </div>
 </div>
 
 <div id="modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);align-items:flex-end;justify-content:center">
-  <div class="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto">
+  <div style="background:#fff;width:100%;max-width:520px;border-radius:20px 20px 0 0;max-height:90vh;display:flex;flex-direction:column">
 
-    <!-- Modal Header -->
-    <div class="admin-topbar">
-      <div style="display:flex;flex-direction:column;gap:2px">
-        <span id="modalOrderId" style="font-size:15px;font-weight:700;color:#111"></span>
-        <span id="modalDate" style="font-size:12px;color:#aaa"></span>
-        <span id="modalBundleId" style="font-size:11px;color:#1d4ed8;display:none"></span>
-      </div>
-      <div class="topbar-actions" id="topbarActions"></div>
+    <!-- Handle -->
+    <div style="display:flex;justify-content:center;padding:12px 0 4px">
+      <div style="width:36px;height:4px;border-radius:2px;background:#e5e5e5"></div>
     </div>
-    <div class="admin-content">
-      <div class="flex items-center gap-2">
-        <button onclick="deleteOrder()"
-          class="text-xs text-red-400 hover:text-red-600 px-2 py-1 rounded-lg hover:bg-red-50 transition">
+
+    <!-- Header -->
+    <div style="padding:8px 20px 14px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #f2f2f2">
+      <div>
+        <div style="font-size:11px;color:#aaa;font-weight:500;letter-spacing:0.5px;margin-bottom:4px">訂單資料</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span id="modalOrderId" style="font-size:15px;font-weight:700;color:#111"></span>
+          <span id="modalBundleId" style="font-size:11px;color:#1d4ed8;display:none"></span>
+          <span id="modalDate" style="font-size:12px;color:#aaa"></span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button onclick="deleteOrder()" style="display:flex;align-items:center;gap:4px;padding:8px 12px;background:#fef2f2;color:#e24b4a;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">
           🗑 刪除
         </button>
-        <button onclick="closeModal()" class="text-gray-400 hover:text-black text-xl w-8 h-8 flex items-center justify-center">✕</button>
+        <button onclick="closeModal()" style="width:34px;height:34px;border-radius:50%;background:#f2f2f2;border:none;font-size:18px;color:#666;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
       </div>
     </div>
 
-    <div class="px-4 py-4 space-y-4">
+    <!-- 內容 -->
+    <div style="flex:1;overflow-y:auto;padding:16px 16px 32px;display:flex;flex-direction:column;gap:12px">
 
-      <!-- 狀態更新 -->
+      <!-- 狀態 -->
       <div>
-        <div class="text-xs text-gray-500 mb-2 font-medium">訂單狀態</div>
-        <div id="statusBtns" style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:4px;margin-bottom:12px"></div>
+        <div style="font-size:11px;font-weight:700;color:#aaa;letter-spacing:0.5px;margin-bottom:8px">訂單狀態</div>
+        <div id="statusBtns" style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:4px"></div>
       </div>
 
       <!-- 客戶資料 -->
-      <div class="bg-gray-50 rounded-xl p-3 space-y-2">
-        <div class="flex justify-between items-center mb-1">
-          <span class="text-xs font-medium text-gray-500">客戶資料</span>
-          <span id="modalCustomerId" class="text-xs font-bold text-blue-500"></span>
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:11px;font-weight:700;color:#aaa;letter-spacing:0.5px">客戶資料</div>
+          <span id="modalCustomerId" style="font-size:12px;font-weight:700;color:#1d4ed8"></span>
         </div>
-        <div id="customerInfo">
-          <div class="text-xs text-gray-400 text-center py-2">載入中...</div>
+        <div id="customerInfo" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="text-align:center;color:#aaa;font-size:13px;padding:12px;grid-column:span 2">載入中...</div>
         </div>
       </div>
 
       <!-- 訂單明細 -->
       <div>
-        <div class="flex justify-between items-center mb-2">
-          <div class="text-xs font-medium text-gray-500">訂單明細</div>
-          <button id="adminEditItemsBtn" onclick="openAdminItemsModal()"
-            class="text-xs px-2 py-1 border rounded-lg text-gray-500 hover:bg-gray-50" style="display:none">
-            ✏️ 修改商品
-          </button>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:11px;font-weight:700;color:#aaa;letter-spacing:0.5px">訂單明細</div>
+          <button id="adminEditItemsBtn" onclick="openAdminItemsModal()" style="display:none;padding:6px 12px;background:#f2f2f2;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">✏️ 修改商品</button>
         </div>
-        <div id="modalItems" class="space-y-1.5"></div>
-        <div id="modalDiscountRow" style="display:none" class="flex justify-between items-center mt-2 text-sm text-green-600">
+        <div id="modalItems" style="display:flex;flex-direction:column;gap:8px"></div>
+        <div id="modalDiscountRow" style="display:none;justify-content:space-between;align-items:center;margin-top:8px;padding:10px 14px;background:#f0fdf4;border-radius:10px;font-size:13px;color:#15803d">
           <span>🎉 滿NT$3,000折扣</span>
           <span id="modalDiscount"></span>
         </div>
-        <div id="modalShippingRow" class="flex justify-between items-center mt-1 text-sm text-gray-500">
+        <div id="modalShippingRow" style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding:10px 14px;background:#f9f9f9;border-radius:10px;font-size:13px;color:#666">
           <span>出貨手續費</span>
           <span id="modalShipping"></span>
         </div>
-        <div class="flex justify-between items-center mt-3 pt-3 border-t font-bold">
-          <span>合計</span>
-          <span class="text-red-500 text-lg" id="modalTotal"></span>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding:14px 16px;background:#111;border-radius:12px">
+          <span style="font-size:14px;font-weight:700;color:#fff">合計</span>
+          <span style="font-size:18px;font-weight:700;color:#f87171" id="modalTotal"></span>
         </div>
       </div>
 
