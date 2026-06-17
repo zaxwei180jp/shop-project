@@ -42,10 +42,10 @@ let activeSub  = "全部";
 function makeTab(label, isActive, isSub) {
   const btn = document.createElement("button");
   btn.textContent = label;
-  const base = "border-radius:8px;font-weight:600;text-align:center;cursor:pointer;border:1.5px solid;transition:all 0.15s;";
+  const base = "border-radius:8px;font-weight:600;text-align:center;cursor:pointer;border:1.5px solid;transition:all 0.15s;white-space:nowrap;flex-shrink:0;";
   const size = isSub
-    ? "padding:10px 6px;font-size:14px;"
-    : "padding:13px 8px;font-size:15px;";
+    ? "padding:10px 14px;font-size:14px;"
+    : "padding:12px 18px;font-size:14px;";
   const color = isActive
     ? "background:#111;color:#fff;border-color:#111;"
     : "background:#fff;color:#111;border-color:#e5e5e5;";
