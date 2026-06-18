@@ -98,13 +98,13 @@ function renderList() {
     cats.forEach(cat => {
       const items = allData.filter(p => p.mainCategory === cat && p.isView !== false);
       if (!items.length) return;
-      const show = items.slice(0, 4);
       const hasMore = items.length > 4;
+      const show = items.slice(0, hasMore ? 4 : items.length);
       html += `<div class="section-title">${cat}</div>`;
-      html += `<div class="product-grid">`;
+      html += `<div class="product-grid${hasMore ? ' has-more' : ''}">`;
       show.forEach(p => { html += renderCard(p); });
       if (hasMore) {
-        html += `<a href="index.html?main=${encodeURIComponent(cat)}" class="product-card" style="display:flex;align-items:center;justify-content:center;min-height:120px;color:var(--gray-600);font-size:15px;font-weight:500;text-decoration:none;background:var(--gray-50)">查看全部 ${items.length} 件 →</a>`;
+        html += `<a href="index.html?main=${encodeURIComponent(cat)}" class="product-card more-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:120px;color:var(--gray-500);font-size:14px;font-weight:500;text-decoration:none;background:var(--gray-50)"><span style="font-size:28px;line-height:1">→</span>查看全部<span style="font-size:13px">${items.length} 件</span></a>`;
       }
       html += `</div>`;
     });
