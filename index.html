@@ -7,6 +7,25 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
   <link rel="stylesheet" href="js/theme.css?v=2">
 
+
+  <style>
+    /* 首頁分類列：有「查看更多」時電腦版顯示5欄 */
+    @media (min-width: 768px) {
+      .product-grid.has-more {
+        grid-template-columns: repeat(5, 1fr) !important;
+      }
+      .more-card {
+        border-radius: var(--radius-sm);
+        border: 1.5px dashed var(--gray-300) !important;
+        transition: background 0.15s, border-color 0.15s;
+      }
+      .more-card:hover {
+        background: var(--gray-100) !important;
+        border-color: var(--gray-400) !important;
+        color: var(--gray-800) !important;
+      }
+    }
+  </style>
 </head>
 <body>
 
