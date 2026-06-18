@@ -27,6 +27,7 @@ let currentImgIdx = 0;
   const variants = Array.isArray(p.variants) ? p.variants : (p.variants||"").split(",").map(s=>s.trim()).filter(Boolean);
 
   wrap.innerHTML = `
+    <div style="max-width:780px;margin:0 auto">
     <!-- 麵包屑 -->
     <div style="padding:12px 16px;font-size:13px;color:var(--gray-400);display:flex;gap:6px;align-items:center">
       <a href="index.html" style="color:var(--gray-400);text-decoration:none">首頁</a>
@@ -113,6 +114,7 @@ let currentImgIdx = 0;
         <div style="font-size:12px;color:var(--gray-400);margin-bottom:4px">下一件 →</div>
         <div style="font-size:13px;font-weight:500;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${products[idx+1].name}</div>
       </a>` : `<div></div>`}
+    </div>
     </div>
   `;
 
