@@ -27,85 +27,100 @@ let currentImgIdx = 0;
   const variants = Array.isArray(p.variants) ? p.variants : (p.variants||"").split(",").map(s=>s.trim()).filter(Boolean);
 
   wrap.innerHTML = `
-    <div style="max-width:780px;margin:0 auto">
+    <style>
+      @media(min-width:768px){
+        #pdLayout{display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:start}
+        #pdLeft{position:sticky;top:56px}
+        #pdRight{padding:28px 28px 24px;overflow-y:auto}
+        #pdBreadcrumb{grid-column:1/-1}
+        #pdPrevNext{grid-column:1/-1}
+      }
+    </style>
+
     <!-- 麵包屑 -->
-    <div style="padding:12px 16px;font-size:13px;color:var(--gray-400);display:flex;gap:6px;align-items:center">
+    <div id="pdBreadcrumb" style="padding:12px 16px;font-size:13px;color:var(--gray-400);display:flex;gap:6px;align-items:center;max-width:1100px;margin:0 auto;width:100%">
       <a href="index.html" style="color:var(--gray-400);text-decoration:none">首頁</a>
       ${p.mainCategory ? `<span>›</span><span>${p.mainCategory}</span>` : ""}
       ${p.category     ? `<span>›</span><span>${p.category}</span>` : ""}
     </div>
 
-    <!-- 圖片 -->
-    <div style="position:relative;background:var(--gray-100)">
-      <img id="mainImg" src="${imagesArr[0]||p.image||''}" alt="${p.name}"
-        style="width:100%;aspect-ratio:1;object-fit:cover;display:block">
-      ${imagesArr.length > 1 ? `
-      <button id="prevBtn" onclick="goToImg(currentImgIdx-1)"
-        style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:40px;height:40px;background:rgba(255,255,255,0.9);border:none;border-radius:50%;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center">
-        <i class="ti ti-chevron-left"></i>
-      </button>
-      <button id="nextBtn" onclick="goToImg(currentImgIdx+1)"
-        style="position:absolute;right:12px;top:50%;transform:translateY(-50%);width:40px;height:40px;background:rgba(255,255,255,0.9);border:none;border-radius:50%;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center">
-        <i class="ti ti-chevron-right"></i>
-      </button>
-      <div id="dotNav" style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px">
-        ${imagesArr.map((_,i)=>`<div class="img-dot" style="width:${i===0?'20px':'8px'};height:8px;border-radius:4px;background:${i===0?'var(--black)':'rgba(255,255,255,0.7)'};transition:all 0.2s"></div>`).join("")}
-      </div>` : ""}
-    </div>
+    <div id="pdLayout" style="max-width:1100px;margin:0 auto;background:var(--white)">
 
-    <!-- 縮圖列 -->
-    ${imagesArr.length > 1 ? `
-    <div style="display:flex;gap:8px;padding:12px 16px;overflow-x:auto;background:var(--white);border-bottom:1px solid var(--gray-200)">
-      ${imagesArr.map((img,i)=>`
-        <img src="${img}" data-index="${i}" onclick="goToImg(${i})"
-          style="width:64px;height:64px;object-fit:cover;border-radius:var(--radius-sm);border:2px solid ${i===0?'var(--black)':'var(--gray-200)'};cursor:pointer;flex-shrink:0;transition:border-color 0.2s">
-      `).join("")}
-    </div>` : ""}
-
-    <!-- 商品資訊 -->
-    <div style="background:var(--white);padding:16px;margin-top:8px">
-      ${p.category ? `<div style="font-size:13px;color:var(--gray-400);margin-bottom:6px">${p.mainCategory||""}${p.mainCategory&&p.category?" · ":""}${p.category||""}</div>` : ""}
-      ${p.idnumber ? `<div style="font-size:12px;color:var(--gray-400);margin-bottom:6px">#${p.idnumber}</div>` : ""}
-      <div style="font-size:22px;font-weight:600;line-height:1.3;margin-bottom:14px">${p.name}</div>
-      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:20px">
-        <span style="font-size:28px;font-weight:700">${formatPrice(p.price)}</span>
-        ${p.isSale && p.originalPrice ? `<span style="font-size:16px;color:var(--gray-400);text-decoration:line-through">${formatPrice(p.originalPrice)}</span>` : ""}
+      <!-- 左欄：圖片 -->
+      <div id="pdLeft">
+        <!-- 主圖 -->
+        <div style="position:relative;background:var(--gray-100)">
+          <img id="mainImg" src="${imagesArr[0]||p.image||''}" alt="${p.name}"
+            style="width:100%;aspect-ratio:1;object-fit:cover;display:block">
+          ${imagesArr.length > 1 ? `
+          <button id="prevBtn" onclick="goToImg(currentImgIdx-1)"
+            style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:40px;height:40px;background:rgba(255,255,255,0.9);border:none;border-radius:50%;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center">
+            <i class="ti ti-chevron-left"></i>
+          </button>
+          <button id="nextBtn" onclick="goToImg(currentImgIdx+1)"
+            style="position:absolute;right:12px;top:50%;transform:translateY(-50%);width:40px;height:40px;background:rgba(255,255,255,0.9);border:none;border-radius:50%;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center">
+            <i class="ti ti-chevron-right"></i>
+          </button>
+          <div id="dotNav" style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px">
+            ${imagesArr.map((_,i)=>`<div class="img-dot" style="width:${i===0?'20px':'8px'};height:8px;border-radius:4px;background:${i===0?'var(--black)':'rgba(255,255,255,0.7)'};transition:all 0.2s"></div>`).join("")}
+          </div>` : ""}
+        </div>
+        <!-- 縮圖列 -->
+        ${imagesArr.length > 1 ? `
+        <div style="display:flex;gap:8px;padding:12px 16px;overflow-x:auto;background:var(--white);border-bottom:1px solid var(--gray-200)">
+          ${imagesArr.map((img,i)=>`
+            <img src="${img}" data-index="${i}" onclick="goToImg(${i})"
+              style="width:64px;height:64px;object-fit:cover;border-radius:var(--radius-sm);border:2px solid ${i===0?'var(--black)':'var(--gray-200)'};cursor:pointer;flex-shrink:0;transition:border-color 0.2s">
+          `).join("")}
+        </div>` : ""}
       </div>
 
-      ${variants.length ? `
-      <div style="margin-bottom:20px">
-        <div style="font-size:14px;font-weight:500;margin-bottom:10px">規格選擇</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px" id="variantBtns">
-          ${variants.map(v=>`
-            <button onclick="selectVariant('${v}')" data-v="${v}"
-              style="padding:8px 18px;border-radius:var(--radius);border:1.5px solid var(--gray-200);background:var(--white);font-size:14px;cursor:pointer">
-              ${v}
-            </button>`).join("")}
+      <!-- 右欄：商品資訊 -->
+      <div id="pdRight">
+        ${p.category ? `<div style="font-size:13px;color:var(--gray-400);margin-bottom:6px">${p.mainCategory||""}${p.mainCategory&&p.category?" · ":""}${p.category||""}</div>` : ""}
+        ${p.idnumber ? `<div style="font-size:12px;color:var(--gray-400);margin-bottom:6px">#${p.idnumber}</div>` : ""}
+        <div style="font-size:22px;font-weight:600;line-height:1.3;margin-bottom:14px">${p.name}</div>
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:20px">
+          <span style="font-size:28px;font-weight:700">${formatPrice(p.price)}</span>
+          ${p.isSale && p.originalPrice ? `<span style="font-size:16px;color:var(--gray-400);text-decoration:line-through">${formatPrice(p.originalPrice)}</span>` : ""}
         </div>
-      </div>` : ""}
 
-      <!-- 數量 -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-        <span style="font-size:15px;font-weight:500">數量</span>
-        <div style="display:flex;align-items:center;border:1.5px solid var(--gray-200);border-radius:var(--radius);overflow:hidden">
-          <button onclick="changeQty(-1)" style="width:48px;height:48px;background:var(--gray-50);border:none;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
-          <span id="qtyDisplay" style="width:56px;height:48px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;border-left:1px solid var(--gray-200);border-right:1px solid var(--gray-200)">1</span>
-          <button onclick="changeQty(1)"  style="width:48px;height:48px;background:var(--gray-50);border:none;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center">＋</button>
+        ${variants.length ? `
+        <div style="margin-bottom:20px">
+          <div style="font-size:14px;font-weight:500;margin-bottom:10px">規格選擇</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px" id="variantBtns">
+            ${variants.map(v=>`
+              <button onclick="selectVariant('${v}')" data-v="${v}"
+                style="padding:8px 18px;border-radius:var(--radius);border:1.5px solid var(--gray-200);background:var(--white);font-size:14px;cursor:pointer">
+                ${v}
+              </button>`).join("")}
+          </div>
+        </div>` : ""}
+
+        <!-- 數量 -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+          <span style="font-size:15px;font-weight:500">數量</span>
+          <div style="display:flex;align-items:center;border:1.5px solid var(--gray-200);border-radius:var(--radius);overflow:hidden">
+            <button onclick="changeQty(-1)" style="width:48px;height:48px;background:var(--gray-50);border:none;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
+            <span id="qtyDisplay" style="width:56px;height:48px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;border-left:1px solid var(--gray-200);border-right:1px solid var(--gray-200)">1</span>
+            <button onclick="changeQty(1)"  style="width:48px;height:48px;background:var(--gray-50);border:none;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center">＋</button>
+          </div>
         </div>
+
+        <button onclick="addToCart()" class="btn-primary" style="margin-bottom:12px">加入購物車</button>
+        <div id="addStatus" style="text-align:center;font-size:14px;color:var(--green);min-height:20px"></div>
+
+        ${p.description ? `
+        <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--gray-200)">
+          <div style="font-size:15px;font-weight:600;margin-bottom:10px">商品說明</div>
+          <div style="font-size:15px;line-height:1.8;color:var(--gray-800);white-space:pre-wrap">${p.description}</div>
+        </div>` : ""}
       </div>
 
-      <button onclick="addToCart()" class="btn-primary" style="margin-bottom:12px">加入購物車</button>
-      <div id="addStatus" style="text-align:center;font-size:14px;color:var(--green);min-height:20px"></div>
     </div>
-
-    ${p.description ? `
-    <div style="background:var(--white);padding:16px;margin-top:8px">
-      <div style="font-size:15px;font-weight:600;margin-bottom:10px">商品說明</div>
-      <div style="font-size:15px;line-height:1.8;color:var(--gray-800);white-space:pre-wrap">${p.description}</div>
-    </div>` : ""}
 
     <!-- 上一件 / 下一件 -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--gray-200);margin-top:8px">
+    <div id="pdPrevNext" style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--gray-200);margin-top:8px;max-width:1100px;margin-left:auto;margin-right:auto">
       ${idx > 0 ? `<a href="product.html?id=${products[idx-1].id}" style="background:var(--white);padding:14px 16px;text-decoration:none;color:var(--black)">
         <div style="font-size:12px;color:var(--gray-400);margin-bottom:4px">← 上一件</div>
         <div style="font-size:13px;font-weight:500;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${products[idx-1].name}</div>
@@ -114,7 +129,6 @@ let currentImgIdx = 0;
         <div style="font-size:12px;color:var(--gray-400);margin-bottom:4px">下一件 →</div>
         <div style="font-size:13px;font-weight:500;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${products[idx+1].name}</div>
       </a>` : `<div></div>`}
-    </div>
     </div>
   `;
 
