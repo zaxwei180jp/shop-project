@@ -203,8 +203,11 @@ if (sessionStorage.getItem("adminAuth") !== "1") location.href = "admin.html";
     <select id="filterStatus"
       class="border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black bg-white">
       <option value="all">全部</option>
-      <option value="on">上架中</option>
+      <option value="on">已上架</option>
       <option value="off">已下架</option>
+      <option value="hot">🔥 熱賣中</option>
+      <option value="new">🆕 新上架</option>
+      <option value="sale">🈹 特價中</option>
     </select>
   </div>
 
@@ -439,8 +442,11 @@ function renderList() {
     (p.name||"").toLowerCase().includes(kw) ||
     (p.idnumber||"").toLowerCase().includes(kw)
   );
-  if (status==="on")  list = list.filter(p => p.isView);
-  if (status==="off") list = list.filter(p => !p.isView);
+  if (status==="on")   list = list.filter(p => p.isView);
+  if (status==="off")  list = list.filter(p => !p.isView);
+  if (status==="hot")  list = list.filter(p => p.isHot);
+  if (status==="new")  list = list.filter(p => p.isNew);
+  if (status==="sale") list = list.filter(p => p.isSale);
   if (activeMain)     list = list.filter(p => p.mainCategory === activeMain);
   if (activeSub)      list = list.filter(p => p.category     === activeSub);
 
