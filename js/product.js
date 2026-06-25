@@ -27,16 +27,6 @@ let currentImgIdx = 0;
   const variants = Array.isArray(p.variants) ? p.variants : (p.variants||"").split(",").map(s=>s.trim()).filter(Boolean);
 
   wrap.innerHTML = `
-    <style>
-      @media(min-width:768px){
-        #pdLayout{display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:start}
-        #pdLeft{position:sticky;top:56px}
-        #pdRight{padding:28px 28px 24px;overflow-y:auto}
-        #pdBreadcrumb{max-width:1100px;margin-left:auto;margin-right:auto;width:100%}
-        #pdPrevNext{max-width:1100px;margin-left:auto;margin-right:auto}
-      }
-    </style>
-
     <!-- 麵包屑 -->
     <div id="pdBreadcrumb" style="padding:12px 16px;font-size:13px;color:var(--gray-400);display:flex;gap:6px;align-items:center">
       <a href="index.html" style="color:var(--gray-400);text-decoration:none">首頁</a>
