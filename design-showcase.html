@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>設計系統展示 | W-82</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="js/theme-premium.css">
+  
+  <style>
+    .showcase-container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+    .showcase-section { 
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+    .showcase-section h2 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .showcase-item {
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .showcase-item:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+    .showcase-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .showcase-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .color-swatch {
+      padding: 16px;
+      border-radius: var(--radius);
+      text-align: center;
+      color: var(--white);
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      transition: transform var(--transition-base);
+    }
+    .color-swatch:hover {
+      transform: scale(1.02);
+    }
+    .color-swatch.light {
+      color: var(--primary);
+      border: 1px solid var(--gray-200);
+    }
+  </style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html" class="logo">W-82</a>
+  <div class="nav-right">
+    <a href="index.html" class="nav-icon-btn" aria-label="回首頁">
+      <i class="ti ti-home"></i>
+    </a>
+  </div>
+</nav>
+
+<div class="showcase-container">
+  
+  <!-- 色彩系統 -->
+  <div class="showcase-section">
+    <h2><i class="ti ti-palette" style="font-size:28px"></i> 色彩系統</h2>
+    
+    <div class="showcase-item">
+      <span class="showcase-label">主要色彩</span>
+      <div class="showcase-grid">
+        <div class="color-swatch" style="background: var(--primary);" title="#1a1a1a">
+          主色 (Deep Black)<br>var(--primary)
+        </div>
+        <div class="color-swatch" style="background: var(--primary-light);" title="#2d2d2d">
+          主色淡化<br>var(--primary-light)
+        </div>
+        <div class="color-swatch" style="background: var(--accent);" title="#c9302c">
+          強調色 (Red)<br>var(--accent)
+        </div>
+        <div class="color-swatch" style="background: var(--success);" title="#059669">
+          成功 (Green)<br>var(--success)
+        </div>
+      </div>
+    </div>
+
+    <div class="showcase-item">
+      <span class="showcase-label">中性色調</span>
+      <div class="showcase-grid">
+        <div class="color-swatch light" style="background: var(--gray-50);" title="#fafafa">
+          Gray-50
+        </div>
+        <div class="color-swatch light" style="background: var(--gray-100);" title="#f3f4f6">
+          Gray-100
+        </div>
+        <div class="color-swatch light" style="background: var(--gray-200);" title="#e5e7eb">
+          Gray-200
+        </div>
+        <div class="color-swatch light" style="background: var(--gray-300);" title="#d1d5db">
+          Gray-300
+        </div>
+        <div class="color-swatch light" style="background: var(--gray-400);" title="#9ca3af">
+          Gray-400
+        </div>
+        <div class="color-swatch" style="background: var(--gray-500);" title="#6b7280">
+          Gray-500
+        </div>
+        <div class="color-swatch" style="background: var(--gray-600);" title="#4b5563">
+          Gray-600
+        </div>
+        <div class="color-swatch" style="background: var(--gray-700);" title="#374151">
+          Gray-700
+        </div>
+        <div class="color-swatch" style="background: var(--gray-800);" title="#1f2937">
+          Gray-800
+        </div>
+        <div class="color-swatch" style="background: var(--gray-900);" title="#111827">
+          Gray-900
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 排版系統 -->
+  <div class="showcase-section">
+    <h2><i class="ti ti-typography" style="font-size:28px"></i> 排版系統</h2>
+    
+    <div class="showcase-item">
+      <span class="showcase-label">標題階級</span>
+      <div style="font-size: 28px; font-weight: 700; margin-bottom: 12px;">28px - 頁面標題 / 大標題</div>
+      <div style="font-size: 24px; font-weight: 700; color: var(--gray-700); margin-bottom: 12px;">24px - 區段標題</div>
+      <div style="font-size: 20px; font-weight: 700; color: var(--gray-800); margin-bottom: 12px;">20px - 卡片標題</div>
+      <div style="font-size: 16px; font-weight: 700; color: var(--gray-800); margin-bottom: 12px;">16px - 子標題 / 按鈕文本</div>
+    </div>
+
+    <div class="showcase-item">
+      <span class="showcase-label">正文排版</span>
+      <div style="font-size: 15px; line-height: 1.6; color: var(--gray-700); margin-bottom: 12px;">
+        15px 正文 - 這是標準的正文大小，用於主要內容。行高設置為 1.6 以保證良好的可讀性。在各種裝置上都能清晰呈現。
+      </div>
+      <div style="font-size: 14px; line-height: 1.6; color: var(--gray-600); margin-bottom: 12px;">
+        14px 描述文本 - 用於次要內容、標籤和說明性文字。
+      </div>
+      <div style="font-size: 12px; line-height: 1.6; color: var(--gray-500); margin-bottom: 0;">
+        12px 標籤文本 - 用於標籤、分類和小型輔助信息。
+      </div>
+    </div>
+  </div>
+
+  <!-- 按鈕組件 -->
+  <div class="showcase-section">
+    <h2><i class="ti ti-button-plus" style="font-size:28px"></i> 按鈕</h2>
+    
+    <div class="showcase-item">
+      <span class="showcase-label">主要按鈕 (Primary)</span>
+      <button class="btn-primary" style="margin-bottom: 12px;">立即購買</button>
+      <p style="font-size: 13px; color: var(--gray-600); margin-top: 8px;">
+        用於主要操作。深灰黑漸變背景，白色文字。懸停時有升起效果。
+      </p>
+    </div>
+
+    <div class="showcase-item">
+      <span class="showcase-label">次要按鈕 (Secondary)</span>
+      <button class="btn-secondary" style="margin-bottom: 12px;">取消</button>
+      <p style="font-size: 13px; color: var(--gray-600); margin-top: 8px;">
+        用於替代操作。白色背景，深灰黑邊框。
+      </p>
+    </div>
+
+    <div class="showcase-item">
+      <span class="showcase-label">按鈕狀態</span>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <button class="btn-primary">正常狀態</button>
+        <button class="btn-primary" style="opacity: 0.6; cursor: not-allowed;">禁用狀態</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 卡片組件 -->
+  <div class="showcase-section">
+    <h2><i class="ti ti-card" style="font-size:28px"></i> 卡片組件</h2>
+    
+    <div class="showcase-item">
+      <span class="showcase-label">商品卡片</span>
+      <div class="product-grid" style="margin-top: 12px; gap: 16px; padding: 0;">
+        <a href="#" class="product-card" style="max-width: 200px;">
+          <div class="product-card-img-placeholder">📸</div>
+          <div class="product-card-body">
+            <div class="product-card-cat">New</div>
+            <div class="product-card-name">高級防曬乳液</div>
+            <span class="badge badge-new">新品</span>
+            <div class="product-card-price">¥199</div>
+          </div>
+        </a>
+        <a href="#" class="product-card" style="max-width: 200px;">
+          <div class="product-card-img-placeholder">🛍️</div>
+          <div class="product-card-body">
+            <div class="product-card-cat">Hot</div>
+            <div class="product-card-name">限時特價商品</div>
+            <span class="badge badge-hot">熱賣</span>
+            <div class="product-card-price">¥99<span class="product-card-orig">¥149</span></div>
+          </div>
+        </a>
+        <a href="#" class="product-card" style="max-width: 200px;">
+          <div class="product-card-img-placeholder">⏰</div>
+          <div class="product-card-body">
+            <div class="product-card-cat">Sale</div>
+            <div class="product-card-name">每日限定特賣</div>
+            <span class="badge badge-sale">特價</span>
+            <div class="product-card-price">¥79<span class="product-card-orig">¥129</span></div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="showcase-item">
+      <span class="showcase-label">區塊卡片</span>
+      <div class="card-block">
+        <div class="card-block-title">✨ 優質配件</div>
+        <div class="card-block-text">
+          精選日本原廠配件，品質保證。提供快速國際配送服務，支持多種付款方式。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 表單組件 -->
+  <div class="showcase-section">
+    <h2><i class="ti ti-forms" style="font-size:28px"></i> 表單元素</h2>
+    
+    <div class="showcase-item">
+      <div class="form-group">
+        <label>郵箱地址</label>
+        <input type="email" placeholder="your@email.com">
+      </div>
+      <div class="form-group">
+        <label>訊息</label>
+        <textarea placeholder="輸入你的訊息..."></textarea>
+      </div>
+    </div>
+
+    <div class="showcase-item">
+      <span class="showcase-label">徽章</span>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;">
+        <span class="badge badge-new">新品</span>
+        <span class="badge badge-hot">熱賣</span>
+        <span class="badge badge-sale">特價</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 警告框 -->
+  <div class="showcase-section">
+    <h2><i class="ti ti-alert-circle" style="font-size:28px"></i> 警告和提示</h2>
+    
+    <div class="showcase-item">
+      <span class="showcase-label">信息提示</span>
+      <div class="alert alert-info">💡 這是一條信息提示。用於傳達重要的非錯誤訊息。</div>
+    </div>
+
+    <div class="showcase-item">
+      <span class="showcase-label">成功提示</span>
+      <div class="alert alert-success">✓ 操作成功！您的訂單已經提交。</div>
+    </div>
+
+    <div class="showcase-item">
+      <span class="showcase-label">警告提示</span>
+      <div class="alert alert-warning">⚠️ 請注意：庫存有限，請盡快下單。</div>
+    </div>
+
+    <div class="showcase-item">
+      <span class="showcase-label">錯誤提示</span>
+      <div class="alert alert-error">✕ 發生錯誤：請檢查您的輸入並重試。</div>
+    </div>
+  </div>
+
+  <!-- 分類 Tab -->
+  <div class="showcase-section">
+    <h2><i class="ti ti-layout-list" style="font-size:28px"></i> 分類 Tab</h2>
+    
+    <div class="showcase-item">
+      <span class="showcase-label">可滑動分類</span>
+      <div class="cat-bar" style="margin-top: 12px; border: none; background: transparent; padding: 0;">
+        <div class="cat-chip active">全部</div>
+        <div class="cat-chip">日化用品</div>
+        <div class="cat-chip">食品</div>
+        <div class="cat-chip">電子產品</div>
+        <div class="cat-chip">服飾鞋帽</div>
+        <div class="cat-chip">家居用品</div>
+      </div>
+      <p style="font-size: 13px; color: var(--gray-600); margin-top: 12px;">
+        Tab 可以水平滑動。活躍 Tab 帶有深色漸變背景和陰影。
+      </p>
+    </div>
+  </div>
+
+  <!-- 間距系統 -->
+  <div class="showcase-section">
+    <h2><i class="ti ti-spacing" style="font-size:28px"></i> 間距系統</h2>
+    
+    <div class="showcase-item">
+      <span class="showcase-label">邊距 (Margin)</span>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-top: 12px;">
+        <div style="background: var(--gray-100); padding: 8px; border-radius: var(--radius); text-align: center; font-size: 12px;">mt-1 = 4px</div>
+        <div style="background: var(--gray-100); padding: 8px; border-radius: var(--radius); text-align: center; font-size: 12px;">mt-2 = 8px</div>
+        <div style="background: var(--gray-100); padding: 8px; border-radius: var(--radius); text-align: center; font-size: 12px;">mt-3 = 12px</div>
+        <div style="background: var(--gray-100); padding: 8px; border-radius: var(--radius); text-align: center; font-size: 12px;">mt-4 = 16px</div>
+      </div>
+    </div>
+
+    <div class="showcase-item">
+      <span class="showcase-label">圓角半徑</span>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-top: 12px;">
+        <div style="background: var(--primary); width: 100%; height: 60px; border-radius: 4px; text-align: center; color: var(--white); display: flex; align-items: center; justify-content: center; font-size: 12px;">radius-xs (4px)</div>
+        <div style="background: var(--primary); width: 100%; height: 60px; border-radius: 6px; text-align: center; color: var(--white); display: flex; align-items: center; justify-content: center; font-size: 12px;">radius-sm (6px)</div>
+        <div style="background: var(--primary); width: 100%; height: 60px; border-radius: 12px; text-align: center; color: var(--white); display: flex; align-items: center; justify-content: center; font-size: 12px;">radius (12px)</div>
+        <div style="background: var(--primary); width: 100%; height: 60px; border-radius: 16px; text-align: center; color: var(--white); display: flex; align-items: center; justify-content: center; font-size: 12px;">radius-lg (16px)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 陰影系統 -->
+  <div class="showcase-section">
+    <h2><i class="ti ti-shadow" style="font-size:28px"></i> 陰影系統</h2>
+    
+    <div class="showcase-item">
+      <span class="showcase-label">深度層級</span>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-top: 12px;">
+        <div style="background: var(--white); padding: 16px; border-radius: var(--radius); box-shadow: var(--shadow-xs); text-align: center; font-size: 12px;">shadow-xs<br>輕微陰影</div>
+        <div style="background: var(--white); padding: 16px; border-radius: var(--radius); box-shadow: var(--shadow-sm); text-align: center; font-size: 12px;">shadow-sm<br>小陰影</div>
+        <div style="background: var(--white); padding: 16px; border-radius: var(--radius); box-shadow: var(--shadow-md); text-align: center; font-size: 12px;">shadow-md<br>中等陰影</div>
+        <div style="background: var(--white); padding: 16px; border-radius: var(--radius); box-shadow: var(--shadow-lg); text-align: center; font-size: 12px;">shadow-lg<br>大陰影</div>
+        <div style="background: var(--white); padding: 16px; border-radius: var(--radius); box-shadow: var(--shadow-xl); text-align: center; font-size: 12px;">shadow-xl<br>超大陰影</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 實用指南 -->
+  <div class="showcase-section">
+    <h2><i class="ti ti-book" style="font-size:28px"></i> 使用指南</h2>
+    
+    <div class="showcase-item">
+      <div style="background: var(--gray-50); padding: 16px; border-radius: var(--radius); border-left: 4px solid var(--accent);">
+        <div style="font-weight: 600; color: var(--primary); margin-bottom: 8px;">📋 快速開始</div>
+        <ol style="font-size: 14px; color: var(--gray-700); line-height: 1.8; margin-left: 20px;">
+          <li>將所有 HTML 文件中的 <code>theme.css</code> 改為 <code>theme-premium.css</code></li>
+          <li>清除瀏覽器快取並刷新頁面</li>
+          <li>在各種裝置上測試以確保兼容性</li>
+          <li>查看 <code>DESIGN_UPGRADE.md</code> 獲取詳細說明</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="showcase-item">
+      <div style="background: var(--gray-50); padding: 16px; border-radius: var(--radius); border-left: 4px solid var(--success);">
+        <div style="font-weight: 600; color: var(--primary); margin-bottom: 8px;">✨ 主要改進</div>
+        <ul style="font-size: 14px; color: var(--gray-700); line-height: 1.8; margin-left: 20px;">
+          <li>✓ 精緻的色彩系統和漸變</li>
+          <li>✓ 優雅的陰影和深度效果</li>
+          <li>✓ 平滑的過渡和動畫</li>
+          <li>✓ 改進的排版和間距</li>
+          <li>✓ 更好的視覺層級感</li>
+          <li>✓ 增強的交互反饋</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<nav class="bottom-nav">
+  <a href="index.html" class="bnav-item"><i class="ti ti-home"></i>首頁</a>
+  <a href="hot.html" class="bnav-item"><i class="ti ti-flame"></i>熱賣</a>
+  <a href="sale.html" class="bnav-item"><i class="ti ti-tag"></i>特價</a>
+  <a href="search.html" class="bnav-item"><i class="ti ti-search"></i>搜尋</a>
+  <a href="order-status.html" class="bnav-item"><i class="ti ti-clipboard-list"></i>訂單</a>
+  <a href="about.html" class="bnav-item"><i class="ti ti-info-circle"></i>關於</a>
+</nav>
+
+</body>
+</html>
