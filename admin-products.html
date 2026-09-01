@@ -246,12 +246,32 @@ if (sessionStorage.getItem("adminAuth") !== "1") location.href = "admin.html";
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="text-xs text-gray-500 mb-1 block">日幣原價</label>
+          <label class="text-xs text-gray-500 mb-1 block">日幣線上價格</label>
+          <input id="editJpriceOnline" type="number" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+        </div>
+        <div>
+          <label class="text-xs text-gray-500 mb-1 block">日幣線上特價</label>
+          <input id="editJspriceOnline" type="number" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-gray-500 mb-1 block">日幣價格</label>
           <input id="editJprice" type="number" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
         </div>
         <div>
           <label class="text-xs text-gray-500 mb-1 block">日幣特價</label>
           <input id="editJsprice" type="number" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-gray-500 mb-1 block">台幣價格</label>
+          <input id="editTprice" type="number" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+        </div>
+        <div>
+          <label class="text-xs text-gray-500 mb-1 block">台幣特價</label>
+          <input id="editSprice" type="number" class="w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
         </div>
       </div>
       <div class="grid grid-cols-2 gap-3">
@@ -468,7 +488,8 @@ function renderList() {
           <div style="font-size:12px;color:#aaa">${[p.mainCategory,p.category].filter(Boolean).join(" · ")}</div>
           ${p.idnumber ? `<div style="font-size:11px;color:#bbb">#${p.idnumber}</div>` : ""}
           <div style="font-size:13px;color:#666;margin-top:4px">
-            <span style="font-weight:600">線上: ¥${Math.round(p.jprice||0).toLocaleString()}${p.jsprice ? ` / 特價: ¥${Math.round(p.jsprice).toLocaleString()}` : ""}</span>
+            <span style="font-weight:600">線上: ¥${Math.round(p.jprice_online||0).toLocaleString()}${p.jsprice_online ? ` / 特價: ¥${Math.round(p.jsprice_online).toLocaleString()}` : ""}</span>
+            <div style="font-size:11px;color:#999;margin-top:2px">日幣: ¥${Math.round(p.jprice||0).toLocaleString()} | 台幣: NT$${Math.round(p.tprice||0).toLocaleString()}</div>
           </div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
@@ -517,8 +538,12 @@ function openEdit(id) {
   const p = editingProduct;
   document.getElementById("editName").value     = p.name    || "";
   document.getElementById("editIdnumber").value = p.idnumber || "";
+  document.getElementById("editJpriceOnline").value  = p.jprice_online  || "";
+  document.getElementById("editJspriceOnline").value = p.jsprice_online || "";
   document.getElementById("editJprice").value   = p.jprice  || "";
   document.getElementById("editJsprice").value  = p.jsprice || "";
+  document.getElementById("editTprice").value   = p.tprice  || "";
+  document.getElementById("editSprice").value   = p.sprice  || "";
   document.getElementById("editWeight").value   = p.weight      || "";
   document.getElementById("editSort").value     = p.sort        || "";
   document.getElementById("editMainCat").value  = p.mainCategory|| "";
@@ -569,10 +594,21 @@ async function saveEdit() {
     saleEnd:      document.getElementById("editSaleEnd").value || null,
     update:       true,
   };
-  const jp  = document.getElementById("editJprice").value;
-  const jsp = document.getElementById("editJsprice").value;
-  if (jp)  payload.jprice  = Number(jp);
-  if (jsp) payload.jsprice = Number(jsp);
+  
+  // 所有 6 個價格字段
+  const jprice_online  = document.getElementById("editJpriceOnline").value;
+  const jsprice_online = document.getElementById("editJspriceOnline").value;
+  const jprice  = document.getElementById("editJprice").value;
+  const jsprice = document.getElementById("editJsprice").value;
+  const tprice  = document.getElementById("editTprice").value;
+  const sprice  = document.getElementById("editSprice").value;
+  
+  if (jprice_online)  payload.jprice_online  = Number(jprice_online);
+  if (jsprice_online) payload.jsprice_online = Number(jsprice_online);
+  if (jprice)  payload.jprice  = Number(jprice);
+  if (jsprice) payload.jsprice = Number(jsprice);
+  if (tprice)  payload.tprice  = Number(tprice);
+  if (sprice)  payload.sprice  = Number(sprice);
 
   // ⭐ 圖片
   // 不管有無圖片都送，讓 Notion 可以被清空
@@ -607,6 +643,12 @@ async function saveEdit() {
       idnumber:     payload.idnumber,
       image:        payload.image,
       images:       payload.images,
+      jprice_online:  payload.jprice_online,
+      jsprice_online: payload.jsprice_online,
+      jprice:  payload.jprice,
+      jsprice: payload.jsprice,
+      tprice:  payload.tprice,
+      sprice:  payload.sprice,
     });
 
     // ⭐ 重新排序（sort 小的排前面，沒有 sort 排最後）
