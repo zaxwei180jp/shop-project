@@ -487,10 +487,6 @@ function renderList() {
           <div style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px">${p.name}</div>
           <div style="font-size:12px;color:#aaa">${[p.mainCategory,p.category].filter(Boolean).join(" · ")}</div>
           ${p.idnumber ? `<div style="font-size:11px;color:#bbb">#${p.idnumber}</div>` : ""}
-          <div style="font-size:13px;color:#666;margin-top:4px">
-            <span style="font-weight:600">線上: ¥${Math.round(p.jprice_online||0).toLocaleString()}${p.jsprice_online ? ` / 特價: ¥${Math.round(p.jsprice_online).toLocaleString()}` : ""}</span>
-            <div style="font-size:11px;color:#999;margin-top:2px">日幣: ¥${Math.round(p.jprice||0).toLocaleString()} | 台幣: NT$${Math.round(p.tprice||0).toLocaleString()}</div>
-          </div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
           <span style="font-size:11px;padding:3px 8px;border-radius:6px;font-weight:600;${p.isView ? "background:#dcfce7;color:#15803d" : "background:#f2f2f2;color:#aaa"}">
@@ -538,8 +534,8 @@ function openEdit(id) {
   const p = editingProduct;
   document.getElementById("editName").value     = p.name    || "";
   document.getElementById("editIdnumber").value = p.idnumber || "";
-  document.getElementById("editJpriceOnline").value  = p.jprice_online  || "";
-  document.getElementById("editJspriceOnline").value = p.jsprice_online || "";
+  document.getElementById("editJpriceOnline").value  = p["jprice (online)"]  || "";
+  document.getElementById("editJspriceOnline").value = p["jsprice (online)"] || "";
   document.getElementById("editJprice").value   = p.jprice  || "";
   document.getElementById("editJsprice").value  = p.jsprice || "";
   document.getElementById("editTprice").value   = p.tprice  || "";
@@ -603,8 +599,8 @@ async function saveEdit() {
   const tprice  = document.getElementById("editTprice").value;
   const sprice  = document.getElementById("editSprice").value;
   
-  if (jprice_online)  payload.jprice_online  = Number(jprice_online);
-  if (jsprice_online) payload.jsprice_online = Number(jsprice_online);
+  if (jprice_online)  payload["jprice (online)"]  = Number(jprice_online);
+  if (jsprice_online) payload["jsprice (online)"] = Number(jsprice_online);
   if (jprice)  payload.jprice  = Number(jprice);
   if (jsprice) payload.jsprice = Number(jsprice);
   if (tprice)  payload.tprice  = Number(tprice);
@@ -643,8 +639,8 @@ async function saveEdit() {
       idnumber:     payload.idnumber,
       image:        payload.image,
       images:       payload.images,
-      jprice_online:  payload.jprice_online,
-      jsprice_online: payload.jsprice_online,
+      "jprice (online)":  payload["jprice (online)"],
+      "jsprice (online)": payload["jsprice (online)"],
       jprice:  payload.jprice,
       jsprice: payload.jsprice,
       tprice:  payload.tprice,
