@@ -24,8 +24,8 @@ export function renderCard(p) {
         ${(p.mainCategory||p.category) ? `<div class="product-card-cat">${p.mainCategory||""}${p.mainCategory&&p.category?" · ":""}${p.category||""}</div>` : ""}
         <div class="product-card-name">${p.name}</div>
         <div>
-          <span class="product-card-price">${formatPrice(p.price)}</span>
-          ${p.isSale && p.originalPrice ? `<span class="product-card-orig">${formatPrice(p.originalPrice)}</span>` : ""}
+          <span class="product-card-price">${formatPrice((p.jsprice || p.jprice) * 1.1)}</span>
+          ${p.isSale && p.jprice ? `<span class="product-card-orig">${formatPrice(p.jprice * 1.1)}</span>` : ""}
         </div>
       </div>
     </a>`;

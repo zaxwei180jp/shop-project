@@ -69,8 +69,8 @@ let currentImgIdx = 0;
         ${p.idnumber ? `<div style="font-size:12px;color:var(--gray-400);margin-bottom:6px">#${p.idnumber}</div>` : ""}
         <div style="font-size:22px;font-weight:600;line-height:1.3;margin-bottom:14px">${p.name}</div>
         <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:20px">
-          <span style="font-size:28px;font-weight:700">${formatPrice(p.price)}</span>
-          ${p.isSale && p.originalPrice ? `<span style="font-size:16px;color:var(--gray-400);text-decoration:line-through">${formatPrice(p.originalPrice)}</span>` : ""}
+          <span style="font-size:28px;font-weight:700">${formatPrice((p.jsprice || p.jprice) * 1.1)}</span>
+          ${p.isSale && p.jprice ? `<span style="font-size:16px;color:var(--gray-400);text-decoration:line-through">${formatPrice(p.jprice * 1.1)}</span>` : ""}
         </div>
 
         ${variants.length ? `

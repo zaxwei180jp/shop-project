@@ -172,7 +172,8 @@ async function init() {
     if (!p) return "";
 
     // 優惠碼：hinamecute → jprice * 0.3
-    let unitPrice = p.price;
+    // 默认使用日幣原價或特價 × 1.1 手續費
+    let unitPrice = Math.round((p.jsprice || p.jprice) * 1.1);
     if (appliedCoupon?.type === "jprice_rate" && p.jprice) {
       unitPrice = Math.round(p.jprice * appliedCoupon.rate);
     }
@@ -194,7 +195,7 @@ async function init() {
         <div style="flex:1;min-width:0">
           <div style="font-size:15px;font-weight:600;line-height:1.4;margin-bottom:4px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${p.name}</div>
           ${variant ? `<div style="font-size:13px;color:var(--gray-400);margin-bottom:4px">規格：${variant}</div>` : ""}
-          <div style="font-size:16px;font-weight:700;margin-bottom:8px">${formatPrice(unitPrice)}${appliedCoupon && p.jprice ? `<span style="font-size:12px;color:var(--gray-400);text-decoration:line-through;margin-left:6px">${formatPrice(p.price)}</span>` : ""}</div>
+          <div style="font-size:16px;font-weight:700;margin-bottom:8px">${formatPrice(unitPrice)}${appliedCoupon && p.jprice ? `<span style="font-size:12px;color:var(--gray-400);text-decoration:line-through;margin-left:6px">${formatPrice(p.jprice * 1.1)}</span>` : ""}</div>
           <div style="display:flex;align-items:center;justify-content:space-between">
             <div style="display:flex;align-items:center;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);overflow:hidden">
               <button onclick="updateQty('${cartKey}',-1)" style="width:36px;height:36px;background:var(--gray-50);border:none;font-size:20px;cursor:pointer">−</button>
