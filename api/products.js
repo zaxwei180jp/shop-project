@@ -95,8 +95,8 @@ export default async function handler(req, res) {
       const sprice  = Math.floor(getNumber(props.sprice));  // formula：台幣特價
       const jprice  = getNumber(props.jprice);  // 日幣價格
       const jsprice = getNumber(props.jsprice); // 日幣特價
-      const jprice_online  = getNumber(props.jprice_online);  // 日幣線上價格
-      const jsprice_online = getNumber(props.jsprice_online); // 日幣線上特價
+      const jprice_online  = getNumber(props["jprice (online)"]);  // 日幣線上價格
+      const jsprice_online = getNumber(props["jsprice (online)"]); // 日幣線上特價
 
       return {
         id: page.id,
@@ -117,10 +117,10 @@ export default async function handler(req, res) {
         idnumber:  getText(props.idnumber),            // ⭐ 商品編號（text）
         variants:  (props.variants?.multi_select || []).map(v => v.name),
         sort:    getNumber(props.sort),               // ⭐ 排序
+        "jprice (online)":  jprice_online,            // ⭐ 日幣線上價格
+        "jsprice (online)": jsprice_online,           // ⭐ 日幣線上特價
         jprice:  jprice,                                // ⭐ 日幣價格
         jsprice: jsprice,                               // ⭐ 日幣特價
-        jprice_online:  jprice_online,                  // ⭐ 日幣線上價格
-        jsprice_online: jsprice_online,                 // ⭐ 日幣線上特價
         tprice:  price,                                 // ⭐ 台幣價格
         sprice:  sprice,                                // ⭐ 台幣特價
         mainCategory: getSelect(props.mainCategory), // ⭐ 大分類
