@@ -1,7 +1,7 @@
 export const formatPrice = (n) =>
-  new Intl.NumberFormat("ja-JP", {
+  new Intl.NumberFormat("zh-TW", {
     style: "currency",
-    currency: "JPY",
+    currency: "TWD",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(Math.floor(Number(n || 0)));
