@@ -162,24 +162,24 @@ function loadSettings() {
 function saveCurrencySetting() {
   const currency = document.querySelector('input[name="currency"]:checked').value;
   localStorage.setItem('w82_currency', currency);
-  showStatus('✅ 貨幣設置已保存');
-  setTimeout(() => location.reload(), 800);
+  showStatus('✅ 貨幣設置已保存，回到首頁...');
+  setTimeout(() => window.location.href = 'index.html', 1000);
 }
 
 // 保存橫幅設置
 function saveBannerSetting() {
   const banner = document.querySelector('input[name="banner"]:checked').value;
   localStorage.setItem('w82_showBanner', banner);
-  showStatus('✅ 橫幅設置已保存');
-  setTimeout(() => location.reload(), 800);
+  showStatus('✅ 橫幅設置已保存，回到首頁...');
+  setTimeout(() => window.location.href = 'index.html', 1000);
 }
 
 // 保存購物車設置
 function saveCartSetting() {
   const cart = document.querySelector('input[name="cart"]:checked').value;
   localStorage.setItem('w82_enableCart', cart);
-  showStatus('✅ 購物車設置已保存');
-  setTimeout(() => location.reload(), 800);
+  showStatus('✅ 購物車設置已保存，回到首頁...');
+  setTimeout(() => window.location.href = 'index.html', 1000);
 }
 
 // 顯示保存提示
