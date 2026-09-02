@@ -7,6 +7,25 @@ const id      = new URLSearchParams(location.search).get("id");
 let products = [];
 let currentImgIdx = 0;
 
+// 取得設置
+const currency = localStorage.getItem('w82_currency') || 'TWD';
+const enableCart = localStorage.getItem('w82_enableCart') !== 'false';
+
+// 根據貨幣設置計算價格
+function getDisplayPrice(p) {
+  if (currency === 'JPY') {
+    return (p.jsprice || p.jprice) * 1.1;
+  }
+  return p.sprice || p.tprice || p.price;
+}
+
+function getOriginalPrice(p) {
+  if (currency === 'JPY') {
+    return p.jprice * 1.1;
+  }
+  return p.sprice;
+}
+
 (async () => {
   try {
     const res = await fetch(API);
@@ -69,8 +88,8 @@ let currentImgIdx = 0;
         ${p.idnumber ? `<div style="font-size:12px;color:var(--gray-400);margin-bottom:6px">#${p.idnumber}</div>` : ""}
         <div style="font-size:22px;font-weight:600;line-height:1.3;margin-bottom:14px">${p.name}</div>
         <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:20px">
-          <span style="font-size:28px;font-weight:700">${formatPrice(p.tprice || p.price)}</span>
-          ${p.isSale && p.sprice ? `<span style="font-size:16px;color:var(--gray-400);text-decoration:line-through">${formatPrice(p.sprice)}</span>` : ""}
+          <span style="font-size:28px;font-weight:700">${formatPrice(getDisplayPrice(p))}</span>
+          ${p.isSale && getOriginalPrice(p) ? `<span style="font-size:16px;color:var(--gray-400);text-decoration:line-through">${formatPrice(getOriginalPrice(p))}</span>` : ""}
         </div>
 
         ${variants.length ? `
@@ -95,7 +114,7 @@ let currentImgIdx = 0;
           </div>
         </div>
 
-        <button onclick="addToCart()" class="btn-primary" style="margin-bottom:12px">加入購物車</button>
+        <button onclick="addToCart()" class="btn-primary" style="margin-bottom:12px${enableCart ? '' : ';display:none'}"">加入購物車</button>
         <div id="addStatus" style="text-align:center;font-size:14px;color:var(--green);min-height:20px"></div>
 
         ${p.description ? `

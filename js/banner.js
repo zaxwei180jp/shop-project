@@ -4,6 +4,13 @@ export async function initBanner(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
+  // 檢查是否要顯示橫幅
+  const showBanner = localStorage.getItem('w82_showBanner') !== 'false';
+  if (!showBanner) {
+    container.classList.add("hidden");
+    return;
+  }
+
   try {
     const res     = await fetch(BANNER_API);
     const banners = await res.json();

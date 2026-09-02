@@ -1,6 +1,17 @@
 import { formatPrice } from "./utils.js";
 
 export function renderCard(p) {
+  const currency = localStorage.getItem('w82_currency') || 'TWD';
+  
+  // 根據貨幣設置選擇價格
+  const displayPrice = currency === 'JPY' 
+    ? (p.jsprice || p.jprice) * 1.1
+    : (p.sprice || p.tprice || p.price);
+  
+  const originalPrice = currency === 'JPY'
+    ? p.jprice * 1.1
+    : p.sprice;
+  
   const imagesArr = Array.isArray(p.images) ? p.images : (p.images||"").split(",").map(s=>s.trim()).filter(Boolean);
   const img = p.image || imagesArr[0] || "";
 
@@ -24,8 +35,8 @@ export function renderCard(p) {
         ${(p.mainCategory||p.category) ? `<div class="product-card-cat">${p.mainCategory||""}${p.mainCategory&&p.category?" · ":""}${p.category||""}</div>` : ""}
         <div class="product-card-name">${p.name}</div>
         <div>
-          <span class="product-card-price">${formatPrice(p.tprice || p.price)}</span>
-          ${p.isSale && p.sprice ? `<span class="product-card-orig">${formatPrice(p.sprice)}</span>` : ""}
+          <span class="product-card-price">${formatPrice(displayPrice)}</span>
+          ${p.isSale && originalPrice ? `<span class="product-card-orig">${formatPrice(originalPrice)}</span>` : ""}
         </div>
       </div>
     </a>`;
