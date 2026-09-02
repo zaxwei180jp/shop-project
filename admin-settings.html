@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>網站設置 | W-82</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- 頂部導航 -->
+<div class="sticky top-0 z-50 bg-white border-b shadow-sm">
+  <div class="flex items-center gap-3 px-4 py-3 max-w-6xl mx-auto">
+    <button onclick="history.back()" class="text-gray-400 hover:text-black text-xl">←</button>
+    <h1 class="font-bold text-base">網站設置</h1>
+  </div>
+</div>
+
+<!-- 主要內容 -->
+<div class="max-w-2xl mx-auto p-4 space-y-4">
+
+  <!-- 貨幣設置 -->
+  <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+    <div class="flex items-start justify-between">
+      <div>
+        <h2 class="font-bold text-lg mb-1">貨幣設置</h2>
+        <p class="text-sm text-gray-500">選擇網站顯示的價格貨幣</p>
+      </div>
+      <div class="text-2xl">💵</div>
+    </div>
+    
+    <div class="space-y-3 border-t pt-4">
+      <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" onclick="setCurrency('TWD')">
+        <input type="radio" id="currency-twd" name="currency" value="TWD" class="w-4 h-4">
+        <div>
+          <div class="font-semibold">台幣 (TWD)</div>
+          <div class="text-sm text-gray-500">顯示 NT$ 台幣價格</div>
+        </div>
+      </label>
+      
+      <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" onclick="setCurrency('JPY')">
+        <input type="radio" id="currency-jpy" name="currency" value="JPY" class="w-4 h-4">
+        <div>
+          <div class="font-semibold">日幣 (JPY)</div>
+          <div class="text-sm text-gray-500">顯示 ¥ 日幣價格</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <!-- 首頁橫幅設置 -->
+  <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+    <div class="flex items-start justify-between">
+      <div>
+        <h2 class="font-bold text-lg mb-1">首頁橫幅</h2>
+        <p class="text-sm text-gray-500">控制首頁上方圖片的顯示</p>
+      </div>
+      <div class="text-2xl">🖼️</div>
+    </div>
+    
+    <div class="space-y-3 border-t pt-4">
+      <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" onclick="setBanner(true)">
+        <input type="radio" id="banner-show" name="banner" value="true" class="w-4 h-4">
+        <div>
+          <div class="font-semibold">顯示</div>
+          <div class="text-sm text-gray-500">首頁顯示上方橫幅圖片</div>
+        </div>
+      </label>
+      
+      <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" onclick="setBanner(false)">
+        <input type="radio" id="banner-hide" name="banner" value="false" class="w-4 h-4">
+        <div>
+          <div class="font-semibold">隱藏</div>
+          <div class="text-sm text-gray-500">首頁不顯示上方橫幅圖片</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <!-- 購物車功能設置 -->
+  <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+    <div class="flex items-start justify-between">
+      <div>
+        <h2 class="font-bold text-lg mb-1">購物車功能</h2>
+        <p class="text-sm text-gray-500">控制「加入購物車」按鈕的顯示</p>
+      </div>
+      <div class="text-2xl">🛒</div>
+    </div>
+    
+    <div class="space-y-3 border-t pt-4">
+      <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" onclick="setCart(true)">
+        <input type="radio" id="cart-enable" name="cart" value="true" class="w-4 h-4">
+        <div>
+          <div class="font-semibold">啟用</div>
+          <div class="text-sm text-gray-500">顯示「加入購物車」按鈕</div>
+        </div>
+      </label>
+      
+      <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" onclick="setCart(false)">
+        <input type="radio" id="cart-disable" name="cart" value="false" class="w-4 h-4">
+        <div>
+          <div class="font-semibold">停用</div>
+          <div class="text-sm text-gray-500">隱藏「加入購物車」按鈕</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <!-- 保存狀態提示 -->
+  <div id="status" class="hidden bg-green-50 border border-green-200 rounded-lg p-4 text-green-700 text-sm">
+    ✅ 設置已保存
+  </div>
+
+</div>
+
+<script>
+// 初始化設置
+document.addEventListener('DOMContentLoaded', () => {
+  const currency = localStorage.getItem('w82_currency') || 'TWD';
+  const showBanner = localStorage.getItem('w82_showBanner') !== 'false';
+  const enableCart = localStorage.getItem('w82_enableCart') !== 'false';
+  
+  document.getElementById('currency-' + currency.toLowerCase()).checked = true;
+  document.getElementById('banner-' + (showBanner ? 'show' : 'hide')).checked = true;
+  document.getElementById('cart-' + (enableCart ? 'enable' : 'disable')).checked = true;
+});
+
+// 設置貨幣
+function setCurrency(value) {
+  localStorage.setItem('w82_currency', value);
+  showStatus();
+  setTimeout(() => location.reload(), 800);
+}
+
+// 設置橫幅
+function setBanner(value) {
+  localStorage.setItem('w82_showBanner', value ? 'true' : 'false');
+  showStatus();
+  setTimeout(() => location.reload(), 800);
+}
+
+// 設置購物車
+function setCart(value) {
+  localStorage.setItem('w82_enableCart', value ? 'true' : 'false');
+  showStatus();
+  setTimeout(() => location.reload(), 800);
+}
+
+// 顯示保存提示
+function showStatus() {
+  const status = document.getElementById('status');
+  status.classList.remove('hidden');
+  setTimeout(() => status.classList.add('hidden'), 2000);
+}
+</script>
+
+</body>
+</html>
