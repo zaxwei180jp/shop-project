@@ -35,6 +35,7 @@
       <a href="admin-banners.html"  class="sidebar-item"><i class="ti ti-photo"></i>輪播管理</a>
       <a href="admin-batch-add.html"      class="sidebar-item"><i class="ti ti-list-check"></i>批次上架</a>
       <a href="admin-batch-generate.html" class="sidebar-item"><i class="ti ti-sparkles"></i>AI 批次生成</a>
+      <a onclick="showSettings()" class="sidebar-item" style="cursor:pointer"><i class="ti ti-settings"></i>網站設置</a>
     </nav>
     <div class="sidebar-footer">
       <a href="index.html" target="_blank" class="sidebar-item"><i class="ti ti-external-link"></i>前往商店</a>
@@ -44,7 +45,64 @@
     <div class="admin-topbar">
       <span class="topbar-title">主控台</span>
     </div>
-    <div class="admin-content">
+    <div id="settingsPanel" style="display:none;padding:20px">
+      <h2 style="font-size:22px;font-weight:600;margin-bottom:20px">網站設置</h2>
+      
+      <!-- 貨幣設置 -->
+      <div style="background:#fff;border-radius:10px;border:1px solid #e5e5e5;padding:20px;margin-bottom:16px">
+        <div style="font-size:16px;font-weight:600;margin-bottom:12px">💵 貨幣設置</div>
+        <p style="font-size:13px;color:#999;margin-bottom:12px">選擇網站顯示的價格貨幣</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="radio" name="currency" value="TWD" style="cursor:pointer">
+            <span>台幣 (TWD)</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="radio" name="currency" value="JPY" style="cursor:pointer">
+            <span>日幣 (JPY)</span>
+          </label>
+        </div>
+        <button onclick="saveCurrencySetting()" style="margin-top:12px;padding:8px 16px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">保存設置</button>
+      </div>
+
+      <!-- 首頁橫幅設置 -->
+      <div style="background:#fff;border-radius:10px;border:1px solid #e5e5e5;padding:20px;margin-bottom:16px">
+        <div style="font-size:16px;font-weight:600;margin-bottom:12px">🖼️ 首頁橫幅</div>
+        <p style="font-size:13px;color:#999;margin-bottom:12px">控制首頁上方圖片的顯示</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="radio" name="banner" value="true" style="cursor:pointer">
+            <span>顯示</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="radio" name="banner" value="false" style="cursor:pointer">
+            <span>隱藏</span>
+          </label>
+        </div>
+        <button onclick="saveBannerSetting()" style="margin-top:12px;padding:8px 16px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">保存設置</button>
+      </div>
+
+      <!-- 購物車功能設置 -->
+      <div style="background:#fff;border-radius:10px;border:1px solid #e5e5e5;padding:20px;margin-bottom:16px">
+        <div style="font-size:16px;font-weight:600;margin-bottom:12px">🛒 購物車功能</div>
+        <p style="font-size:13px;color:#999;margin-bottom:12px">控制「加入購物車」按鈕的顯示</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="radio" name="cart" value="true" style="cursor:pointer">
+            <span>啟用</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="radio" name="cart" value="false" style="cursor:pointer">
+            <span>停用</span>
+          </label>
+        </div>
+        <button onclick="saveCartSetting()" style="margin-top:12px;padding:8px 16px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">保存設置</button>
+      </div>
+
+      <div id="settingsStatus" style="margin-top:12px;padding:12px;border-radius:8px;text-align:center;display:none;font-size:14px"></div>
+    </div>
+
+    <div id="dashboardPanel">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px">
         <a href="admin-orders.html" class="card" style="text-decoration:none;color:inherit;display:block">
           <div style="font-size:13px;color:var(--gray-400);margin-bottom:6px">訂單管理</div>
@@ -73,6 +131,73 @@
 
 <script>
 sessionStorage.setItem("adminAuth","1");
+
+// 顯示設置面板
+function showSettings() {
+  document.getElementById('settingsPanel').style.display = 'block';
+  document.getElementById('dashboardPanel').style.display = 'none';
+  document.querySelector('.topbar-title').textContent = '網站設置';
+  loadSettings();
+}
+
+// 顯示主控台
+function showDashboard() {
+  document.getElementById('settingsPanel').style.display = 'none';
+  document.getElementById('dashboardPanel').style.display = 'block';
+  document.querySelector('.topbar-title').textContent = '主控台';
+}
+
+// 加載設置
+function loadSettings() {
+  const currency = localStorage.getItem('w82_currency') || 'TWD';
+  const banner = localStorage.getItem('w82_showBanner') !== 'false';
+  const cart = localStorage.getItem('w82_enableCart') !== 'false';
+
+  document.querySelector('input[name="currency"][value="' + currency + '"]').checked = true;
+  document.querySelector('input[name="banner"][value="' + banner + '"]').checked = true;
+  document.querySelector('input[name="cart"][value="' + cart + '"]').checked = true;
+}
+
+// 保存貨幣設置
+function saveCurrencySetting() {
+  const currency = document.querySelector('input[name="currency"]:checked').value;
+  localStorage.setItem('w82_currency', currency);
+  showStatus('✅ 貨幣設置已保存');
+  setTimeout(() => location.reload(), 800);
+}
+
+// 保存橫幅設置
+function saveBannerSetting() {
+  const banner = document.querySelector('input[name="banner"]:checked').value;
+  localStorage.setItem('w82_showBanner', banner);
+  showStatus('✅ 橫幅設置已保存');
+  setTimeout(() => location.reload(), 800);
+}
+
+// 保存購物車設置
+function saveCartSetting() {
+  const cart = document.querySelector('input[name="cart"]:checked').value;
+  localStorage.setItem('w82_enableCart', cart);
+  showStatus('✅ 購物車設置已保存');
+  setTimeout(() => location.reload(), 800);
+}
+
+// 顯示保存提示
+function showStatus(msg) {
+  const status = document.getElementById('settingsStatus');
+  status.textContent = msg;
+  status.style.display = 'block';
+  status.style.background = '#dcfce7';
+  status.style.color = '#15803d';
+  setTimeout(() => status.style.display = 'none', 2000);
+}
+
+// 為主控台按鈕添加點擊事件
+document.addEventListener('DOMContentLoaded', () => {
+  const logo = document.querySelector('.sidebar-logo');
+  if (logo) logo.style.cursor = 'pointer';
+  logo.addEventListener('click', showDashboard);
+});
 </script>
 
 <nav class="admin-bottom-nav" style="display:none">
