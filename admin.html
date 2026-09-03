@@ -54,7 +54,7 @@
         <p style="font-size:13px;color:#999;margin-bottom:12px">選擇網站顯示的價格貨幣</p>
         <div style="display:flex;gap:12px;flex-wrap:wrap">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="radio" name="currency" value="TWD" style="cursor:pointer">
+            <input type="radio" name="currency" value="TWD" checked style="cursor:pointer">
             <span>台幣 (TWD)</span>
           </label>
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
@@ -70,7 +70,7 @@
         <p style="font-size:13px;color:#999;margin-bottom:12px">控制首頁上方圖片的顯示</p>
         <div style="display:flex;gap:12px;flex-wrap:wrap">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="radio" name="banner" value="true" style="cursor:pointer">
+            <input type="radio" name="banner" value="true" checked style="cursor:pointer">
             <span>顯示</span>
           </label>
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
@@ -86,7 +86,7 @@
         <p style="font-size:13px;color:#999;margin-bottom:12px">控制「加入購物車」按鈕的顯示</p>
         <div style="display:flex;gap:12px;flex-wrap:wrap">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="radio" name="cart" value="true" style="cursor:pointer">
+            <input type="radio" name="cart" value="true" checked style="cursor:pointer">
             <span>啟用</span>
           </label>
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
@@ -151,30 +151,45 @@ function showDashboard() {
 // 加載設置
 function loadSettings() {
   console.log('=== Loading Settings ===');
-  console.log('All localStorage keys:', Object.keys(localStorage));
   
-  const currency = localStorage.getItem('w82_currency') || 'TWD';
-  const banner = localStorage.getItem('w82_showBanner') || 'true';
-  const cart = localStorage.getItem('w82_enableCart') || 'true';
-  
-  console.log('Loaded values:', { currency, banner, cart });
-  
-  // 必須明確檢查存在後才能勾選
-  const currencyRadio = document.querySelector('input[name="currency"][value="' + currency + '"]');
-  const bannerRadio = document.querySelector('input[name="banner"][value="' + banner + '"]');
-  const cartRadio = document.querySelector('input[name="cart"][value="' + cart + '"]');
-  
-  console.log('Found radios:', { currencyRadio, bannerRadio, cartRadio });
-  
-  if (currencyRadio) currencyRadio.checked = true;
-  if (bannerRadio) bannerRadio.checked = true;
-  if (cartRadio) cartRadio.checked = true;
-  
-  console.log('Settings loaded and applied');
+  try {
+    const currency = localStorage.getItem('w82_currency') || 'TWD';
+    const banner = localStorage.getItem('w82_showBanner') || 'true';
+    const cart = localStorage.getItem('w82_enableCart') || 'true';
+    
+    console.log('Loaded from localStorage:', { currency, banner, cart });
+    
+    // 重新勾選 radio 按鈕
+    const currencyRadio = document.querySelector('input[name="currency"][value="' + currency + '"]');
+    const bannerRadio = document.querySelector('input[name="banner"][value="' + banner + '"]');
+    const cartRadio = document.querySelector('input[name="cart"][value="' + cart + '"]');
+    
+    if (currencyRadio) currencyRadio.checked = true;
+    if (bannerRadio) bannerRadio.checked = true;
+    if (cartRadio) cartRadio.checked = true;
+    
+    console.log('✓ Settings loaded and applied');
+  } catch (e) {
+    console.error('Error loading settings:', e);
+  }
 }
 
-// 頁面加載時執行
-window.addEventListener('DOMContentLoaded', loadSettings);
+// 確保在頁面加載時執行
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', loadSettings);
+} else {
+  loadSettings();
+}
+
+// 簡單的測試保存函數
+function quickTestSave() {
+  console.log('🔧 Quick test save...');
+  localStorage.setItem('w82_showBanner', 'false');
+  localStorage.setItem('w82_enableCart', 'false');
+  console.log('✓ Test saved');
+  console.log('w82_showBanner:', localStorage.getItem('w82_showBanner'));
+  console.log('w82_enableCart:', localStorage.getItem('w82_enableCart'));
+}
 
 // 保存所有設置
 function saveAllSettings() {
@@ -194,11 +209,7 @@ function saveAllSettings() {
 
     if (!currencyRadio || !bannerRadio || !cartRadio) {
       console.error('❌ Missing radio selection');
-      const status = document.getElementById('settingsStatus');
-      status.style.display = 'block';
-      status.style.background = '#fee2e2';
-      status.style.color = '#991b1b';
-      status.textContent = '❌ 請選擇所有設置';
+      alert('請選擇所有設置');
       return;
     }
 
@@ -207,15 +218,15 @@ function saveAllSettings() {
     const banner = bannerRadio.value;
     const cart = cartRadio.value;
     
+    console.log('About to save:', { currency, banner, cart });
+    
     localStorage.setItem('w82_currency', currency);
     localStorage.setItem('w82_showBanner', banner);
     localStorage.setItem('w82_enableCart', cart);
     
-    console.log('✓ Saved to localStorage:', { currency, banner, cart });
-    console.log('✓ Verify saved values:');
-    console.log('  w82_currency:', localStorage.getItem('w82_currency'));
-    console.log('  w82_showBanner:', localStorage.getItem('w82_showBanner'));
-    console.log('  w82_enableCart:', localStorage.getItem('w82_enableCart'));
+    console.log('✓ Saved to localStorage');
+    console.log('✓ Verify - w82_showBanner:', localStorage.getItem('w82_showBanner'));
+    console.log('✓ Verify - w82_enableCart:', localStorage.getItem('w82_enableCart'));
 
     // 顯示成功訊息
     const status = document.getElementById('settingsStatus');
@@ -225,13 +236,14 @@ function saveAllSettings() {
     status.style.borderRadius = '8px';
     status.textContent = '✅ 所有設置已保存！';
     
+    // 3秒後隱藏訊息
+    setTimeout(() => {
+      status.style.display = 'none';
+    }, 3000);
+    
   } catch (e) {
     console.error('❌ Save error:', e);
-    const status = document.getElementById('settingsStatus');
-    status.style.display = 'block';
-    status.style.background = '#fee2e2';
-    status.style.color = '#991b1b';
-    status.textContent = '❌ 保存失敗: ' + e.message;
+    alert('保存失敗: ' + e.message);
   }
 }
 
