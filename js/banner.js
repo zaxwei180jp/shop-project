@@ -5,12 +5,18 @@ export async function initBanner(containerId) {
   if (!container) return;
 
   // 檢查是否要顯示橫幅
-  const showBanner = localStorage.getItem('w82_showBanner') !== 'false';
-  console.log('Banner setting:', { showBanner, stored: localStorage.getItem('w82_showBanner') });
+  const storedValue = localStorage.getItem('w82_showBanner');
+  const showBanner = storedValue !== 'false';
+  console.log('=== Banner Init Debug ===');
+  console.log('w82_showBanner stored value:', storedValue);
+  console.log('Type of storedValue:', typeof storedValue);
+  console.log('showBanner result:', showBanner);
   if (!showBanner) {
     container.style.display = 'none';
+    console.log('✓ Banner HIDDEN because w82_showBanner is "false"');
     return;
   }
+  console.log('✓ Banner SHOWING because w82_showBanner is not "false"');
 
   try {
     const res     = await fetch(BANNER_API);

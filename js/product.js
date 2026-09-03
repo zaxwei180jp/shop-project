@@ -9,8 +9,12 @@ let currentImgIdx = 0;
 
 // 取得設置
 const currency = localStorage.getItem('w82_currency') || 'TWD';
-const enableCart = localStorage.getItem('w82_enableCart') !== 'false';
-console.log('Cart enabled:', enableCart, 'localStorage value:', localStorage.getItem('w82_enableCart'));
+const storedCartValue = localStorage.getItem('w82_enableCart');
+const enableCart = storedCartValue !== 'false';
+console.log('=== Cart Init Debug ===');
+console.log('w82_enableCart stored value:', storedCartValue);
+console.log('Type of storedCartValue:', typeof storedCartValue);
+console.log('enableCart result:', enableCart);
 
 // 根據貨幣設置計算價格
 function getDisplayPrice(p) {
