@@ -119,7 +119,7 @@ function getOriginalPrice(p) {
           </div>
         </div>
 
-        <button onclick="addToCart()" class="btn-primary" style="margin-bottom:12px${enableCart ? '' : ';display:none'}">加入購物車</button>
+        <button onclick="addToCart()" class="btn-primary" style="margin-bottom:12px;display:none">加入購物車</button>
         <div id="addStatus" style="text-align:center;font-size:14px;color:var(--green);min-height:20px"></div>
 
         ${p.description ? `
