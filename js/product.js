@@ -19,9 +19,11 @@ console.log('enableCart result:', enableCart);
 // 根據貨幣設置計算價格
 function getDisplayPrice(p) {
   if (currency === 'JPY') {
-    return (p.jsprice || p.jprice) * 1.1;
+    // 日幣：如果在特價期間，顯示特價；否則顯示原價
+    return (p.isSale ? (p.jsprice || p.jprice) : p.jprice) * 1.1;
   }
-  return p.sprice || p.tprice || p.price;
+  // 台幣：如果在特價期間，顯示特價；否則顯示原價
+  return p.isSale ? (p.sprice || p.tprice) : p.tprice;
 }
 
 function getOriginalPrice(p) {

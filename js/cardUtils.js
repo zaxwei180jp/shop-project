@@ -4,9 +4,15 @@ export function renderCard(p) {
   const currency = localStorage.getItem('w82_currency') || 'TWD';
   
   // 根據貨幣設置選擇價格
-  const displayPrice = currency === 'JPY' 
-    ? (p.jsprice || p.jprice) * 1.1
-    : (p.sprice || p.tprice || p.price);
+  const displayPrice = (() => {
+    if (currency === 'JPY') {
+      // 日幣：如果在特價期間，顯示特價；否則顯示原價
+      return (p.isSale ? (p.jsprice || p.jprice) : p.jprice) * 1.1;
+    } else {
+      // 台幣：如果在特價期間，顯示特價；否則顯示原價
+      return p.isSale ? (p.sprice || p.tprice) : p.tprice;
+    }
+  })();
   
   const originalPrice = currency === 'JPY'
     ? p.jprice * 1.1
