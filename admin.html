@@ -150,44 +150,74 @@ function showDashboard() {
 
 // 加載設置
 function loadSettings() {
-  const currency = localStorage.getItem('w82_currency') || 'TWD';
-  const bannerVal = localStorage.getItem('w82_showBanner');
-  const cartVal = localStorage.getItem('w82_enableCart');
+  console.log('=== Loading Settings ===');
+  console.log('All localStorage keys:', Object.keys(localStorage));
   
-  // 轉換為字符串以匹配 radio 按鈕的值
-  const banner = (bannerVal === 'false') ? 'false' : 'true';
-  const cart = (cartVal === 'false') ? 'false' : 'true';
-
-  console.log('Loading settings:', { currency, banner, cart });
-  console.log('Raw localStorage:', { bannerVal, cartVal });
-
-  document.querySelector('input[name="currency"][value="' + currency + '"]').checked = true;
-  document.querySelector('input[name="banner"][value="' + banner + '"]').checked = true;
-  document.querySelector('input[name="cart"][value="' + cart + '"]').checked = true;
+  const currency = localStorage.getItem('w82_currency') || 'TWD';
+  const banner = localStorage.getItem('w82_showBanner') || 'true';
+  const cart = localStorage.getItem('w82_enableCart') || 'true';
+  
+  console.log('Loaded values:', { currency, banner, cart });
+  
+  // 必須明確檢查存在後才能勾選
+  const currencyRadio = document.querySelector('input[name="currency"][value="' + currency + '"]');
+  const bannerRadio = document.querySelector('input[name="banner"][value="' + banner + '"]');
+  const cartRadio = document.querySelector('input[name="cart"][value="' + cart + '"]');
+  
+  console.log('Found radios:', { currencyRadio, bannerRadio, cartRadio });
+  
+  if (currencyRadio) currencyRadio.checked = true;
+  if (bannerRadio) bannerRadio.checked = true;
+  if (cartRadio) cartRadio.checked = true;
+  
+  console.log('Settings loaded and applied');
 }
+
+// 頁面加載時執行
+window.addEventListener('DOMContentLoaded', loadSettings);
 
 // 保存所有設置
 function saveAllSettings() {
   try {
-    const currency = document.querySelector('input[name="currency"]:checked')?.value;
-    const banner = document.querySelector('input[name="banner"]:checked')?.value;
-    const cart = document.querySelector('input[name="cart"]:checked')?.value;
+    console.log('=== Saving Settings ===');
+    
+    // 獲取選中的值
+    const currencyRadio = document.querySelector('input[name="currency"]:checked');
+    const bannerRadio = document.querySelector('input[name="banner"]:checked');
+    const cartRadio = document.querySelector('input[name="cart"]:checked');
+    
+    console.log('Checked radios:', { 
+      currencyRadio: currencyRadio?.value, 
+      bannerRadio: bannerRadio?.value, 
+      cartRadio: cartRadio?.value 
+    });
 
-    console.log('Saving settings:', { currency, banner, cart });
-
-    if (currency) {
-      localStorage.setItem('w82_currency', String(currency));
-      console.log('✓ Saved w82_currency:', localStorage.getItem('w82_currency'));
-    }
-    if (banner !== undefined) {
-      localStorage.setItem('w82_showBanner', String(banner));
-      console.log('✓ Saved w82_showBanner:', localStorage.getItem('w82_showBanner'));
-    }
-    if (cart !== undefined) {
-      localStorage.setItem('w82_enableCart', String(cart));
-      console.log('✓ Saved w82_enableCart:', localStorage.getItem('w82_enableCart'));
+    if (!currencyRadio || !bannerRadio || !cartRadio) {
+      console.error('❌ Missing radio selection');
+      const status = document.getElementById('settingsStatus');
+      status.style.display = 'block';
+      status.style.background = '#fee2e2';
+      status.style.color = '#991b1b';
+      status.textContent = '❌ 請選擇所有設置';
+      return;
     }
 
+    // 保存到 localStorage
+    const currency = currencyRadio.value;
+    const banner = bannerRadio.value;
+    const cart = cartRadio.value;
+    
+    localStorage.setItem('w82_currency', currency);
+    localStorage.setItem('w82_showBanner', banner);
+    localStorage.setItem('w82_enableCart', cart);
+    
+    console.log('✓ Saved to localStorage:', { currency, banner, cart });
+    console.log('✓ Verify saved values:');
+    console.log('  w82_currency:', localStorage.getItem('w82_currency'));
+    console.log('  w82_showBanner:', localStorage.getItem('w82_showBanner'));
+    console.log('  w82_enableCart:', localStorage.getItem('w82_enableCart'));
+
+    // 顯示成功訊息
     const status = document.getElementById('settingsStatus');
     status.style.display = 'block';
     status.style.background = '#dcfce7';
@@ -195,12 +225,8 @@ function saveAllSettings() {
     status.style.borderRadius = '8px';
     status.textContent = '✅ 所有設置已保存！';
     
-    console.log('=== Final localStorage state ===');
-    console.log('w82_currency:', localStorage.getItem('w82_currency'));
-    console.log('w82_showBanner:', localStorage.getItem('w82_showBanner'));
-    console.log('w82_enableCart:', localStorage.getItem('w82_enableCart'));
   } catch (e) {
-    console.error('Save error:', e);
+    console.error('❌ Save error:', e);
     const status = document.getElementById('settingsStatus');
     status.style.display = 'block';
     status.style.background = '#fee2e2';
