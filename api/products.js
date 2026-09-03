@@ -84,10 +84,16 @@ export default async function handler(req, res) {
       const saleEndRaw = props.saleEnd?.date?.start || null;
       let isSale = getCheckbox(props.isSale);
       if (saleEndRaw) {
-        const now     = new Date();
-        const twNow   = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Taipei" }));
-        const saleEnd = new Date(saleEndRaw + "T23:59:59+08:00");
-        isSale = twNow <= saleEnd;
+        // 使用台灣時區獲取當前日期（YYYY-MM-DD 格式）
+        const now = new Date();
+        const twDate = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Taipei" }));
+        const todayStr = twDate.getFullYear() + "-" + 
+                         String(twDate.getMonth() + 1).padStart(2, "0") + "-" + 
+                         String(twDate.getDate()).padStart(2, "0");
+        
+        // 比較日期字符串（YYYY-MM-DD）
+        isSale = todayStr <= saleEndRaw;
+        console.log(`[Sale Check] Product: ${getText(props.tname)}, Today: ${todayStr}, SaleEnd: ${saleEndRaw}, isSale: ${isSale}`);
       }
       const isNew  = getCheckbox(props.isNew);
 
