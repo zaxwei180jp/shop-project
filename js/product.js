@@ -28,7 +28,7 @@ function getOriginalPrice(p) {
   if (currency === 'JPY') {
     return p.jprice * 1.1;
   }
-  return p.sprice;
+  return p.tprice;
 }
 
 (async () => {

@@ -10,7 +10,7 @@ export function renderCard(p) {
   
   const originalPrice = currency === 'JPY'
     ? p.jprice * 1.1
-    : p.sprice;
+    : p.tprice;
   
   const imagesArr = Array.isArray(p.images) ? p.images : (p.images||"").split(",").map(s=>s.trim()).filter(Boolean);
   const img = p.image || imagesArr[0] || "";
