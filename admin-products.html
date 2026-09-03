@@ -470,6 +470,11 @@ function renderList() {
   if (activeMain)     list = list.filter(p => p.mainCategory === activeMain);
   if (activeSub)      list = list.filter(p => p.category     === activeSub);
 
+  // 排序：上架商品在前，下架商品在後
+  if (status !== "off") {  // 除非明確篩選下架商品
+    list.sort((a, b) => (b.isView ? 1 : 0) - (a.isView ? 1 : 0));
+  }
+
   document.getElementById("productCount").textContent = `共 ${list.length} 件`;
 
   if (!list.length) {
