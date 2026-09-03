@@ -7,7 +7,7 @@ export async function initBanner(containerId) {
   // 檢查是否要顯示橫幅
   const showBanner = localStorage.getItem('w82_showBanner') !== 'false';
   if (!showBanner) {
-    container.classList.add("hidden");
+    container.style.display = 'none';
     return;
   }
 
