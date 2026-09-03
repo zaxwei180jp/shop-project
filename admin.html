@@ -62,7 +62,6 @@
             <span>日幣 (JPY)</span>
           </label>
         </div>
-        <button onclick="saveCurrencySetting()" style="margin-top:12px;padding:8px 16px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">保存設置</button>
       </div>
 
       <!-- 首頁橫幅設置 -->
@@ -79,7 +78,6 @@
             <span>隱藏</span>
           </label>
         </div>
-        <button onclick="saveBannerSetting()" style="margin-top:12px;padding:8px 16px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">保存設置</button>
       </div>
 
       <!-- 購物車功能設置 -->
@@ -96,9 +94,12 @@
             <span>停用</span>
           </label>
         </div>
-        <button onclick="saveCartSetting()" style="margin-top:12px;padding:8px 16px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">保存設置</button>
       </div>
 
+      <!-- 統一的保存按鈕 -->
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <button onclick="saveAllSettings()" style="flex:1;padding:12px 18px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-weight:600">💾 保存所有設置</button>
+      </div>
       <div id="settingsStatus" style="margin-top:12px;padding:12px;border-radius:8px;text-align:center;display:none;font-size:14px"></div>
     </div>
 
@@ -158,28 +159,38 @@ function loadSettings() {
   document.querySelector('input[name="cart"][value="' + cart + '"]').checked = true;
 }
 
-// 保存貨幣設置
-function saveCurrencySetting() {
-  const currency = document.querySelector('input[name="currency"]:checked').value;
-  localStorage.setItem('w82_currency', currency);
-  showStatus('✅ 貨幣設置已保存，回到首頁...');
-  setTimeout(() => window.location.href = 'index.html', 1000);
-}
+// 保存所有設置
+function saveAllSettings() {
+  try {
+    const currency = document.querySelector('input[name="currency"]:checked')?.value;
+    const banner = document.querySelector('input[name="banner"]:checked')?.value;
+    const cart = document.querySelector('input[name="cart"]:checked')?.value;
 
-// 保存橫幅設置
-function saveBannerSetting() {
-  const banner = document.querySelector('input[name="banner"]:checked').value;
-  localStorage.setItem('w82_showBanner', String(banner));
-  showStatus('✅ 橫幅設置已保存，回到首頁...');
-  setTimeout(() => window.location.href = 'index.html', 1000);
-}
+    if (currency) localStorage.setItem('w82_currency', currency);
+    if (banner) localStorage.setItem('w82_showBanner', banner);
+    if (cart) localStorage.setItem('w82_enableCart', cart);
 
-// 保存購物車設置
-function saveCartSetting() {
-  const cart = document.querySelector('input[name="cart"]:checked').value;
-  localStorage.setItem('w82_enableCart', String(cart));
-  showStatus('✅ 購物車設置已保存，回到首頁...');
-  setTimeout(() => window.location.href = 'index.html', 1000);
+    const status = document.getElementById('settingsStatus');
+    status.style.display = 'block';
+    status.style.background = '#dcfce7';
+    status.style.color = '#15803d';
+    status.style.borderRadius = '8px';
+    status.textContent = '✅ 所有設置已保存！';
+    
+    console.log('Settings saved:', { currency, banner, cart });
+    console.log('localStorage contents:', {
+      w82_currency: localStorage.getItem('w82_currency'),
+      w82_showBanner: localStorage.getItem('w82_showBanner'),
+      w82_enableCart: localStorage.getItem('w82_enableCart')
+    });
+  } catch (e) {
+    console.error('Save error:', e);
+    const status = document.getElementById('settingsStatus');
+    status.style.display = 'block';
+    status.style.background = '#fee2e2';
+    status.style.color = '#991b1b';
+    status.textContent = '❌ 保存失敗: ' + e.message;
+  }
 }
 
 // 顯示保存提示
