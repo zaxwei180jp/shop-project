@@ -10,6 +10,7 @@ let currentImgIdx = 0;
 // 取得設置
 const currency = localStorage.getItem('w82_currency') || 'TWD';
 const enableCart = localStorage.getItem('w82_enableCart') !== 'false';
+console.log('Cart enabled:', enableCart, 'localStorage value:', localStorage.getItem('w82_enableCart'));
 
 // 根據貨幣設置計算價格
 function getDisplayPrice(p) {

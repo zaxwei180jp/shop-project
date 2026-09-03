@@ -6,6 +6,7 @@ export async function initBanner(containerId) {
 
   // 檢查是否要顯示橫幅
   const showBanner = localStorage.getItem('w82_showBanner') !== 'false';
+  console.log('Banner setting:', { showBanner, stored: localStorage.getItem('w82_showBanner') });
   if (!showBanner) {
     container.style.display = 'none';
     return;
