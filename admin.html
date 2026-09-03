@@ -169,7 +169,7 @@ function saveCurrencySetting() {
 // 保存橫幅設置
 function saveBannerSetting() {
   const banner = document.querySelector('input[name="banner"]:checked').value;
-  localStorage.setItem('w82_showBanner', banner);
+  localStorage.setItem('w82_showBanner', String(banner));
   showStatus('✅ 橫幅設置已保存，回到首頁...');
   setTimeout(() => window.location.href = 'index.html', 1000);
 }
@@ -177,7 +177,7 @@ function saveBannerSetting() {
 // 保存購物車設置
 function saveCartSetting() {
   const cart = document.querySelector('input[name="cart"]:checked').value;
-  localStorage.setItem('w82_enableCart', cart);
+  localStorage.setItem('w82_enableCart', String(cart));
   showStatus('✅ 購物車設置已保存，回到首頁...');
   setTimeout(() => window.location.href = 'index.html', 1000);
 }
