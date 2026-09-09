@@ -13,20 +13,22 @@ export default async function handler(req, res) {
     const searchQuery = [jname, idnumber].filter(Boolean).join(" ") || productName;
     if (!searchQuery) return res.status(400).json({ error: "請提供商品資訊" });
 
-    const prompt = `搜尋 costco.co.jp 商品「${searchQuery}」，整理商品詳細資訊。
+    const prompt = `你是日本 Costco 商品專家。搜尋商品「${searchQuery}」。
 
-用繁體中文回覆。格式輸出（不加說明和markdown）：
+必須用繁體中文回覆。每行只有一個信息。格式如下（照抄格式）：
 
-商品名稱：[用繁體中文翻譯的商品名稱，例如：哈密瓜果糖漿綜合包]
-日文名稱：[日文原文名稱]
-商品編號：[編號]
+商品名稱：米老鼠葡萄乾混合包
+日文名稱：ミッキーマウスレーズンミックス
+商品編號：12345
 
 商品內容跟特點
-• [特點一]
-• [特點二]
-• [特點三]
-• [特點四]
-• [特點五]`;
+• 大容量500克，共50粒
+• 含有葡萄乾、蔓越莓、黑醋栗
+• 天然果乾，無添加糖
+• 適合全家享用
+• 方便攜帶
+
+只輸出這個格式，不要加入編號在名稱裡。`;
 
     // 調用 OpenAI ChatGPT API（gpt-3.5-turbo）
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
