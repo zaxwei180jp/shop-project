@@ -582,25 +582,45 @@ async function generateDescription() {
     if (!res.ok) throw new Error(data.error || "生成失敗");
 
     const text = data.text || "";
+    
+    console.log("=== AI Generated Text ===");
+    console.log(text);
+    console.log("=== End ===");
 
-    // 解析並填入欄位
-    const nameMatch  = text.match(/商品名稱[：:]\s*(.+)/);
-    const jnameMatch = text.match(/日文名稱[：:]\s*(.+)/);
-    const idMatch    = text.match(/商品編號[：:]\s*(.+)/);
+    // 解析並填入欄位 - 改進 regex 以處理各種格式
+    const nameMatch  = text.match(/商品名稱[：:]\s*([^\n]+)/);
+    const jnameMatch = text.match(/日文名稱[：:]\s*([^\n]+)/);
+    const idMatch    = text.match(/商品編號[：:]\s*([^\n]+)/);
     const descMatch  = text.match(/商品內容跟特點[\s\S]*/);
 
-    if (nameMatch)  document.getElementById("tname").value       = nameMatch[1].trim();
+    console.log("Parsing results:", { nameMatch, jnameMatch, idMatch });
+
+    if (nameMatch) {
+      const tnameValue = nameMatch[1].trim();
+      console.log("✓ Setting tname:", tnameValue);
+      document.getElementById("tname").value = tnameValue;
+    } else {
+      console.warn("❌ nameMatch failed");
+    }
+    
     if (jnameMatch) {
       const jnameEl = document.getElementById("jname");
-      if (jnameEl) jnameEl.value = jnameMatch[1].trim();
+      const jnameValue = jnameMatch[1].trim();
+      console.log("✓ Setting jname:", jnameValue);
+      if (jnameEl) jnameEl.value = jnameValue;
     }
+    
     if (idMatch) {
       const idnumEl = document.getElementById("idnumber");
-      if (idnumEl && !idnumEl.value) idnumEl.value = idMatch[1].trim();
+      const idValue = idMatch[1].trim();
+      console.log("✓ Setting idnumber:", idValue);
+      if (idnumEl && !idnumEl.value) idnumEl.value = idValue;
     }
+    
     if (descMatch) {
       // 移除商品名稱、日文名稱、商品編號那幾行，只保留描述部分
       const desc = descMatch[0].trim();
+      console.log("✓ Setting description");
       document.getElementById("description").value = desc;
     }
 
