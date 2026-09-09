@@ -587,44 +587,59 @@ async function generateDescription() {
     console.log(text);
     console.log("=== End ===");
 
-    // 改進的解析邏輯 - 分三步：先找到每個標籤位置，再提取內容
     let tname = "", jname = "", idnumber = "", description = "";
     
-    // 1. 找到商品名稱（在商品名稱: 和 日文名稱: 之間）
-    const tnameStart = text.indexOf("商品名稱");
-    const jnameStart = text.indexOf("日文名稱");
-    const idStart = text.indexOf("商品編號");
-    const descStart = text.indexOf("商品內容跟特點");
+    // 用更嚴格的方式提取 - 逐行解析
+    const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+    console.log("Lines:", lines);
     
-    console.log("Field positions:", { tnameStart, jnameStart, idStart, descStart });
-    
-    if (tnameStart !== -1 && jnameStart !== -1) {
-      // 提取商品名稱：從 "商品名稱：" 到 "日文名稱" 之間
-      const tnameContent = text.substring(tnameStart + 5, jnameStart).trim();
-      // 移除前面的冒號和標點
-      tname = tnameContent.replace(/^[：:]\s*/, "").split("\n")[0].trim();
-      console.log("✓ Extracted tname:", tname);
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      
+      if (line.startsWith("商品名稱：") || line.startsWith("商品名稱:")) {
+        // 提取商品名稱，去掉編號前綴（如 "67040 哈莫瓜..." → "哈莫瓜..."）
+        let name = line.replace(/^商品名稱[：:]\s*/, "").trim();
+        // 去掉前面的編號
+        name = name.replace(/^\d+\s+/, "");
+        tname = name;
+        console.log("✓ Found tname:", tname);
+      }
+      
+      else if (line.startsWith("日文名稱：") || line.startsWith("日文名稱:")) {
+        // 提取日文名稱，也去掉可能的編號前綴
+        let name = line.replace(/^日文名稱[：:]\s*/, "").trim();
+        name = name.replace(/^\d+\s+/, "");
+        jname = name;
+        console.log("✓ Found jname:", jname);
+      }
+      
+      else if (line.startsWith("商品編號：") || line.startsWith("商品編號:")) {
+        idnumber = line.replace(/^商品編號[：:]\s*/, "").trim();
+        console.log("✓ Found idnumber:", idnumber);
+      }
+      
+      else if (line.startsWith("商品內容跟特點")) {
+        // 從這行開始到結尾都是描述
+        description = lines.slice(i).join("\n").trim();
+        console.log("✓ Found description");
+        break;
+      }
     }
     
-    if (jnameStart !== -1 && idStart !== -1) {
-      // 提取日文名稱：從 "日文名稱：" 到 "商品編號" 之間
-      const jnameContent = text.substring(jnameStart + 5, idStart).trim();
-      jname = jnameContent.replace(/^[：:]\s*/, "").split("\n")[0].trim();
-      console.log("✓ Extracted jname:", jname);
+    // 安全檢查：確保名稱不是日文
+    if (tname && /[\u3040-\u309F\u30A0-\u30FF]/.test(tname)) {
+      console.warn("⚠️ tname contains Japanese characters, might need correction");
+      // 嘗試使用 jname 作為 tname（如果 tname 是日文）
+      if (jname && !/[\u3040-\u309F\u30A0-\u30FF]/.test(jname)) {
+        // jname 不是日文，說明抓反了
+        const temp = tname;
+        tname = jname;
+        jname = temp;
+        console.log("✓ Swapped tname and jname");
+      }
     }
     
-    if (idStart !== -1 && descStart !== -1) {
-      // 提取商品編號：從 "商品編號：" 到 "商品內容跟特點" 之間
-      const idContent = text.substring(idStart + 5, descStart).trim();
-      idnumber = idContent.replace(/^[：:]\s*/, "").split("\n")[0].trim();
-      console.log("✓ Extracted idnumber:", idnumber);
-    }
-    
-    if (descStart !== -1) {
-      // 提取描述：從 "商品內容跟特點" 之後
-      description = text.substring(descStart).trim();
-      console.log("✓ Extracted description");
-    }
+    console.log("Final values:", { tname, jname, idnumber });
     
     // 填入欄位
     if (tname) {
