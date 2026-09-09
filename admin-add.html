@@ -587,41 +587,72 @@ async function generateDescription() {
     console.log(text);
     console.log("=== End ===");
 
-    // 解析並填入欄位 - 改進 regex 以處理各種格式
-    const nameMatch  = text.match(/商品名稱[：:]\s*([^\n]+)/);
-    const jnameMatch = text.match(/日文名稱[：:]\s*([^\n]+)/);
-    const idMatch    = text.match(/商品編號[：:]\s*([^\n]+)/);
-    const descMatch  = text.match(/商品內容跟特點[\s\S]*/);
-
-    console.log("Parsing results:", { nameMatch, jnameMatch, idMatch });
-
-    if (nameMatch) {
-      const tnameValue = nameMatch[1].trim();
-      console.log("✓ Setting tname:", tnameValue);
-      document.getElementById("tname").value = tnameValue;
+    // 改進的解析邏輯 - 分三步：先找到每個標籤位置，再提取內容
+    let tname = "", jname = "", idnumber = "", description = "";
+    
+    // 1. 找到商品名稱（在商品名稱: 和 日文名稱: 之間）
+    const tnameStart = text.indexOf("商品名稱");
+    const jnameStart = text.indexOf("日文名稱");
+    const idStart = text.indexOf("商品編號");
+    const descStart = text.indexOf("商品內容跟特點");
+    
+    console.log("Field positions:", { tnameStart, jnameStart, idStart, descStart });
+    
+    if (tnameStart !== -1 && jnameStart !== -1) {
+      // 提取商品名稱：從 "商品名稱：" 到 "日文名稱" 之間
+      const tnameContent = text.substring(tnameStart + 5, jnameStart).trim();
+      // 移除前面的冒號和標點
+      tname = tnameContent.replace(/^[：:]\s*/, "").split("\n")[0].trim();
+      console.log("✓ Extracted tname:", tname);
+    }
+    
+    if (jnameStart !== -1 && idStart !== -1) {
+      // 提取日文名稱：從 "日文名稱：" 到 "商品編號" 之間
+      const jnameContent = text.substring(jnameStart + 5, idStart).trim();
+      jname = jnameContent.replace(/^[：:]\s*/, "").split("\n")[0].trim();
+      console.log("✓ Extracted jname:", jname);
+    }
+    
+    if (idStart !== -1 && descStart !== -1) {
+      // 提取商品編號：從 "商品編號：" 到 "商品內容跟特點" 之間
+      const idContent = text.substring(idStart + 5, descStart).trim();
+      idnumber = idContent.replace(/^[：:]\s*/, "").split("\n")[0].trim();
+      console.log("✓ Extracted idnumber:", idnumber);
+    }
+    
+    if (descStart !== -1) {
+      // 提取描述：從 "商品內容跟特點" 之後
+      description = text.substring(descStart).trim();
+      console.log("✓ Extracted description");
+    }
+    
+    // 填入欄位
+    if (tname) {
+      console.log("Setting tname to:", tname);
+      document.getElementById("tname").value = tname;
     } else {
-      console.warn("❌ nameMatch failed");
+      console.warn("❌ tname is empty");
     }
     
-    if (jnameMatch) {
+    if (jname) {
       const jnameEl = document.getElementById("jname");
-      const jnameValue = jnameMatch[1].trim();
-      console.log("✓ Setting jname:", jnameValue);
-      if (jnameEl) jnameEl.value = jnameValue;
+      if (jnameEl) {
+        console.log("Setting jname to:", jname);
+        jnameEl.value = jname;
+      }
     }
     
-    if (idMatch) {
-      const idnumEl = document.getElementById("idnumber");
-      const idValue = idMatch[1].trim();
-      console.log("✓ Setting idnumber:", idValue);
-      if (idnumEl && !idnumEl.value) idnumEl.value = idValue;
+    if (idnumber) {
+      const idEl = document.getElementById("idnumber");
+      if (idEl) {
+        console.log("Setting idnumber to:", idnumber);
+        idEl.value = idnumber;
+      }
     }
     
-    if (descMatch) {
-      // 移除商品名稱、日文名稱、商品編號那幾行，只保留描述部分
-      const desc = descMatch[0].trim();
-      console.log("✓ Setting description");
-      document.getElementById("description").value = desc;
+    if (description) {
+      console.log("Setting description");
+      document.getElementById("description").value = description;
     }
 
     status.textContent = "✅ 已生成並填入，請確認內容後繼續！";
