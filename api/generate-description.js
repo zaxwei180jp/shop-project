@@ -15,10 +15,10 @@ export default async function handler(req, res) {
 
     const prompt = `搜尋 costco.co.jp 商品「${searchQuery}」，整理商品詳細資訊。
 
-格式輸出（不加說明和markdown）：
+用繁體中文回覆。格式輸出（不加說明和markdown）：
 
-商品名稱：[繁體中文名稱]
-日文名稱：[日文名稱]
+商品名稱：[用繁體中文翻譯的商品名稱，例如：哈密瓜果糖漿綜合包]
+日文名稱：[日文原文名稱]
 商品編號：[編號]
 
 商品內容跟特點
