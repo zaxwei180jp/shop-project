@@ -547,61 +547,59 @@ function clearSlot(idx, slot) {
 }
 
 function formatProductDescription(tname, jname, idnumber, rawDesc) {
-  // 解析原始描述並格式化成結構化形式
-  const lines = rawDesc.split("\n").map(l => l.trim()).filter(Boolean);
+  console.log("📝 Formatting description (first 200 chars):", rawDesc.substring(0, 200));
+
+  const lines = rawDesc.split("\n").map(l => l.trim()).filter(l => l && l.length > 0);
 
   let result = "";
-
-  // 添加基本信息
   result += `商品名稱：${tname}\n`;
   result += `日文名稱：${jname}\n`;
   result += `商品編號：${idnumber}\n\n`;
 
-  // 提取各個部分
   let basicInfoLines = [];
   let detailDescLines = [];
   let importantLines = [];
-
   let currentSection = null;
 
-  for (const line of lines) {
-    if (line.includes("商品基本信息") || line.includes("【商品基本信息】")) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // 識別章節
+    if (line.includes("商品基本信息")) {
       currentSection = "basic";
       continue;
     }
-    if (line.includes("詳細描述") || line.includes("【詳細描述】")) {
+    if (line.includes("詳細描述")) {
       currentSection = "detail";
       continue;
     }
-    if (line.includes("重要說明") || line.includes("【重要說明】")) {
+    if (line.includes("重要說明")) {
       currentSection = "important";
       continue;
     }
 
-    if (line.length === 0) continue;
+    // 跳過含有【】的行
+    if (line.includes("【") || line.includes("】")) {
+      continue;
+    }
 
+    // 根據章節分類
     if (currentSection === "basic") {
-      // 清理格式：移除【】符號
-      if (!line.includes("【") && !line.includes("】")) {
-        basicInfoLines.push(line);
-      }
+      basicInfoLines.push(line);
     } else if (currentSection === "detail") {
-      if (!line.includes("【") && !line.includes("】")) {
-        detailDescLines.push(line);
-      }
+      detailDescLines.push(line);
     } else if (currentSection === "important") {
-      if (!line.includes("【") && !line.includes("】")) {
-        importantLines.push(line);
-      }
+      importantLines.push(line);
     }
   }
+
+  console.log("📊 Extracted sections:", {basic: basicInfoLines.length, detail: detailDescLines.length, important: importantLines.length});
 
   // 格式化輸出
   if (basicInfoLines.length > 0) {
     result += "【商品基本信息】\n";
     for (const line of basicInfoLines) {
-      // 確保每行以 * 開頭
-      const cleanLine = line.replace(/^[\*•-]\s*/, "").trim();
+      const cleanLine = line.replace(/^[\*•\-\s]+/, "").trim();
       if (cleanLine) {
         result += `* ${cleanLine}\n`;
       }
@@ -612,7 +610,7 @@ function formatProductDescription(tname, jname, idnumber, rawDesc) {
   if (detailDescLines.length > 0) {
     result += "【詳細描述】\n";
     for (const line of detailDescLines) {
-      const cleanLine = line.replace(/^[\*•-]\s*/, "").trim();
+      const cleanLine = line.replace(/^[\*•\-\s]+/, "").trim();
       if (cleanLine) {
         result += `${cleanLine}\n`;
       }
@@ -623,14 +621,14 @@ function formatProductDescription(tname, jname, idnumber, rawDesc) {
   if (importantLines.length > 0) {
     result += "【重要說明】\n";
     for (const line of importantLines) {
-      // 清理行首的符號，然後加 •
-      const cleanLine = line.replace(/^[\*•-]\s*/, "").trim();
+      const cleanLine = line.replace(/^[\*•\-\s]+/, "").trim();
       if (cleanLine) {
         result += `• ${cleanLine}\n`;
       }
     }
   }
 
+  console.log("✅ Formatted result length:", result.length);
   return result.trim();
 }
 
