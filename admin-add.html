@@ -667,8 +667,24 @@ async function generateDescription() {
     if (descParts.length > 0) {
       description = descParts.join("\n");
       console.log("✓ Found comprehensive description");
+    } else {
+      // 備用方案：直接使用所有未被識別的行
+      const leftoverLines = lines.filter(line =>
+        !line.includes("商品名稱") &&
+        !line.includes("日文名稱") &&
+        !line.includes("商品編號") &&
+        !line.includes("【") &&
+        !line.includes("】") &&
+        line.trim().length > 0
+      );
+      if (leftoverLines.length > 0) {
+        description = leftoverLines.join("\n");
+        console.log("✓ Using fallback description from remaining lines, length:", description.length);
+      }
     }
-    
+
+    console.log("Final description value:", description ? description.substring(0, 100) + "..." : "EMPTY");
+
     // 安全檢查：確保名稱不是日文
     if (tname && /[\u3040-\u309F\u30A0-\u30FF]/.test(tname)) {
       console.warn("⚠️ tname is only Japanese, using as jname and creating Chinese equivalent");
