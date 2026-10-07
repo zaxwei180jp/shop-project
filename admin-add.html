@@ -494,16 +494,46 @@ function addDetailSlot() {
 }
 
 function pickFile(idx, slot) {
-  const input = document.createElement("input"); input.type = "file"; input.accept = "image/*";
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.style.display = "none"; // 隱藏 input
+  document.body.appendChild(input); // 添加到 DOM
+
   input.onchange = async (e) => {
-    const file = e.target.files[0]; if (!file) return;
-    slot.querySelector(".slot-ph").style.display="none"; slot.querySelector(".slot-load").style.display="flex";
+    const file = e.target.files[0];
+    if (!file) {
+      document.body.removeChild(input);
+      return;
+    }
+
+    console.log(`準備上傳圖${idx+1}:`, file.name);
+    slot.querySelector(".slot-ph").style.display = "none";
+    slot.querySelector(".slot-load").style.display = "flex";
+
     try {
-      const url = await uploadToCloudinary(file); detailUrls[idx] = url;
-      slot.querySelector(".slot-img").src = url; slot.querySelector(".slot-img").style.display="block"; const delB=slot.querySelector(".slot-del"); delB.style.display="flex"; delB.style.alignItems="center"; delB.style.justifyContent="center"; slot.onclick = null; slot.style.cursor="default";
-    } catch { alert(`圖${idx+1}上傳失敗`); slot.querySelector(".slot-ph").style.display="flex"; }
-    finally { slot.querySelector(".slot-load").style.display="none"; }
-  }; input.click();
+      const url = await uploadToCloudinary(file);
+      console.log(`✓ 圖${idx+1}上傳成功:`, url);
+      detailUrls[idx] = url;
+      slot.querySelector(".slot-img").src = url;
+      slot.querySelector(".slot-img").style.display = "block";
+      const delB = slot.querySelector(".slot-del");
+      delB.style.display = "flex";
+      delB.style.alignItems = "center";
+      delB.style.justifyContent = "center";
+      slot.onclick = null;
+      slot.style.cursor = "default";
+    } catch (err) {
+      console.error(`圖${idx+1}上傳失敗:`, err);
+      alert(`圖${idx+1}上傳失敗: ${err.message}`);
+      slot.querySelector(".slot-ph").style.display = "flex";
+    } finally {
+      slot.querySelector(".slot-load").style.display = "none";
+      document.body.removeChild(input); // 清理 input
+    }
+  };
+
+  input.click();
 }
 
 function clearSlot(idx, slot) {
@@ -514,6 +544,94 @@ function clearSlot(idx, slot) {
   slot.querySelector(".slot-ph").style.display="flex";
   slot.classList.add("cursor-pointer","hover:border-gray-400");
   slot.onclick = () => pickFile(idx, slot);
+}
+
+function formatProductDescription(tname, jname, idnumber, rawDesc) {
+  // 解析原始描述並格式化成結構化形式
+  const lines = rawDesc.split("\n").map(l => l.trim()).filter(Boolean);
+
+  let result = "";
+
+  // 添加基本信息
+  result += `商品名稱：${tname}\n`;
+  result += `日文名稱：${jname}\n`;
+  result += `商品編號：${idnumber}\n\n`;
+
+  // 提取各個部分
+  let basicInfoLines = [];
+  let detailDescLines = [];
+  let importantLines = [];
+
+  let currentSection = null;
+
+  for (const line of lines) {
+    if (line.includes("商品基本信息") || line.includes("【商品基本信息】")) {
+      currentSection = "basic";
+      continue;
+    }
+    if (line.includes("詳細描述") || line.includes("【詳細描述】")) {
+      currentSection = "detail";
+      continue;
+    }
+    if (line.includes("重要說明") || line.includes("【重要說明】")) {
+      currentSection = "important";
+      continue;
+    }
+
+    if (line.length === 0) continue;
+
+    if (currentSection === "basic") {
+      // 清理格式：移除【】符號
+      if (!line.includes("【") && !line.includes("】")) {
+        basicInfoLines.push(line);
+      }
+    } else if (currentSection === "detail") {
+      if (!line.includes("【") && !line.includes("】")) {
+        detailDescLines.push(line);
+      }
+    } else if (currentSection === "important") {
+      if (!line.includes("【") && !line.includes("】")) {
+        importantLines.push(line);
+      }
+    }
+  }
+
+  // 格式化輸出
+  if (basicInfoLines.length > 0) {
+    result += "【商品基本信息】\n";
+    for (const line of basicInfoLines) {
+      // 確保每行以 * 開頭
+      const cleanLine = line.replace(/^[\*•-]\s*/, "").trim();
+      if (cleanLine) {
+        result += `* ${cleanLine}\n`;
+      }
+    }
+    result += "\n";
+  }
+
+  if (detailDescLines.length > 0) {
+    result += "【詳細描述】\n";
+    for (const line of detailDescLines) {
+      const cleanLine = line.replace(/^[\*•-]\s*/, "").trim();
+      if (cleanLine) {
+        result += `${cleanLine}\n`;
+      }
+    }
+    result += "\n";
+  }
+
+  if (importantLines.length > 0) {
+    result += "【重要說明】\n";
+    for (const line of importantLines) {
+      // 清理行首的符號，然後加 •
+      const cleanLine = line.replace(/^[\*•-]\s*/, "").trim();
+      if (cleanLine) {
+        result += `• ${cleanLine}\n`;
+      }
+    }
+  }
+
+  return result.trim();
 }
 
 async function uploadToCloudinary(file) {
@@ -683,7 +801,13 @@ async function generateDescription() {
       }
     }
 
-    console.log("Final description value:", description ? description.substring(0, 100) + "..." : "EMPTY");
+    // 格式化描述成最終呈現格式
+    if (description) {
+      description = formatProductDescription(tname, jname, idnumber, description);
+      console.log("✓ Description formatted");
+    }
+
+    console.log("Final description length:", description ? description.length : 0);
 
     // 安全檢查：確保名稱不是日文
     if (tname && /[\u3040-\u309F\u30A0-\u30FF]/.test(tname)) {
