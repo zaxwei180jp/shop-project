@@ -595,6 +595,26 @@ function formatProductDescription(tname, jname, idnumber, rawDesc) {
 
   console.log("📊 Extracted sections:", {basic: basicInfoLines.length, detail: detailDescLines.length, important: importantLines.length});
 
+  // 如果沒有找到任何標籤，直接使用所有行作為詳細描述
+  if (basicInfoLines.length === 0 && detailDescLines.length === 0 && importantLines.length === 0) {
+    console.warn("⚠️ No section headers found, using all content as detail");
+    result += "【詳細描述】\n";
+    const contentLines = lines.filter(l =>
+      !l.includes("商品名稱") &&
+      !l.includes("日文名稱") &&
+      !l.includes("商品編號") &&
+      !l.includes("【") &&
+      !l.includes("】")
+    );
+    for (const line of contentLines) {
+      const cleanLine = line.replace(/^[\*•\-\s]+/, "").trim();
+      if (cleanLine) {
+        result += `${cleanLine}\n`;
+      }
+    }
+    return result.trim();
+  }
+
   // 格式化輸出
   if (basicInfoLines.length > 0) {
     result += "【商品基本信息】\n";
