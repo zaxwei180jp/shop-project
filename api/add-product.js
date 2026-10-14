@@ -1,3 +1,29 @@
+// 取得「最前面」的排序值：所有商品 sort 的最小正數 - 1（sort 越小越前面）
+async function frontSortValue(NOTION_TOKEN, DATABASE_ID) {
+  const headers = {
+    Authorization: `Bearer ${NOTION_TOKEN}`,
+    "Notion-Version": "2022-06-28",
+    "Content-Type": "application/json",
+  };
+  let min = Infinity;
+  let cursor;
+  do {
+    const body = { page_size: 100, ...(cursor ? { start_cursor: cursor } : {}) };
+    const r = await fetch(`https://api.notion.com/v1/databases/${DATABASE_ID}/query`, {
+      method: "POST", headers, body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    for (const page of d.results || []) {
+      const v = page.properties?.sort?.number;
+      if (v && v < min) min = v;
+    }
+    cursor = d.has_more ? d.next_cursor : undefined;
+  } while (cursor);
+  if (min === Infinity) return 1;
+  const next = min - 1;
+  return next === 0 ? -1 : next; // 0 會被前台當成「未排序」排到最後，所以跳過
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -17,6 +43,11 @@ export default async function handler(req, res) {
     if (!tname) {
       return res.status(400).json({ error: "商品名稱為必填" });
     }
+
+    // 新品 / 特價 / 熱賣 → 排到最前面
+    const sortVal = (isNew || isHot || isSale)
+      ? await frontSortValue(NOTION_TOKEN, DATABASE_ID)
+      : null;
 
     const response = await fetch("https://api.notion.com/v1/pages", {
       method: "POST",
@@ -62,6 +93,7 @@ export default async function handler(req, res) {
           isSale:  { checkbox: !!isSale },
           isNew:   { checkbox: !!isNew  },
           ...(saleEnd ? { saleEnd: { date: { start: saleEnd } } } : {}),
+          ...(sortVal !== null ? { sort: { number: sortVal } } : {}),
           update: {
             date: { start: new Date().toISOString().split("T")[0] },
           },
