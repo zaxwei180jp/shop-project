@@ -1,13 +1,54 @@
+// 取得「最前面」的排序值：所有商品 sort 的最小正數 - 1（sort 越小越前面）
+async function frontSortValue(NOTION_TOKEN, DATABASE_ID) {
+  const headers = {
+    Authorization: `Bearer ${NOTION_TOKEN}`,
+    "Notion-Version": "2022-06-28",
+    "Content-Type": "application/json",
+  };
+  let min = Infinity;
+  let cursor;
+  do {
+    const body = { page_size: 100, ...(cursor ? { start_cursor: cursor } : {}) };
+    const r = await fetch(`https://api.notion.com/v1/databases/${DATABASE_ID}/query`, {
+      method: "POST", headers, body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    for (const page of d.results || []) {
+      const v = page.properties?.sort?.number;
+      if (v && v < min) min = v;
+    }
+    cursor = d.has_more ? d.next_cursor : undefined;
+  } while (cursor);
+  if (min === Infinity) return 1;
+  const next = min - 1;
+  return next === 0 ? -1 : next; // 0 會被前台當成「未排序」排到最後，所以跳過
+}
+
 export default async function handler(req, res) {
   if (req.method !== "PATCH") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    const { NOTION_TOKEN } = process.env;
+    const { NOTION_TOKEN, DATABASE_ID } = process.env;
     const { pageId, ...fields } = req.body;
 
     if (!pageId) return res.status(400).json({ error: "缺少 pageId" });
+
+    // 狀態從「關」變成「開」（新品/特價/熱賣）→ 排到最前面
+    const statusKeys = ["isNew", "isHot", "isSale"];
+    if (statusKeys.some(k => fields[k] !== undefined)) {
+      const pr = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+        headers: {
+          Authorization: `Bearer ${NOTION_TOKEN}`,
+          "Notion-Version": "2022-06-28",
+        },
+      });
+      const pd = await pr.json();
+      const prev = Object.fromEntries(statusKeys.map(k => [k, !!pd.properties?.[k]?.checkbox]));
+      const turnedOn = statusKeys.some(k => fields[k] !== undefined && !!fields[k] && !prev[k]);
+      if (turnedOn) fields.sort = await frontSortValue(NOTION_TOKEN, DATABASE_ID);
+    }
 
     const properties = {};
 
