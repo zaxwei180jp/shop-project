@@ -1,6 +1,15 @@
+// 台灣時區今天日期（YYYY-MM-DD）
+function todayTW() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Taipei", year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(new Date());
+  return parts; // en-CA 格式即 YYYY-MM-DD
+}
+
 export default async function handler(req, res) {
   try {
     const { NOTION_TOKEN, DATABASE_ID } = process.env;
+    const expiredSaleIds = [];
 
     // ⭐ 分頁讀取全部商品（Notion 每次最多 100 筆）
     const headers = {
@@ -80,21 +89,12 @@ export default async function handler(req, res) {
 
       const isView = getCheckbox(props.isView); // ⭐ 上架控制
       const isHot  = getCheckbox(props.isHot);
-      // 自動判斷特價：有 saleEnd 且今天 <= saleEnd
+      // 特價 = 勾選「特價」且（沒有結束日 或 今天 <= 結束日）
       const saleEndRaw = props.saleEnd?.date?.start || null;
-      let isSale = getCheckbox(props.isSale);
-      if (saleEndRaw) {
-        // 使用台灣時區獲取當前日期（YYYY-MM-DD 格式）
-        const now = new Date();
-        const twDate = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Taipei" }));
-        const todayStr = twDate.getFullYear() + "-" + 
-                         String(twDate.getMonth() + 1).padStart(2, "0") + "-" + 
-                         String(twDate.getDate()).padStart(2, "0");
-        
-        // 比較日期字符串（YYYY-MM-DD）
-        isSale = todayStr <= saleEndRaw;
-        console.log(`[Sale Check] Product: ${getText(props.tname)}, Today: ${todayStr}, SaleEnd: ${saleEndRaw}, isSale: ${isSale}`);
-      }
+      const checkedSale = getCheckbox(props.isSale);
+      const isSale = checkedSale && (!saleEndRaw || todayTW() <= saleEndRaw.slice(0, 10));
+      // 勾選了特價但已過期 → 記下來，稍後把 Notion 的勾選一併清掉
+      if (checkedSale && saleEndRaw && !isSale) expiredSaleIds.push(page.id);
       const isNew  = getCheckbox(props.isNew);
 
       const price   = Math.floor(getNumber(props.tprice));  // formula：台幣售價
@@ -139,6 +139,17 @@ export default async function handler(req, res) {
         update: getDate(props.update),
       };
     });
+
+    // 把已過期的特價勾選同步清掉（失敗不影響回應）
+    if (expiredSaleIds.length) {
+      await Promise.allSettled(expiredSaleIds.map(pid =>
+        fetch(`https://api.notion.com/v1/pages/${pid}`, {
+          method: "PATCH",
+          headers,
+          body: JSON.stringify({ properties: { isSale: { checkbox: false } } }),
+        })
+      ));
+    }
 
     // ⭐ showAll=1 時回傳全部（後台用），否則只回傳上架商品
     const visible = req.query.showAll === "1"
