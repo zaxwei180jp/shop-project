@@ -127,7 +127,7 @@ function getOriginalPrice(p) {
         ${p.description ? `
         <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--gray-200)">
           <div style="font-size:15px;font-weight:600;margin-bottom:10px">商品說明</div>
-          <div style="font-size:15px;line-height:1.8;color:var(--gray-800);white-space:pre-wrap">${p.description}</div>
+          <div style="font-size:15px;line-height:1.8;color:var(--gray-800);white-space:pre-wrap;padding-right:4px">${p.description}</div>
         </div>` : ""}
       </div>
 
