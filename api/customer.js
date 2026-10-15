@@ -1,6 +1,8 @@
 // GET  ?email=xxx     → 查詢是否已有此 email 的客戶
 // POST               → 新增客戶，自動產生客戶編號
 
+import { verifyPage } from "../lib/notion-verify.js";
+
 export default async function handler(req, res) {
   try {
     const { NOTION_TOKEN, CUSTOMER_DATABASE_ID } = process.env;
@@ -125,7 +127,11 @@ export default async function handler(req, res) {
         const err = await response.json();
         return res.status(500).json({ error: err.message || "更新失敗" });
       }
-      return res.status(200).json({ success: true });
+      const v = await verifyPage(NOTION_TOKEN, targetPageId, properties);
+      if (!v.ok) {
+        return res.status(500).json({ error: "Notion 尚未確認更新，請再試一次", mismatches: v.mismatches });
+      }
+      return res.status(200).json({ success: true, verified: true });
     }
 
     // ── POST：新增客戶 + 自動產生編號 ────────────────
@@ -212,19 +218,20 @@ export default async function handler(req, res) {
       const customerId = `${PREFIX}${suffix}`;
 
       // 寫入 Notion
+      const createProps = {
+        customerId: { title:        [{ text: { content: customerId } }] },
+        email:      { email:        email.toLowerCase().trim() },
+        name:       { rich_text:    [{ text: { content: name || "" } }] },
+        phone:      { phone_number: phone || null },
+        address:    { rich_text:    [{ text: { content: address || "" } }] },
+        createdAt:  { date:         { start: new Date().toISOString() } },
+      };
       const createRes = await fetch("https://api.notion.com/v1/pages", {
         method: "POST",
         headers,
         body: JSON.stringify({
           parent: { database_id: CUSTOMER_DATABASE_ID },
-          properties: {
-            customerId: { title:        [{ text: { content: customerId } }] },
-            email:      { email:        email.toLowerCase().trim() },
-            name:       { rich_text:    [{ text: { content: name || "" } }] },
-            phone:      { phone_number: phone || null },
-            address:    { rich_text:    [{ text: { content: address || "" } }] },
-            createdAt:  { date:         { start: new Date().toISOString() } },
-          },
+          properties: createProps,
         }),
       });
 
@@ -234,7 +241,13 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: err.message || "建立失敗", detail: err });
       }
 
-      return res.status(200).json({ customerId, isNew: true });
+      const created = await createRes.json();
+      const v = await verifyPage(NOTION_TOKEN, created.id, createProps);
+      if (!v.ok) {
+        return res.status(500).json({ error: "Notion 尚未確認客戶建立，請再試一次", mismatches: v.mismatches });
+      }
+
+      return res.status(200).json({ customerId, isNew: true, verified: true });
     }
 
     res.status(405).json({ error: "Method not allowed" });

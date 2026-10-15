@@ -2,6 +2,8 @@
 // PATCH  → 更新 order / isActive
 // DELETE → 刪除（archive）
 
+import { verifyPage, verifyArchived } from "../lib/notion-verify.js";
+
 export default async function handler(req, res) {
   try {
     const { NOTION_TOKEN, BANNER_DATABASE_ID } = process.env;
@@ -65,7 +67,14 @@ export default async function handler(req, res) {
       });
       const data = await response.json();
       if (!response.ok) return res.status(500).json({ error: data.message || "新增失敗" });
-      return res.status(200).json({ success: true, pageId: data.id });
+      const v = await verifyPage(NOTION_TOKEN, data.id, {
+        title:    { title:     [{ text: { content: title || "Banner" } }] },
+        image:    { rich_text: [{ text: { content: image } }] },
+        order:    { number: Number(order) || 99 },
+        isActive: { checkbox: true },
+      });
+      if (!v.ok) return res.status(500).json({ error: "Notion 尚未確認新增，請再試一次", mismatches: v.mismatches });
+      return res.status(200).json({ success: true, pageId: data.id, verified: true });
     }
 
     // ── PATCH：更新 order / isActive ──────────────────
@@ -88,7 +97,9 @@ export default async function handler(req, res) {
         const err = await response.json();
         return res.status(500).json({ error: err.message || "更新失敗" });
       }
-      return res.status(200).json({ success: true });
+      const v = await verifyPage(NOTION_TOKEN, pageId, properties);
+      if (!v.ok) return res.status(500).json({ error: "Notion 尚未確認更新，請再試一次", mismatches: v.mismatches });
+      return res.status(200).json({ success: true, verified: true });
     }
 
     // ── DELETE：刪除（archive）────────────────────────
@@ -108,7 +119,9 @@ export default async function handler(req, res) {
         const err = await response.json();
         return res.status(500).json({ error: err.message || "刪除失敗" });
       }
-      return res.status(200).json({ success: true });
+      const v = await verifyArchived(NOTION_TOKEN, pageId);
+      if (!v.ok) return res.status(500).json({ error: "Notion 尚未確認刪除，請再試一次" });
+      return res.status(200).json({ success: true, verified: true });
     }
 
     res.status(405).json({ error: "Method not allowed" });

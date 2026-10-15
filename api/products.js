@@ -156,7 +156,11 @@ export default async function handler(req, res) {
       ? products
       : products.filter(p => p.isView);
 
-    res.setHeader("Cache-Control", "public, max-age=30, stale-while-revalidate=10");
+    // 後台（showAll=1）不快取，確保儲存後重新載入的是 Notion 最新資料
+    res.setHeader(
+      "Cache-Control",
+      req.query.showAll === "1" ? "no-store" : "public, max-age=30, stale-while-revalidate=10"
+    );
     res.status(200).json(visible);
 
   } catch (err) {

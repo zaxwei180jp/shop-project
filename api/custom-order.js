@@ -1,6 +1,8 @@
 // POST → 建立客製化訂單
 // GET ?type=list → 所有客製化訂單（後台用）
 
+import { verifyPage, verifyArchived } from "../lib/notion-verify.js";
+
 export default async function handler(req, res) {
   try {
     const { NOTION_TOKEN } = process.env;
@@ -88,7 +90,18 @@ export default async function handler(req, res) {
 
       const result = await response.json();
       if (!response.ok) return res.status(500).json({ error: result.message || "建立失敗" });
-      return res.status(200).json({ success: true, pageId: result.id, orderId });
+      const v = await verifyPage(NOTION_TOKEN, result.id, {
+        orderId:     { title:     [{ text: { content: orderId || "" } }] },
+        customerId:  { rich_text: [{ text: { content: customerId || "" } }] },
+        productName: { rich_text: [{ text: { content: productName } }] },
+        source:      { select:    source ? { name: source } : null },
+        quantity:    { number:    Number(quantity) || 1 },
+        price:       { number:    Number(price) || 0 },
+        note:        { rich_text: [{ text: { content: note || "" } }] },
+        status:      { status:    { name: "待處理" } },
+      });
+      if (!v.ok) return res.status(500).json({ error: "Notion 尚未確認訂單建立，請再試一次", mismatches: v.mismatches });
+      return res.status(200).json({ success: true, pageId: result.id, orderId, verified: true });
     }
 
     // ── PATCH：更新狀態 / 價格 ───────────────────────
@@ -110,7 +123,9 @@ export default async function handler(req, res) {
         const err = await response.json();
         return res.status(500).json({ error: err.message || "更新失敗" });
       }
-      return res.status(200).json({ success: true });
+      const v = await verifyPage(NOTION_TOKEN, pageId, properties);
+      if (!v.ok) return res.status(500).json({ error: "Notion 尚未確認更新，請再試一次", mismatches: v.mismatches });
+      return res.status(200).json({ success: true, verified: true });
     }
 
     // ── DELETE：刪除 ─────────────────────────────────

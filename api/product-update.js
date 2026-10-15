@@ -24,6 +24,8 @@ async function frontSortValue(NOTION_TOKEN, DATABASE_ID) {
   return next === 0 ? -1 : next; // 0 會被前台當成「未排序」排到最後，所以跳過
 }
 
+import { verifyPage } from "../lib/notion-verify.js";
+
 export default async function handler(req, res) {
   if (req.method !== "PATCH") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -58,6 +60,10 @@ export default async function handler(req, res) {
       properties.jprice = { number: Number(fields.jprice) || 0 };
     if (fields.jsprice !== undefined)
       properties.jsprice = { number: Number(fields.jsprice) || 0 };
+    if (fields["jprice (online)"] !== undefined)
+      properties["jprice (online)"] = { number: Number(fields["jprice (online)"]) || 0 };
+    if (fields["jsprice (online)"] !== undefined)
+      properties["jsprice (online)"] = { number: Number(fields["jsprice (online)"]) || 0 };
     if (fields.weight !== undefined)
       properties.weight = { number: Number(fields.weight) || 0 };
     if (fields.mainCategory !== undefined)
@@ -97,7 +103,13 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: err.message || "更新失敗" });
     }
 
-    res.status(200).json({ success: true });
+    // 回讀 Notion 確認真的已更新，才回報成功
+    const v = await verifyPage(NOTION_TOKEN, pageId, properties);
+    if (!v.ok) {
+      return res.status(500).json({ error: "Notion 尚未確認更新，請再按一次儲存", mismatches: v.mismatches });
+    }
+
+    res.status(200).json({ success: true, verified: true });
 
   } catch (err) {
     res.status(500).json({ error: err.message });

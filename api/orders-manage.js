@@ -3,6 +3,8 @@
 // POST                          → 建立新訂單
 // PATCH                         → 更新訂單狀態
 
+import { verifyPage, verifyArchived } from "../lib/notion-verify.js";
+
 export default async function handler(req, res) {
   try {
     const { NOTION_TOKEN, ORDERS_DATABASE_ID } = process.env;
@@ -198,7 +200,18 @@ export default async function handler(req, res) {
         const err = await response.json();
         return res.status(500).json({ error: err.message || "Notion 寫入失敗" });
       }
-      return res.status(200).json({ success: true, orderId });
+      const created = await response.json();
+      const v = await verifyPage(NOTION_TOKEN, created.id, {
+        orderId:    { title:     [{ text: { content: orderId } }] },
+        customerId: { rich_text: [{ text: { content: customerId || "" } }] },
+        items:      { rich_text: [{ text: { content: itemsText } }] },
+        total:      { number: total },
+        status:     { select: { name: "待處理" } },
+      });
+      if (!v.ok) {
+        return res.status(500).json({ error: "Notion 尚未確認訂單寫入，請稍後查詢訂單狀態", mismatches: v.mismatches });
+      }
+      return res.status(200).json({ success: true, orderId, verified: true });
     }
 
     // ── PATCH：更新訂單狀態 ───────────────────────────
@@ -229,7 +242,11 @@ export default async function handler(req, res) {
         const err = await response.json();
         return res.status(500).json({ error: err.message || "更新失敗" });
       }
-      return res.status(200).json({ success: true });
+      const v = await verifyPage(NOTION_TOKEN, pageId, properties);
+      if (!v.ok) {
+        return res.status(500).json({ error: "Notion 尚未確認更新，請再試一次", mismatches: v.mismatches });
+      }
+      return res.status(200).json({ success: true, verified: true });
     }
 
     // ── DELETE：刪除訂單（archive）────────────────────
@@ -249,7 +266,9 @@ export default async function handler(req, res) {
         const err = await response.json();
         return res.status(500).json({ error: err.message || "刪除失敗" });
       }
-      return res.status(200).json({ success: true });
+      const v = await verifyArchived(NOTION_TOKEN, pageId);
+      if (!v.ok) return res.status(500).json({ error: "Notion 尚未確認刪除，請再試一次" });
+      return res.status(200).json({ success: true, verified: true });
     }
 
     res.status(405).json({ error: "Method not allowed" });
