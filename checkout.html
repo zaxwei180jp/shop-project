@@ -326,10 +326,12 @@ window.submitOrder = async () => {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ pageId: o.pageId, bundleId }),
-        })
+        }).then(r => r.json())
       );
-      // 本筆訂單也標記 bundleId（需要 pageId，先查）
-      await Promise.all(patchPromises);
+      // 每筆都要 Notion 確認更新成功
+      const results = await Promise.all(patchPromises);
+      const failed = results.find(d => !d.success);
+      if (failed) throw new Error(failed.error || "集運資料未確認更新");
       sessionStorage.removeItem("bundleOrders");
     }
 

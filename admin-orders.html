@@ -895,12 +895,14 @@ async function adminConfirmMerge() {
   btn.disabled = true; btn.textContent = "處理中...";
   try {
     const bundleId = "BUNDLE" + Date.now().toString().slice(-8);
-    await Promise.all([..._adminMergeSelected].map(pageId =>
+    const results = await Promise.all([..._adminMergeSelected].map(pageId =>
       fetch(ORDERS_API_ADMIN, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pageId, bundleId }),
-      })
+      }).then(r => r.json())
     ));
+    const failed = results.find(d => !d.success);
+    if (failed) throw new Error(failed.error || "Notion 未確認更新");
     adminClearMerge();
     await init();
   } catch (err) {

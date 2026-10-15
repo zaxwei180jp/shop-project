@@ -552,10 +552,13 @@ async function moveDown(idx) { if (idx < banners.length-1) await swapOrder(idx, 
 async function swapOrder(a, b) {
   const ba = banners[a], bb = banners[b];
   try {
-    await Promise.all([
-      fetch(BANNER_API, { method:"PATCH", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ pageId: ba.pageId, order: bb.order }) }),
-      fetch(BANNER_API, { method:"PATCH", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ pageId: bb.pageId, order: ba.order }) }),
+    // 兩筆都要 Notion 確認更新成功，才改畫面
+    const results = await Promise.all([
+      fetch(BANNER_API, { method:"PATCH", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ pageId: ba.pageId, order: bb.order }) }).then(r => r.json()),
+      fetch(BANNER_API, { method:"PATCH", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ pageId: bb.pageId, order: ba.order }) }).then(r => r.json()),
     ]);
+    const failed = results.find(d => !d.success);
+    if (failed) throw new Error(failed.error || "Notion 未確認更新");
     [banners[a], banners[b]] = [banners[b], banners[a]];
     renderList();
   } catch (err) { alert("排序失敗：" + err.message); }

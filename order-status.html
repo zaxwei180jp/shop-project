@@ -985,13 +985,15 @@ async function confirmMerge() {
     const bundleId = "BUNDLE" + Date.now().toString().slice(-8);
     const pageIds  = [..._mergeSelected];
 
-    await Promise.all(pageIds.map(pageId =>
+    const results = await Promise.all(pageIds.map(pageId =>
       fetch(ORDERS_API_MOD, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pageId, bundleId }),
-      })
+      }).then(r => r.json())
     ));
+    const failed = results.find(d => !d.success);
+    if (failed) throw new Error(failed.error || "Notion 未確認更新");
 
     btn.textContent = "✅ 集運合併成功！";
     setTimeout(() => {
