@@ -66,6 +66,12 @@ body{background:var(--gray-100)!important}
 .line-clamp-2{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 input[type="text"],input[type="email"],input[type="password"],input[type="number"],textarea,select{font-size:14px!important;border:1px solid var(--gray-200)!important;border-radius:var(--radius)!important;padding:10px 12px!important}
 input:focus,textarea:focus,select:focus{border-color:var(--black)!important;outline:none!important}
+/* iOS Safari：輸入框字級低於 16px 會在點擊時自動放大畫面，手機上統一用 16px */
+@media (max-width: 768px) {
+  input[type="text"],input[type="email"],input[type="password"],input[type="number"],input[type="date"],
+  textarea,select,
+  input.text-sm,textarea.text-sm,select.text-sm { font-size: 16px !important; }
+}
 button{cursor:pointer}
 .bg-yellow-100{background:#fef9c3!important}
 .text-yellow-700{color:#a16207!important}
