@@ -590,18 +590,69 @@ function cleanMd(line) {
   return line.replace(/\*\*/g, "").replace(/^#{1,6}\s*/, "").trimEnd();
 }
 
+// 比對用：去掉行首的項目符號（* - • 1.）與表情符號
+function bareLine(line) {
+  return line.trim()
+    .replace(/^(?:[*\-•·]|\d+[.)])\s*/, "")
+    .replace(/^[\p{Extended_Pictographic}️\s]+/u, "")
+    .trim();
+}
+
+const KANA_RE = /[぀-ヿ]/;
+
 function parseAIText(raw) {
   const lines = raw.replace(/\r/g, "").split("\n").map(cleanMd);
-  let tname = "", jname = "", idnumber = "";
-  const body = [];
-  const grab = (line, re) => { const m = line.trim().match(re); return m ? m[1].trim() : null; };
-  for (const line of lines) {
-    let v;
-    if (!tname    && (v = grab(line, /^商品名稱\s*[：:]\s*(.*)$/))) { tname    = v.replace(/^\d+\s+/, ""); continue; }
-    if (!jname    && (v = grab(line, /^日文名稱\s*[：:]\s*(.*)$/))) { jname    = v.replace(/^\d+\s+/, ""); continue; }
-    if (!idnumber && (v = grab(line, /^商品編號\s*[：:]\s*(.*)$/))) { idnumber = v.replace(/^#\s*/, ""); continue; }
-    body.push(line);
+  const bare  = lines.map(bareLine);
+  const labelRe = (labels) => new RegExp("^(?:" + labels + ")\\s*[：:]\\s*(.*)$");
+  const reT = labelRe("中文名稱|中文");
+  const reJ = labelRe("日文名稱|日文");
+  const reI = labelRe("商品編號|編號");
+  const used = new Array(lines.length).fill(false);
+  let tname = "", jname = "", idnumber = "", tIdx = -1;
+
+  const reName = labelRe("商品名稱");
+  bare.forEach((l, i) => {
+    let m;
+    if (!tname && (m = l.match(reT))) { tname = m[1].replace(/^\d+\s+/, "").trim(); used[i] = true; tIdx = i; }
+    else if ((m = l.match(reName))) {
+      // 「商品名稱：」若內容是日文 → 日文名稱；否則視為中文名稱
+      const v = m[1].replace(/^\d+\s+/, "").trim();
+      if (KANA_RE.test(v)) { if (!jname) jname = v; }
+      else if (!tname) { tname = v; tIdx = i; }
+      used[i] = true;
+    }
+    else if (!jname && (m = l.match(reJ))) { jname = m[1].replace(/^\d+\s+/, "").trim(); used[i] = true; }
+    else if (!idnumber && (m = l.match(reI))) { idnumber = m[1].replace(/^#\s*/, "").trim(); used[i] = true; }
+  });
+
+  // 沒有中文名稱標題時，取「【…】」標題行作為中文名稱（去掉【】前綴與表情符號）
+  if (!tname) {
+    for (let i = 0; i < bare.length; i++) {
+      const m = !used[i] && bare[i].match(/^【[^】]*】\s*(.+)$/);
+      if (m) {
+        tname = m[1].replace(/[\p{Extended_Pictographic}\uFE0F\s]+$/u, "").trim();
+        used[i] = true; tIdx = i; break;
+      }
+    }
   }
+
+  // 沒有「日文名稱：」標題時，取中文名稱行之前第一行含假名的文字當日文名稱
+  if (!jname) {
+    const end = tIdx >= 0 ? tIdx : bare.length;
+    for (let i = 0; i < end; i++) {
+      if (!used[i] && KANA_RE.test(bare[i]) && !/[：:]/.test(bare[i])) {
+        jname = bare[i]; used[i] = true;
+        // 日文名稱常跨兩行，把緊接著的假名行也併入
+        const nx = i + 1;
+        if (nx < end && !used[nx] && KANA_RE.test(bare[nx]) && !/[：:]/.test(bare[nx])) {
+          jname += " " + bare[nx]; used[nx] = true;
+        }
+        break;
+      }
+    }
+  }
+
+  const body = lines.filter((_, i) => !used[i]);
   while (body.length && !body[0].trim()) body.shift();
   return {
     tname, jname, idnumber,
@@ -615,6 +666,10 @@ function parseAndFill() {
   if (!raw.trim()) { alert("請先貼上 ChatGPT 的回覆"); return; }
 
   const r = parseAIText(raw);
+  if (!r.tname && !r.jname && !r.idnumber && !r.description) {
+    alert("解析失敗：貼上的內容是空的或格式無法辨識");
+    return;
+  }
   const filled = [];
   if (r.tname)       { document.getElementById("tname").value = r.tname; filled.push("中文名稱"); }
   if (r.jname)       { document.getElementById("jname").value = r.jname; filled.push("日文名稱"); }
@@ -629,7 +684,7 @@ function parseAndFill() {
   status.style.display = "block";
   status.textContent = filled.length
     ? `✅ 已填入：${filled.join("、")}，請確認內容`
-    : "⚠️ 找不到可填入的欄位，請確認回覆包含「商品名稱：」等標題";
+    : "⚠️ 找不到可填入的欄位，請確認回覆包含「商品名稱：」或「中文：」等標題";
   status.className = filled.length ? "text-xs text-green-600 mt-2" : "text-xs text-red-500 mt-2";
   if (r.tname) document.getElementById("tname").scrollIntoView({ behavior: "smooth", block: "center" });
 }
