@@ -150,7 +150,24 @@ label{font-size:14px;font-weight:600;color:var(--gray-800);margin-bottom:8px;dis
   .topbar-title { font-size: 16px; }
   .admin-content { padding: 16px; padding-bottom: 80px; }
 
-  /* 手機底部導覽 */
+  /* 手機輸入框更大 */
+  input[type="text"],input[type="email"],input[type="password"],input[type="number"],input[type="tel"],textarea,select{
+    padding:16px 14px;font-size:16px;
+  }
+  label{ font-size:15px;margin-bottom:10px; }
+
+  /* 手機按鈕更大 */
+  .btn{ padding:13px 18px;font-size:16px;font-weight:600; }
+  .btn-sm{ padding:10px 14px;font-size:15px; }
+
+  /* 手機卡片更大 */
+  .card{ padding:18px; }
+  .product-row{ padding:16px;gap:16px; }
+  .product-thumb{ width:64px;height:64px; }
+
+  /* 手機表單間距 */
+  .form-row{ gap:10px;margin-bottom:20px; }
+  .form-grid { grid-template-columns: 1fr !important; gap: 16px; }
   .admin-bottom-nav {
     display: grid !important;
     grid-template-columns: repeat(5, 1fr);
@@ -180,4 +197,11 @@ label{font-size:14px;font-weight:600;color:var(--gray-800);margin-bottom:8px;dis
 
 @media (min-width: 769px) {
   .admin-bottom-nav { display: none !important; }
+}
+
+/* iOS Safari：輸入框字級低於 16px 會在點擊時自動放大畫面，手機上統一用 16px */
+@media (max-width: 768px) {
+  input[type="text"],input[type="email"],input[type="password"],input[type="number"],input[type="date"],
+  textarea,select,
+  input.text-sm,textarea.text-sm,select.text-sm { font-size: 16px !important; }
 }
