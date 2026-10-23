@@ -304,10 +304,11 @@ if (sessionStorage.getItem("adminAuth") !== "1") location.href = "admin.html";
       <div>
         <label class="text-xs text-gray-500 mb-2 block">圖片（第一張為主圖）</label>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px" id="editImgSlots"></div>
-        <button type="button" onclick="addEditImgSlot()"
+        <button type="button" onclick="openEditMulti()"
           class="w-full py-2 border border-dashed border-gray-300 rounded-xl text-xs text-gray-400 hover:border-gray-500 transition">
-          ＋ 新增圖片
+          ＋ 新增圖片（可一次選多張）
         </button>
+        <p class="text-xs text-gray-400 mt-1">點擊圖片格可更換照片；✕ 可移除</p>
       </div>
 
       <!-- AI 生成 -->
@@ -672,6 +673,45 @@ async function saveEdit() {
 // ── 商品管理圖片上傳 ─────────────────────────────────
 const CLOUD_NAME_P    = "doue38blc";
 const UPLOAD_PRESET_P = "shop_upload";
+let editReplaceIdx = -1;
+
+// 檔案選擇器改成掛在 document 內的隱藏 input（iOS Safari 對未掛載的 input 常常不會彈出或不觸發 change）
+function ensureEditInputs() {
+  if (!document.getElementById("editMultiInput")) {
+    const multi = document.createElement("input");
+    multi.type = "file"; multi.accept = "image/*"; multi.multiple = true;
+    multi.id = "editMultiInput"; multi.style.display = "none";
+    multi.addEventListener("change", (e) => {
+      const files = Array.from(e.target.files || []);
+      e.target.value = "";
+      if (files.length) addEditFiles(files);
+    });
+    document.body.appendChild(multi);
+  }
+  if (!document.getElementById("editReplaceInput")) {
+    const single = document.createElement("input");
+    single.type = "file"; single.accept = "image/*";
+    single.id = "editReplaceInput"; single.style.display = "none";
+    single.addEventListener("change", (e) => {
+      const file = (e.target.files || [])[0];
+      e.target.value = "";
+      if (file && editReplaceIdx >= 0) uploadEditFile(editReplaceIdx, file);
+    });
+    document.body.appendChild(single);
+  }
+}
+
+function openEditMulti() {
+  ensureEditInputs();
+  document.getElementById("editMultiInput").click();
+}
+
+function openEditReplace(idx) {
+  ensureEditInputs();
+  editReplaceIdx = idx;
+  document.getElementById("editReplaceInput").click();
+}
+
 function addEditImgSlot(existingUrl) {
   const slotIdx   = editImgUrls.length;
   editImgUrls.push(existingUrl || "");
@@ -716,43 +756,64 @@ function addEditImgSlot(existingUrl) {
     slot.appendChild(label);
   }
 
-  if (!hasImg) slot.onclick = () => pickEditSlot(slotIdx, slot);
+  slot.onclick = () => openEditReplace(slotIdx);
   container.appendChild(slot);
 }
 
-function pickEditSlot(slotIdx, slot) {
-  const input = document.createElement("input");
-  input.type = "file"; input.accept = "image/*";
-  input.onchange = async (e) => {
-    const file = e.target.files[0]; if (!file) return;
-    slot.querySelector(".slot-ph").style.display="none";
-    slot.querySelector(".slot-load").style.display="flex";
-    try {
-      const fd = new FormData();
-      fd.append("file", file); fd.append("upload_preset", UPLOAD_PRESET_P);
-      const res  = await fetch("https://api.cloudinary.com/v1_1/"+CLOUD_NAME_P+"/image/upload", {method:"POST",body:fd});
-      const data = await res.json();
-      if (!data.secure_url) throw new Error("失敗");
-      editImgUrls[slotIdx] = data.secure_url;
-      slot.querySelector(".slot-img").src = data.secure_url;
-      slot.querySelector(".slot-img").style.display = "block";
-      slot.querySelector(".slot-ph").style.display = "none";
-      const db=slot.querySelector(".slot-del"); db.style.display="flex"; db.style.alignItems="center"; db.style.justifyContent="center";
-      slot.onclick = null;
-    } catch { alert("上傳失敗"); slot.querySelector(".slot-ph").style.display="flex"; }
-    finally { slot.querySelector(".slot-load").style.display="none"; }
-  };
-  input.click();
+// 一次選多張：每張各佔一格，並行上傳
+function addEditFiles(files) {
+  const indices = files.map(() => {
+    const idx = editImgUrls.length;
+    addEditImgSlot("");
+    return idx;
+  });
+  return Promise.all(files.map((file, i) => uploadEditFile(indices[i], file)));
+}
+
+function setEditSlotUrl(idx, url) {
+  editImgUrls[idx] = url || "";
+  const slot = document.getElementById("editSlot-" + idx);
+  if (!slot) return;
+  const img = slot.querySelector(".slot-img");
+  const ph  = slot.querySelector(".slot-ph");
+  const del = slot.querySelector(".slot-del");
+  if (url) {
+    img.src = url; img.style.display = "block";
+    ph.style.display = "none";
+    del.style.display = "flex"; del.style.alignItems = "center"; del.style.justifyContent = "center";
+  } else {
+    img.removeAttribute("src"); img.style.display = "none";
+    ph.style.display = "flex";
+    del.style.display = "none";
+  }
+}
+
+function setEditSlotLoading(idx, on) {
+  const slot = document.getElementById("editSlot-" + idx);
+  if (slot) slot.querySelector(".slot-load").style.display = on ? "flex" : "none";
+}
+
+async function uploadEditFile(idx, file) {
+  setEditSlotLoading(idx, true);
+  try {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("upload_preset", UPLOAD_PRESET_P);
+    const res  = await fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME_P + "/image/upload", { method: "POST", body: fd });
+    const data = await res.json();
+    if (!data.secure_url) throw new Error(data.error?.message || "上傳失敗");
+    setEditSlotUrl(idx, data.secure_url);
+  } catch (err) {
+    setEditSlotUrl(idx, "");
+    alert("圖片上傳失敗：" + err.message);
+  } finally {
+    setEditSlotLoading(idx, false);
+  }
 }
 
 function removeEditSlot(slotIdx, e) {
   e.stopPropagation();
-  editImgUrls[slotIdx] = "";
-  const slot = document.getElementById("editSlot-"+slotIdx);
-  slot.querySelector(".slot-img").style.display = "none";
-  slot.querySelector(".slot-del").style.display = "none";
-  slot.querySelector(".slot-ph").style.display = "";
-  slot.onclick = () => pickEditSlot(slotIdx, slot);
+  setEditSlotUrl(slotIdx, "");
 }
 
 // ── AI 生成描述 ──────────────────────────────────────
