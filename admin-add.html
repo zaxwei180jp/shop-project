@@ -400,7 +400,10 @@ const BTN_ACTIVE_STYLE = "padding:9px 14px;border-radius:8px;font-size:13px;font
   addDetailSlot();
 
   document.getElementById("mainImgInput").addEventListener("change", async (e) => {
-    const file = e.target.files[0]; if (file) { e.target.value = ""; await uploadMainImg(file); }
+    // 先保留檔案參照、上傳完成後才清空 input（iOS Safari 提前清空可能讓檔案變成空的）
+    const file = e.target.files[0];
+    if (file) await uploadMainImg(file);
+    e.target.value = "";
   });
   document.getElementById("detailMultiInput").addEventListener("change", async (e) => {
     const files = e.target.files; if (files.length) await addDetailFiles(files); e.target.value = "";
@@ -462,11 +465,16 @@ async function uploadMainImg(file) {
   document.getElementById("mainImgPlaceholder").style.display="none";
   document.getElementById("mainImgLoading").style.display="flex";
   try {
+    if (!file || file.size === 0) throw new Error("無法讀取所選照片，請重新選擇");
     mainImgUrl = await uploadToCloudinary(file);
     document.getElementById("mainImgPreview").src = mainImgUrl;
     document.getElementById("mainImgPreview").style.display="flex";
     document.getElementById("mainImgRemove").style.display="flex";
-  } catch { alert("主圖上傳失敗"); document.getElementById("mainImgPlaceholder").style.display="flex"; }
+  } catch (err) {
+    mainImgUrl = "";
+    alert("主圖上傳失敗：" + err.message);
+    document.getElementById("mainImgPlaceholder").style.display="flex";
+  }
   finally { document.getElementById("mainImgLoading").style.display="none"; }
 }
 
