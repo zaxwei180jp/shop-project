@@ -214,9 +214,8 @@ if (sessionStorage.getItem("adminAuth") !== "1") location.href = "admin.html";
     <div class="space-y-3">
       <div>
         <div class="text-xs text-gray-500 mb-1.5">首頁主圖 <span class="text-red-400">（封面用，建議正方形）</span></div>
-        <div id="mainImgBox"
-          style="position:relative;display:flex;align-items:center;justify-content:center;border:2px dashed #e5e5e5;border-radius:8px;height:160px;cursor:pointer;overflow:hidden;background:#f9f9f9"
-          onclick="document.getElementById('mainImgInput').click()">
+        <label id="mainImgBox" for="mainImgInput"
+          style="position:relative;display:flex;align-items:center;justify-content:center;border:2px dashed #e5e5e5;border-radius:8px;height:160px;cursor:pointer;overflow:hidden;background:#f9f9f9">
           <div id="mainImgPlaceholder" class="flex flex-col items-center text-gray-400">
             <span class="text-3xl mb-1">🖼</span>
             <span class="text-xs">點擊上傳主圖</span>
@@ -224,8 +223,9 @@ if (sessionStorage.getItem("adminAuth") !== "1") location.href = "admin.html";
           <img id="mainImgPreview" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
           <div id="mainImgLoading" style="display:none;position:absolute;inset:0;background:#f9f9f9;align-items:center;justify-content:center;font-size:14px;color:#aaa">⏳ 上傳中...</div>
           <button id="mainImgRemove" onclick="removeMainImg(event)" style="display:none;position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;z-index:10;align-items:center;justify-content:center">✕</button>
-        </div>
-        <input id="mainImgInput" type="file" accept="image/*" class="hidden">
+        </label>
+        <input id="mainImgInput" type="file" accept="image/*" style="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none">
+        <p id="mainImgStatus" class="text-xs text-gray-400 mt-1" style="min-height:16px"></p>
       </div>
       <div>
         <div class="text-xs text-gray-500 mb-1.5">商品詳細圖 <span class="text-gray-400">（依序顯示於商品頁）</span></div>
@@ -461,17 +461,26 @@ function renderSubBtns(selectedMain) {
   });
 }
 
+function setMainStatus(msg, isErr) {
+  const el = document.getElementById("mainImgStatus");
+  el.textContent = msg; el.style.color = isErr ? "#dc2626" : "#9ca3af";
+}
+
 async function uploadMainImg(file) {
+  setMainStatus(file ? `已選取：${file.name || "未命名"}（${Math.round((file.size||0)/1024)} KB, ${file.type || "未知類型"}）` : "未取得檔案");
   document.getElementById("mainImgPlaceholder").style.display="none";
   document.getElementById("mainImgLoading").style.display="flex";
   try {
     if (!file || file.size === 0) throw new Error("無法讀取所選照片，請重新選擇");
+    setMainStatus("上傳中…");
     mainImgUrl = await uploadToCloudinary(file);
+    setMainStatus("上傳完成");
     document.getElementById("mainImgPreview").src = mainImgUrl;
     document.getElementById("mainImgPreview").style.display="flex";
     document.getElementById("mainImgRemove").style.display="flex";
   } catch (err) {
     mainImgUrl = "";
+    setMainStatus("上傳失敗：" + err.message, true);
     alert("主圖上傳失敗：" + err.message);
     document.getElementById("mainImgPlaceholder").style.display="flex";
   }
