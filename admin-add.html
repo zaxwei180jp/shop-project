@@ -499,6 +499,7 @@ function addDetailSlot() {
 
 // 把一張圖上傳到指定格子
 function uploadToSlot(idx, slot, file) {
+  slot.dataset.busy = "1";
   slot.querySelector(".slot-ph").style.display = "none";
   slot.querySelector(".slot-load").style.display = "flex";
   return uploadToCloudinary(file)
@@ -514,7 +515,7 @@ function uploadToSlot(idx, slot, file) {
       alert(`圖${idx+1}上傳失敗: ${err.message}`);
       slot.querySelector(".slot-ph").style.display = "flex";
     })
-    .finally(() => { slot.querySelector(".slot-load").style.display = "none"; });
+    .finally(() => { delete slot.dataset.busy; slot.querySelector(".slot-load").style.display = "none"; });
 }
 
 function pickFile(idx, slot) {
@@ -531,13 +532,20 @@ function pickFile(idx, slot) {
 
 // 一次選多張：每張各佔一格，依選取順序排列並同時上傳
 async function addDetailFiles(files) {
-  const jobs = [...files].map(file => {
+  const list = [...files];
+  const container = document.getElementById("detailSlots");
+  const targets = [];
+  // 先填入畫面上還是空的格子（例如一開始預設的「圖1」），不足再新增
+  for (const s of [...container.children]) {
+    if (targets.length >= list.length) break;
+    const idx = parseInt(s.id.split("-")[1], 10);
+    if (!detailUrls[idx] && !s.dataset.busy) targets.push({ idx, slot: s });
+  }
+  while (targets.length < list.length) {
     addDetailSlot();
-    const idx  = detailUrls.length - 1;
-    const slot = document.getElementById("detailSlots").lastElementChild;
-    return uploadToSlot(idx, slot, file);
-  });
-  await Promise.all(jobs);
+    targets.push({ idx: detailUrls.length - 1, slot: container.lastElementChild });
+  }
+  await Promise.all(targets.map((t, i) => uploadToSlot(t.idx, t.slot, list[i])));
 }
 
 function clearSlot(idx, slot) {
