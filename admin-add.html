@@ -548,7 +548,8 @@ async function submitProduct() {
   const btn = document.getElementById("submitBtn"); btn.disabled = true; btn.textContent = "送出中...";
   try {
     const validDetails = detailUrls.filter(Boolean);
-    const allImages = validDetails;
+    // 第一張 → image（主圖）；其餘 → images（詳細圖），避免重複
+    const allImages = validDetails.slice(1);
     const jname = document.getElementById("jname").value.trim();
     const payload = { tname, jname, jprice: Number(tprice), jsprice: Number(document.getElementById("sprice").value)||0, "jprice (online)": Number(document.getElementById("jprice_online").value)||0, "jsprice (online)": Number(document.getElementById("jsprice_online").value)||0, mainCategory: document.getElementById("mainCategory").value.trim(), category: document.getElementById("category").value.trim(), description: document.getElementById("description").value.trim(), weight: Number(document.getElementById("weight").value)||0, idnumber: document.getElementById("idnumber").value.trim()||null, image: validDetails[0] || "", images: allImages.join(","), isView: document.getElementById("isView").checked, isNew: document.getElementById("isNew").checked, isHot: document.getElementById("isHot").checked, isSale: document.getElementById("isSale").checked, saleEnd: document.getElementById("saleEnd").value || null };
     const res = await fetch(ADD_API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });

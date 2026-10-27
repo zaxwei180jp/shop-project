@@ -222,6 +222,7 @@ if (sessionStorage.getItem("adminAuth") !== "1") location.href = "admin.html";
   </div>
 
   <div id="productCount" class="text-xs text-gray-400 mb-3"></div>
+  <div id="backfillBar" style="display:none;align-items:center;justify-content:space-between;gap:8px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px 12px;margin-bottom:10px"></div>
   <div id="productList" class="space-y-2"></div>
 </div>
 
@@ -399,10 +400,64 @@ async function init() {
 
     renderCatBtns();
     renderList();
+    renderBackfillBar();
   } catch (err) {
     document.getElementById("productList").innerHTML =
       `<div class="text-center text-red-400 py-6 text-sm">載入失敗</div>`;
   }
+}
+
+// ── 主圖欄位補齊 ─────────────────────────────────────
+// 早期一次上傳多張時，主圖欄位（image）是空的、只有 images。
+// 這裡把每筆缺主圖的商品，用第一張圖補進 image 欄位（沿用既有的 product-update API）。
+function imagesArrOf(p) {
+  return Array.isArray(p.images) ? p.images : (p.images || "").split(",").map(x => x.trim()).filter(Boolean);
+}
+// 需要整理的商品：主圖欄位是空的，或 images 裡還包含主圖（舊資料重複）
+function missingMainProducts() {
+  return allProducts.filter(p => {
+    const arr = imagesArrOf(p);
+    return (!p.image && arr.length > 0) || (p.image && arr.includes(p.image));
+  });
+}
+function renderBackfillBar() {
+  const bar = document.getElementById("backfillBar");
+  const n = missingMainProducts().length;
+  if (!n) { bar.style.display = "none"; bar.innerHTML = ""; return; }
+  bar.style.display = "flex";
+  bar.innerHTML = `
+    <span class="text-xs text-gray-700" id="backfillText">有 ${n} 筆商品的主圖／詳細圖欄位需要整理</span>
+    <button type="button" onclick="backfillMainImages()" id="backfillBtn"
+      style="flex-shrink:0;padding:6px 12px;border-radius:8px;background:#111;color:#fff;font-size:12px;border:none;cursor:pointer">整理圖片欄位</button>`;
+}
+async function backfillMainImages() {
+  const targets = missingMainProducts();
+  if (!targets.length) return;
+  if (!confirm(`將整理 ${targets.length} 筆商品：第一張寫入主圖欄位，其餘寫入詳細圖欄位，確定嗎？`)) return;
+  const btn = document.getElementById("backfillBtn");
+  btn.disabled = true;
+  let ok = 0, fail = 0;
+  for (let i = 0; i < targets.length; i++) {
+    const p = targets[i];
+    const arr   = imagesArrOf(p);
+    const first = p.image || arr[0];
+    const rest  = arr.filter(u => u !== first);
+    document.getElementById("backfillText").textContent = `處理中 ${i + 1} / ${targets.length}…`;
+    try {
+      const res  = await fetch(UPDATE_API, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pageId: p.id, image: first, images: rest.join(",") }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "失敗");
+      p.image = first; p.images = rest.join(","); ok++;
+    } catch { fail++; }
+  }
+  btn.disabled = false;
+  renderList();
+  renderBackfillBar();
+  alert(`完成：成功 ${ok} 筆${fail ? `，失敗 ${fail} 筆（可再按一次重試）` : ""}`);
 }
 
 // ── 分類按鈕 ─────────────────────────────────────────
@@ -616,7 +671,7 @@ async function saveEdit() {
   // 不管有無圖片都送，讓 Notion 可以被清空
   const validImgs = editImgUrls.filter(Boolean);
   payload.image  = validImgs[0]  || "";
-  payload.images = validImgs.join(",");
+  payload.images = validImgs.slice(1).join(","); // 第一張已在 image，不重複寫入
 
   const btn = document.getElementById("editSaveBtn");
   btn.textContent = "儲存中..."; btn.disabled = true;

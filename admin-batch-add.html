@@ -519,7 +519,7 @@ async function submitAll() {
           category:     r.sub,
           idnumber:     r.idnum ? r.idnum : null,
           image:        (imgUrls[Number(r.id)] || imgUrls[r.id] || []).filter(Boolean)[0] || "",
-          images:       (imgUrls[Number(r.id)] || imgUrls[r.id] || []).filter(Boolean).join(","),
+          images:       (imgUrls[Number(r.id)] || imgUrls[r.id] || []).filter(Boolean).slice(1).join(","), // 第一張已在 image
           isView:       true,
           isNew:        false,
           isHot:        false,
