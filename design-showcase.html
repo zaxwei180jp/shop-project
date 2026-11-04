@@ -394,7 +394,7 @@
   <a href="sale.html" class="bnav-item"><i class="ti ti-tag"></i>特價</a>
   <a href="search.html" class="bnav-item"><i class="ti ti-search"></i>搜尋</a>
   <a href="order-status.html" class="bnav-item"><i class="ti ti-clipboard-list"></i>訂單</a>
-  <button type="button" class="bnav-item" aria-label="重新整理" style="background:none;border:none;font:inherit;cursor:pointer" onclick="(function(){var u=new URL(location.href);u.searchParams.set('_',Date.now());location.replace(u.href)})()"><i class="ti ti-refresh"></i>重新整理</button>
+  <button type="button" class="bnav-item" aria-label="重新整理" style="background:none;border:none;font:inherit;cursor:pointer" onclick="(function(){var u=new window.URL(location.href);u.searchParams.set('_',Date.now());location.replace(u.href)})()"><i class="ti ti-refresh"></i>重新整理</button>
 </nav>
 
 </body>
