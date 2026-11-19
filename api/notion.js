@@ -48,8 +48,20 @@ async function notion(path, method = 'GET', body) {
 // 讀取數字：支援 Number 欄位，也支援 Formula 欄位（公式結果為數字）
 function numVal(prop) {
   if (!prop) return null;
-  if (prop.type === 'formula') return prop.formula && prop.formula.number != null ? prop.formula.number : null;
+  if (prop.type === 'formula') {
+    const f = prop.formula || {};
+    if (f.type === 'number') return f.number != null ? f.number : null;
+    if (f.type === 'string') { const n = parseFloat(String(f.string || '').replace(/[^0-9.\-]/g, '')); return isNaN(n) ? null : n; }
+    return null;
+  }
   return prop.number != null ? prop.number : null;
+}
+
+// 台幣金額：四捨五入到整數；0 或空值視為沒有價格
+function twdVal(prop) {
+  const n = numVal(prop);
+  if (n == null || n === 0) return null;
+  return Math.round(n);
 }
 
 function txt(arr) {
@@ -78,8 +90,8 @@ function simplify(page) {
     code: txt(p[P.code] && p[P.code].rich_text),
     cat: (p[P.cat] && p[P.cat].select && p[P.cat].select.name) || '',
     barcode: txt(p[P.barcode] && p[P.barcode].rich_text),
-    price: numVal(p[P.price]),
-    sale: numVal(p[P.sale]),
+    price: twdVal(p[P.price]),
+    sale: twdVal(p[P.sale]),
     photos: splitUrls(txt(p[P.photos] && p[P.photos].rich_text)),
     date: (p[P.date] && p[P.date].date && p[P.date].date.start) || '',
     saleStart: (p[P.period] && p[P.period].date && p[P.period].date.start || '').slice(0, 10),
