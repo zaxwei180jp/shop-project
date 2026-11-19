@@ -177,6 +177,9 @@ body:not(.admin-on) .admin-only{display:none!important}
 </style>
 </head>
 <body>
+<style>/* 唯讀版：隱藏所有管理功能 */
+#addBtn,.editbtn,.admin-only,#setBtn,#settings,#lockView,#adminView{display:none!important}
+</style>
 
 <header>
   <div class="top">
@@ -261,8 +264,8 @@ body:not(.admin-on) .admin-only{display:none!important}
       <div class="fld optfld" id="fWeightBox"><label>重量（kg）</label><input id="fWeight" type="number" inputmode="decimal" step="any" placeholder="例：1.26"></div>
     </div>
     <div class="two">
-      <div class="fld"><label>現場價錢（円）</label><input id="fPrice" type="number" inputmode="numeric" placeholder="0"></div>
-      <div class="fld"><label>現場特價（円）</label><input id="fSale" type="number" inputmode="numeric" placeholder="沒有就留空"></div>
+      <div class="fld"><label>台幣價格（NT$）</label><input id="fPrice" type="number" inputmode="numeric" placeholder="0"></div>
+      <div class="fld"><label>台幣特價（NT$）</label><input id="fSale" type="number" inputmode="numeric" placeholder="沒有就留空"></div>
     </div>
     <div class="two">
       <div class="fld"><label>特價開始</label><input id="fSaleStart" type="date"></div>
@@ -345,7 +348,7 @@ body:not(.admin-on) .admin-only{display:none!important}
 
   function $(id){ return document.getElementById(id); }
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-  function yen(n){ return n == null ? '' : '¥' + Number(n).toLocaleString('ja-JP'); }
+  function yen(n){ return n == null ? '' : 'NT$' + Number(n).toLocaleString('zh-TW'); }
   function toast(t){ var e=$('toast'); e.textContent=t; e.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(function(){e.classList.remove('show');},2200); }
   function loading(on, t){ $('loadTxt').textContent = t || '處理中…'; $('loading').classList.toggle('show', !!on); }
 
@@ -354,7 +357,7 @@ body:not(.admin-on) .admin-only{display:none!important}
   function setKey(k){ try{ k ? localStorage.setItem(KEY_STORE, k) : localStorage.removeItem(KEY_STORE); }catch(e){} }
   function getShow(){ try{ return localStorage.getItem(SHOW_STORE) !== '0'; }catch(e){ return true; } }
   function setShow(v){ try{ localStorage.setItem(SHOW_STORE, v ? '1' : '0'); }catch(e){} }
-  function applyAdmin(){ document.body.classList.toggle('admin-on', !!getKey() && getShow()); }
+  function applyAdmin(){ document.body.classList.remove('admin-on'); } // 唯讀版：不開放管理功能
 
   function api(body){
     if(getKey()) body.adminKey = getKey();
@@ -546,8 +549,8 @@ body:not(.admin-on) .admin-only{display:none!important}
       ['商品編號', it.code, true], ['分類', it.cat], ['條碼', it.barcode, true]
     ].concat(has.weight ? [['重量', it.weight != null ? kg(it.weight) : '']] : []).concat([
      
-      ['現場價錢', yen(it.price)],
-      ['現場特價', it.saleState === 'on' ? yen(it.sale)
+      ['台幣價格', yen(it.price)],
+      ['台幣特價', it.saleState === 'on' ? yen(it.sale)
         : it.saleState === 'ended' ? '已結束（原特價 ' + yen(it.saleRaw) + '）'
         : it.saleState === 'future' ? '尚未開始（' + yen(it.saleRaw) + '）' : '—'],
       ['特價期間', it.saleStart || it.saleEnd ? (it.saleStart || '').replace(/-/g,'/') + ' ～ ' + (it.saleEnd ? it.saleEnd.replace(/-/g,'/') : '不限') +
@@ -990,7 +993,7 @@ body:not(.admin-on) .admin-only{display:none!important}
 
     // 價錢
     ctx.font = '30px ' + CARD_FONT; ctx.fillStyle = '#8b857d';
-    ctx.fillText(saleOn ? '現場特價' : '現場價格', PAD, labelY + 10);
+    ctx.fillText(saleOn ? '台幣特價' : '台幣價格', PAD, labelY + 10);
 
     // 重量（右側醒目方塊）
     var wBoxW = 0;
