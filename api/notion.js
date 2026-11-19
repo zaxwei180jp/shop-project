@@ -19,7 +19,7 @@ const P = {
   code: '商品編號',   // Text
   cat: '分類',        // Select
   barcode: '條碼',    // Text
-  price: '台幣價格',  // Formula（唯讀，由公式帶出）
+  price: '台幣價錢',  // Formula（唯讀，由公式帶出）
   sale: '台幣特價',   // Formula（唯讀，由公式帶出）
   photos: '照片',     // Text（多張網址用 , 分隔）
   date: '更新日期',   // Date
