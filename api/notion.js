@@ -19,8 +19,8 @@ const P = {
   code: '商品編號',   // Text
   cat: '分類',        // Select
   barcode: '條碼',    // Text
-  price: '現場價錢',  // Number
-  sale: '現場特價',   // Number
+  price: '台幣價格',  // Formula（唯讀，由公式帶出）
+  sale: '台幣特價',   // Formula（唯讀，由公式帶出）
   photos: '照片',     // Text（多張網址用 , 分隔）
   date: '更新日期',   // Date
   period: '特價期間', // Date（開始～結束）
@@ -43,6 +43,13 @@ async function notion(path, method = 'GET', body) {
   const j = await r.json();
   if (!r.ok) throw new Error(j.message || ('Notion 錯誤 ' + r.status));
   return j;
+}
+
+// 讀取數字：支援 Number 欄位，也支援 Formula 欄位（公式結果為數字）
+function numVal(prop) {
+  if (!prop) return null;
+  if (prop.type === 'formula') return prop.formula && prop.formula.number != null ? prop.formula.number : null;
+  return prop.number != null ? prop.number : null;
 }
 
 function txt(arr) {
@@ -71,8 +78,8 @@ function simplify(page) {
     code: txt(p[P.code] && p[P.code].rich_text),
     cat: (p[P.cat] && p[P.cat].select && p[P.cat].select.name) || '',
     barcode: txt(p[P.barcode] && p[P.barcode].rich_text),
-    price: p[P.price] && p[P.price].number != null ? p[P.price].number : null,
-    sale: p[P.sale] && p[P.sale].number != null ? p[P.sale].number : null,
+    price: numVal(p[P.price]),
+    sale: numVal(p[P.sale]),
     photos: splitUrls(txt(p[P.photos] && p[P.photos].rich_text)),
     date: (p[P.date] && p[P.date].date && p[P.date].date.start) || '',
     saleStart: (p[P.period] && p[P.period].date && p[P.period].date.start || '').slice(0, 10),
@@ -98,8 +105,7 @@ function buildProps(d) {
   if ('code' in d) props[P.code] = { rich_text: rich(d.code) };
   if ('cat' in d) props[P.cat] = { select: d.cat ? { name: String(d.cat).replace(/,/g, '，').slice(0, 100) } : null };
   if ('barcode' in d) props[P.barcode] = { rich_text: rich(d.barcode) };
-  if ('price' in d) props[P.price] = { number: numOrNull(d.price) };
-  if ('sale' in d) props[P.sale] = { number: numOrNull(d.sale) };
+  // 價格／特價是公式欄位，Notion 不允許直接寫入，因此不再送出
   if ('saleStart' in d || 'saleEnd' in d) {
     const s = String(d.saleStart || '').slice(0, 10), e = String(d.saleEnd || '').slice(0, 10);
     props[P.period] = { date: s ? { start: s, end: e && e >= s ? e : null } : null };
@@ -173,6 +179,9 @@ function passOk(input) {
   return crypto.timingSafeEqual(a, c);
 }
 
+// 唯讀版：拒絕所有會修改 Notion 或 Cloudinary 的動作
+const READ_ONLY_BLOCKED = ['upload', 'create', 'update', 'archive'];
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: '只接受 POST' });
   if (!process.env.NOTION_TOKEN || !process.env.NOTION_DB_ID) {
@@ -180,6 +189,10 @@ module.exports = async (req, res) => {
   }
   const DB = process.env.NOTION_DB_ID;
   const b = (typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body) || {};
+
+  if (READ_ONLY_BLOCKED.indexOf(b.action) >= 0) {
+    return res.status(403).json({ error: '唯讀網站，不允許修改資料' });
+  }
 
   if (WRITE_ACTIONS.indexOf(b.action) >= 0) {
     if (!process.env.ADMIN_PASSWORD) return res.status(500).json({ error: '尚未設定環境變數 ADMIN_PASSWORD' });
