@@ -57,6 +57,11 @@ function numVal(prop) {
   return prop.number != null ? prop.number : null;
 }
 
+// 照片最後一張是日本當地牌價，不對外顯示；只剩一張時保留
+function displayPhotos(urls) {
+  return urls.length > 1 ? urls.slice(0, -1) : urls;
+}
+
 // 台幣金額：四捨五入到整數；0 或空值視為沒有價格
 function twdVal(prop) {
   const n = numVal(prop);
@@ -92,7 +97,7 @@ function simplify(page) {
     barcode: txt(p[P.barcode] && p[P.barcode].rich_text),
     price: twdVal(p[P.price]),
     sale: twdVal(p[P.sale]),
-    photos: splitUrls(txt(p[P.photos] && p[P.photos].rich_text)),
+    photos: displayPhotos(splitUrls(txt(p[P.photos] && p[P.photos].rich_text))),
     date: (p[P.date] && p[P.date].date && p[P.date].date.start) || '',
     saleStart: (p[P.period] && p[P.period].date && p[P.period].date.start || '').slice(0, 10),
     saleEnd: (p[P.period] && p[P.period].date && p[P.period].date.end || '').slice(0, 10),
