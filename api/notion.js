@@ -24,6 +24,7 @@ const P = {
   photos: '照片',     // Text（多張網址用 , 分隔）
   date: '更新日期',   // Date
   period: '特價期間', // Date（開始～結束）
+  status: '狀態',     // Select：上架／暫時缺貨／下架（空白＝上架）
   desc: '詳細說明',   // Text（選用）
   weight: '重量',     // Number（選用，單位 kg）
   isNew: '新品',      // Checkbox（選用）
@@ -99,6 +100,7 @@ function simplify(page) {
     sale: twdVal(p[P.sale]),
     photos: displayPhotos(splitUrls(txt(p[P.photos] && p[P.photos].rich_text))),
     date: (p[P.date] && p[P.date].date && p[P.date].date.start) || '',
+    status: (p[P.status] && p[P.status].select && p[P.status].select.name) || '',
     saleStart: (p[P.period] && p[P.period].date && p[P.period].date.start || '').slice(0, 10),
     saleEnd: (p[P.period] && p[P.period].date && p[P.period].date.end || '').slice(0, 10),
     desc: txt(p[P.desc] && p[P.desc].rich_text),
@@ -244,7 +246,8 @@ module.exports = async (req, res) => {
           results = results.concat(q.results);
           cursor = q.has_more ? q.next_cursor : undefined;
         } while (cursor);
-        return res.json({ items: results.map(simplify) });
+        // 唯讀版：下架商品不對外顯示
+        return res.json({ items: results.map(simplify).filter(i => i.status !== '下架') });
       }
 
       case 'upload': {
