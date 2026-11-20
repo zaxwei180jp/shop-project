@@ -32,6 +32,7 @@ header{position:sticky;top:0;z-index:20;background:var(--bg);padding:calc(env(sa
 .bar select{border:0;background:transparent;color:var(--sub);font-size:12px}
 main{padding:6px 16px calc(env(safe-area-inset-bottom) + 96px)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.item.oos .thumb::after{content:"暫時缺貨";position:absolute;inset:0;background:rgba(243,240,235,.55);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--ink);letter-spacing:2px;z-index:1}
 .item{position:relative;background:var(--card);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);cursor:pointer;display:flex;flex-direction:column}
 .editbtn{position:absolute;top:6px;right:6px;z-index:2;width:32px;height:32px;border-radius:10px;border:0;background:rgba(251,250,247,.92);color:var(--main-d);font-size:15px;box-shadow:var(--shadow)}
 .thumb{position:relative;aspect-ratio:1/1;background:#ebe6de;display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:12px}
@@ -427,6 +428,8 @@ body:not(.admin-on) .admin-only{display:none!important}
     // 特價＋新品 > 特價 > 新品 > 一般，同一級再依選擇的排序
     var prio = function(i){ return (i.sale != null ? 2 : 0) + (i.isNew ? 1 : 0); };
     list.sort(function(a,b){
+      // 暫時缺貨排在後面
+      var oa = a.status==='暫時缺貨' ? 1 : 0, ob = b.status==='暫時缺貨' ? 1 : 0; if(oa!==ob) return oa-ob;
       var pd = prio(b) - prio(a); if(pd) return pd;
       if(s==='name') return a.name.localeCompare(b.name,'ja');
       if(s==='code') return a.code.localeCompare(b.code,'ja',{numeric:true});
@@ -461,7 +464,8 @@ body:not(.admin-on) .admin-only{display:none!important}
     $('countTxt').textContent = '顯示 ' + list.length + ' 項';
     var card = function(i){
       var ph = i.photos[0];
-      return '<div class="item" data-id="'+i.id+'"><button class="editbtn admin-only" data-edit="'+i.id+'" title="編輯">✎</button>'+
+      var oos = i.status === '暫時缺貨' ? ' oos' : '';
+      return '<div class="item'+oos+'" data-id="'+i.id+'"><button class="editbtn admin-only" data-edit="'+i.id+'" title="編輯">✎</button>'+
         '<div class="thumb">'+(ph ? '<img loading="lazy" src="'+esc(thumbUrl(ph))+'" alt="">' : '沒有照片')+
           ((i.isNew || i.sale!=null) ? '<div class="badges">'+
             (i.isNew ? '<span class="newbadge">新品</span>' : '')+
