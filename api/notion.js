@@ -1,1011 +1,292 @@
-export const config = { runtime: 'edge' };
+// Vercel Serverless Function — 日本好市多 商品照片管理 Notion Proxy
+// 環境變數：
+//   NOTION_TOKEN            Notion Integration 密鑰
+//   NOTION_DB_ID            資料庫 ID
+//   CLOUDINARY_CLOUD_NAME   Cloudinary cloud name
+//   CLOUDINARY_API_KEY      Cloudinary API Key
+//   CLOUDINARY_API_SECRET   Cloudinary API Secret
+//   CLOUDINARY_FOLDER       （選填）存放資料夾，預設 costco
+//   ADMIN_PASSWORD          管理密碼（新增／編輯／刪除／上傳都需要）
 
-const NOTION_TOKEN   = process.env.NOTION_TOKEN;
-const DB_REQ         = process.env.NOTION_DATABASE_ID;
-const DB_SHIPTO      = '2fd5bfd83387803fbb46e3dca0ea739b';
-const DB_PACK        = '2fe5bfd83387801ebc35f492744f41e1';
-const DB_FREIGHT     = '3035bfd833878045bfedea25f1f5bab6';
-const DB_PRODUCT     = '413d80b35c5380abab3ddfd2b3fcbe26';   // 新商品資料庫（2026/11 更換）
-// 商品資料庫欄位名稱（用名稱對應，不寫死欄位 ID）
-const PROD_F = { code: '商品編號', name: '商品名稱', price: '現場價錢', weight: '重量' };
-const prodText = p => (p?.rich_text || p?.title || []).map(t => t.plain_text).join('').trim();
-const _norm = n => String(n || '').replace(/\s/g, '');
-// 依名稱找欄位（容忍前後或中間多了空白）
-function prodProp(props, name) {
-  if (!props) return undefined;
-  if (props[name]) return props[name];
-  const k = Object.keys(props).find(n => _norm(n) === _norm(name));
-  return k ? props[k] : undefined;
-}
-// 讀新商品資料庫的欄位設定，找出「商品編號」的實際名稱與類型（快取）
-let _prodSchema = null;
-async function prodCodeFilter(code, exact) {
-  if (!_prodSchema) {
-    const r = await nFetch(`https://api.notion.com/v1/databases/${DB_PRODUCT}`, { headers: nHeaders() });
-    const db = await r.json();
-    if (db.object === 'error') throw new Error(`讀不到商品資料庫：${db.message}`);
-    const k = Object.keys(db.properties || {}).find(n => _norm(n) === _norm(PROD_F.code));
-    if (!k) throw new Error(`商品資料庫找不到「${PROD_F.code}」欄位，現有欄位：${Object.keys(db.properties || {}).join('、')}`);
-    _prodSchema = { name: k, type: db.properties[k].type };
-  }
-  const { name, type } = _prodSchema;
-  const t = type === 'title' ? 'title' : type === 'number' ? 'number' : 'rich_text';
-  if (t === 'number') return { property: name, number: { equals: Number(code) || 0 } };
-  return { property: name, [t]: exact ? { equals: code } : { contains: code } };
-}
-const prodPrice = p => Math.round(Number(p?.number) || 0);                 // 整數
-const prodWeight = p => Math.round((Number(p?.number) || 0) * 100) / 100;  // 小數點第二位，四捨五入
+const crypto = require('crypto');
+
+const API = 'https://api.notion.com/v1';
 const NOTION_VERSION = '2022-06-28';
 
-const nHeaders = () => ({
-  'Authorization': `Bearer ${NOTION_TOKEN}`,
-  'Notion-Version': NOTION_VERSION,
-  'Content-Type': 'application/json; charset=utf-8',
-});
-
-const cors = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+// Notion 欄位名稱（如果你的資料庫欄位名稱不同，只要改這裡）
+const P = {
+  name: '商品名稱',   // Title
+  code: '商品編號',   // Text
+  cat: '分類',        // Select
+  barcode: '條碼',    // Text
+  price: '台幣價錢',  // Formula（唯讀，由公式帶出）
+  sale: '台幣特價',   // Formula（唯讀，由公式帶出）
+  photos: '照片',     // Text（多張網址用 , 分隔）
+  date: '更新日期',   // Date
+  period: '特價期間', // Date（開始～結束）
+  desc: '詳細說明',   // Text（選用）
+  weight: '重量',     // Number（選用，單位 kg）
+  isNew: '新品',      // Checkbox（選用）
+  tags: '重點'        // Multi-select（選用）
 };
 
-const json = (data, status = 200) =>
-  new Response(JSON.stringify(data), { status, headers: { ...cors, 'Content-Type': 'application/json; charset=utf-8' } });
-
-// Fetch with retry on 429 rate limit
-async function nFetch(url, opts, retries=3) {
-  for (let i=0; i<retries; i++) {
-    const res = await fetch(url, opts);
-    if (res.status !== 429) return res;
-    const wait = parseInt(res.headers.get('Retry-After')||'1') * 1000;
-    await new Promise(r => setTimeout(r, wait || (i+1)*500));
-  }
-  return fetch(url, opts);
-}
-
-// ── Shared helpers ──────────────────────────────────────────────
-
-// Fetch all pages from a DB with pagination
-async function queryAll(dbId, sorts = [{ timestamp: 'created_time', direction: 'descending' }]) {
-  let results = [], cursor;
-  while (true) {
-    const body = { page_size: 100, sorts };
-    if (cursor) body.start_cursor = cursor;
-    const res = await nFetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
-      method: 'POST', headers: nHeaders(), body: JSON.stringify(body),
-    });
-    const data = await res.json();
-    if (!data.results) throw new Error(data.message || 'Query failed');
-    results = results.concat(data.results);
-    if (!data.has_more) break;
-    cursor = data.next_cursor;
-  }
-  return results;
-}
-
-// Fetch a single page
-async function fetchPage(id) {
-  const res = await nFetch(`https://api.notion.com/v1/pages/${id}`, { headers: nHeaders() });
-  return res.json();
-}
-
-// ── PJ條碼：依欄位名稱找（不寫死欄位 ID），依 Notion 欄位類型讀寫 ──
-const BARCODE_NAME = 'PJ條碼';
-function barcodeProp(props) {
-  if (!props) return null;
-  if (props[BARCODE_NAME]) return props[BARCODE_NAME];
-  const k = Object.keys(props).find(n => n.replace(/\s/g, '').includes('條碼'));
-  return k ? props[k] : null;
-}
-let _barcodeTypeCache = null;
-async function barcodeWriteProp(value) {
-  if (!_barcodeTypeCache) {
-    const res = await nFetch(`https://api.notion.com/v1/databases/${DB_PACK}`, { headers: nHeaders() });
-    const db  = await res.json();
-    const bp  = barcodeProp(db.properties);
-    _barcodeTypeCache = bp ? { id: bp.id, type: bp.type } : { id: null, type: null };
-  }
-  const { id, type } = _barcodeTypeCache;
-  if (!id) return null;
-  const v = String(value ?? '').trim();
-  let prop = null;
-  if (type === 'rich_text')    prop = { rich_text: v ? [{ text: { content: v } }] : [] };
-  if (type === 'number')       prop = { number: v === '' ? null : Number(v) };
-  if (type === 'url')          prop = { url: v || null };
-  if (type === 'phone_number') prop = { phone_number: v || null };
-  if (type === 'select')       prop = { select: v ? { name: v } : null };
-  // 公式、彙總等唯讀欄位不寫入
-  return prop ? { id: decodeURIComponent(id), prop } : null;
-}
-
-// Extract value from a Notion property
-function val(prop) {
-  if (!prop) return null;
-  switch (prop.type) {
-    case 'title':      return prop.title?.[0]?.plain_text || '';
-    case 'rich_text':  return prop.rich_text?.[0]?.plain_text || '';
-    case 'number':     return prop.number ?? 0;
-    case 'select':     return prop.select?.name || '';
-    case 'status':     return prop.status?.name || '';
-    case 'date':       return prop.date?.start || '';
-    case 'formula':    return prop.formula?.string ?? (prop.formula?.number ?? '');
-    case 'rollup': {
-      const r = prop.rollup;
-      if (r?.type === 'number') return r.number ?? 0;
-      if (r?.type === 'date')   return r.date?.start || '';
-      const item = r?.array?.[0];
-      if (!item) return '';
-      if (item.type === 'date')       return item.date?.start || '';
-      if (item.type === 'rich_text')  return item.rich_text?.[0]?.plain_text || '';
-      if (item.type === 'number')     return item.number ?? 0;
-      return '';
-    }
-    case 'relation':   return prop.relation || [];
-    case 'url':        return prop.url || '';
-    case 'phone_number': return prop.phone_number || '';
-    case 'email':      return prop.email || '';
-    default:           return null;
-  }
-}
-
-// Find property by ID (handles URL encoding)
-function prop(props, id) {
-  const dec = decodeURIComponent(id);
-  return Object.values(props).find(v => v.id === id || v.id === dec || decodeURIComponent(v.id) === dec);
-}
-
-// Batch fetch pages and return id→data map
-async function batchFetchPages(ids, mapper) {
-  const map = {};
-  // Validate UUID format before fetching
-  const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  await Promise.all([...ids].filter(id => uuidRe.test(id)).map(async id => {
-    try {
-      const page = await fetchPage(id);
-      map[id] = mapper(page);
-    } catch { map[id] = null; }
-  }));
-  return map;
-}
-
-// Collect relation IDs from results by property ID
-function collectRelIds(results, propId) {
-  const ids = new Set();
-  for (const page of results) {
-    const p = prop(page.properties, propId);
-    if (p?.relation?.length) p.relation.forEach(r => ids.add(r.id));
-  }
-  return ids;
-}
-
-// Fetch shipto info (shared across list and freight_list)
-async function fetchShiptoMap(ids) {
-  return batchFetchPages(ids, page => {
-    const props = page.properties || {};
-    const titleProp = Object.values(props).find(v => v.type === 'title');
-    const nameProp  = Object.values(props).find(v => v.id === '~zOg');
-    return {
-      code: titleProp?.title?.[0]?.plain_text || '',
-      name: nameProp?.rich_text?.[0]?.plain_text || '',
-    };
+async function notion(path, method = 'GET', body) {
+  const r = await fetch(API + path, {
+    method,
+    headers: {
+      Authorization: 'Bearer ' + process.env.NOTION_TOKEN,
+      'Notion-Version': NOTION_VERSION,
+      'Content-Type': 'application/json'
+    },
+    body: body ? JSON.stringify(body) : undefined
   });
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.message || ('Notion 錯誤 ' + r.status));
+  return j;
 }
 
-// ── Main handler ────────────────────────────────────────────────
+// 讀取數字：支援 Number 欄位，也支援 Formula 欄位（公式結果為數字）
+function numVal(prop) {
+  if (!prop) return null;
+  if (prop.type === 'formula') {
+    const f = prop.formula || {};
+    if (f.type === 'number') return f.number != null ? f.number : null;
+    if (f.type === 'string') { const n = parseFloat(String(f.string || '').replace(/[^0-9.\-]/g, '')); return isNaN(n) ? null : n; }
+    return null;
+  }
+  return prop.number != null ? prop.number : null;
+}
 
-export default async function handler(req) {
-  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
-  const url    = new URL(req.url);
-  const action = url.searchParams.get('action');
+// 照片最後一張是日本當地牌價，不對外顯示；只剩一張時保留
+function displayPhotos(urls) {
+  return urls.length > 1 ? urls.slice(0, -1) : urls;
+}
+
+// 台幣金額：四捨五入到整數；0 或空值視為沒有價格
+function twdVal(prop) {
+  const n = numVal(prop);
+  if (n == null || n === 0) return null;
+  return Math.round(n);
+}
+
+function txt(arr) {
+  return (arr || []).map(t => t.plain_text).join('');
+}
+
+// Notion 單段文字上限 2000 字，超過就切成多段
+function rich(v) {
+  const s = v == null ? '' : String(v);
+  const out = [];
+  for (let i = 0; i < s.length && out.length < 100; i += 2000) {
+    out.push({ text: { content: s.slice(i, i + 2000) } });
+  }
+  return out;
+}
+
+function splitUrls(s) {
+  return String(s || '').split(/[,，\n]/).map(x => x.trim()).filter(Boolean);
+}
+
+function simplify(page) {
+  const p = page.properties || {};
+  return {
+    id: page.id,
+    name: txt(p[P.name] && p[P.name].title),
+    code: txt(p[P.code] && p[P.code].rich_text),
+    cat: (p[P.cat] && p[P.cat].select && p[P.cat].select.name) || '',
+    barcode: txt(p[P.barcode] && p[P.barcode].rich_text),
+    price: twdVal(p[P.price]),
+    sale: twdVal(p[P.sale]),
+    photos: displayPhotos(splitUrls(txt(p[P.photos] && p[P.photos].rich_text))),
+    date: (p[P.date] && p[P.date].date && p[P.date].date.start) || '',
+    saleStart: (p[P.period] && p[P.period].date && p[P.period].date.start || '').slice(0, 10),
+    saleEnd: (p[P.period] && p[P.period].date && p[P.period].date.end || '').slice(0, 10),
+    desc: txt(p[P.desc] && p[P.desc].rich_text),
+    weight: p[P.weight] && p[P.weight].number != null ? p[P.weight].number : null,
+    isNew: !!(p[P.isNew] && p[P.isNew].checkbox),
+    tags: ((p[P.tags] && p[P.tags].multi_select) || []).map(o => o.name),
+    edited: page.last_edited_time
+  };
+}
+
+function numOrNull(v) {
+  if (v === '' || v == null) return null;
+  const n = Number(v);
+  return isNaN(n) ? null : n;
+}
+
+function buildProps(d) {
+  const props = {};
+  if (!d) return props;
+  if ('name' in d) props[P.name] = { title: rich(d.name) };
+  if ('code' in d) props[P.code] = { rich_text: rich(d.code) };
+  if ('cat' in d) props[P.cat] = { select: d.cat ? { name: String(d.cat).replace(/,/g, '，').slice(0, 100) } : null };
+  if ('barcode' in d) props[P.barcode] = { rich_text: rich(d.barcode) };
+  // 價格／特價是公式欄位，Notion 不允許直接寫入，因此不再送出
+  if ('saleStart' in d || 'saleEnd' in d) {
+    const s = String(d.saleStart || '').slice(0, 10), e = String(d.saleEnd || '').slice(0, 10);
+    props[P.period] = { date: s ? { start: s, end: e && e >= s ? e : null } : null };
+  }
+  if ('desc' in d) props[P.desc] = { rich_text: rich(d.desc) };
+  if ('weight' in d) props[P.weight] = { number: numOrNull(d.weight) };
+  if ('isNew' in d) props[P.isNew] = { checkbox: !!d.isNew };
+  if ('tags' in d) {
+    const list = (Array.isArray(d.tags) ? d.tags : String(d.tags || '').split(/[,，、]/))
+      .map(t => String(t).trim().replace(/,/g, '，').slice(0, 100)).filter(Boolean);
+    props[P.tags] = { multi_select: Array.from(new Set(list)).map(name => ({ name })) };
+  }
+  if ('date' in d) props[P.date] = { date: d.date ? { start: String(d.date).slice(0, 10) } : null };
+  if ('photos' in d) {
+    const list = Array.isArray(d.photos) ? d.photos : splitUrls(d.photos);
+    props[P.photos] = { rich_text: rich(list.join(',')) };
+  }
+  return props;
+}
+
+// 簽名上傳到 Cloudinary（API Secret 只存在伺服器端）
+async function uploadCloudinary(base64, contentType) {
+  const cloud = process.env.CLOUDINARY_CLOUD_NAME;
+  const key = process.env.CLOUDINARY_API_KEY;
+  const secret = process.env.CLOUDINARY_API_SECRET;
+  if (!cloud || !key || !secret) throw new Error('缺少 Cloudinary 環境變數');
+
+  const folder = process.env.CLOUDINARY_FOLDER || 'costco';
+  const timestamp = Math.floor(Date.now() / 1000);
+  const toSign = 'folder=' + folder + '&timestamp=' + timestamp + secret;
+  const signature = crypto.createHash('sha1').update(toSign).digest('hex');
+
+  const form = new FormData();
+  form.append('file', 'data:' + (contentType || 'image/jpeg') + ';base64,' + base64);
+  form.append('api_key', key);
+  form.append('timestamp', String(timestamp));
+  form.append('folder', folder);
+  form.append('signature', signature);
+
+  const r = await fetch('https://api.cloudinary.com/v1_1/' + cloud + '/image/upload', { method: 'POST', body: form });
+  const j = await r.json();
+  if (!r.ok) throw new Error((j.error && j.error.message) || 'Cloudinary 上傳失敗');
+  return j.secure_url;
+}
+
+// 查詢商品編號是否已存在（排除自己），回傳重複的商品名稱，沒有則回傳 null
+async function findDupCode(DB, code, excludeId) {
+  code = String(code || '').trim();
+  if (!code) return null;
+  const q = await notion('/databases/' + DB + '/query', 'POST', {
+    page_size: 10,
+    filter: { property: P.code, rich_text: { equals: code } }
+  });
+  const norm = id => String(id || '').replace(/-/g, '');
+  const hit = q.results.find(p => norm(p.id) !== norm(excludeId));
+  return hit ? (txt(hit.properties[P.name] && hit.properties[P.name].title) || '（未命名）') : null;
+}
+
+function dupMsg(code, name) {
+  return '商品編號「' + code + '」已經存在（' + name + '），不能重複';
+}
+
+// 需要管理密碼的動作
+const WRITE_ACTIONS = ['upload', 'create', 'update', 'archive', 'checkCode', 'auth'];
+
+function passOk(input) {
+  const pw = process.env.ADMIN_PASSWORD || '';
+  if (!pw || typeof input !== 'string') return false;
+  const a = crypto.createHash('sha256').update(input).digest();
+  const c = crypto.createHash('sha256').update(pw).digest();
+  return crypto.timingSafeEqual(a, c);
+}
+
+// 唯讀版：拒絕所有會修改 Notion 或 Cloudinary 的動作
+const READ_ONLY_BLOCKED = ['upload', 'create', 'update', 'archive'];
+
+module.exports = async (req, res) => {
+  if (req.method !== 'POST') return res.status(405).json({ error: '只接受 POST' });
+  if (!process.env.NOTION_TOKEN || !process.env.NOTION_DB_ID) {
+    return res.status(500).json({ error: '缺少環境變數 NOTION_TOKEN 或 NOTION_DB_ID' });
+  }
+  const DB = process.env.NOTION_DB_ID;
+  const b = (typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body) || {};
+
+  if (READ_ONLY_BLOCKED.indexOf(b.action) >= 0) {
+    return res.status(403).json({ error: '唯讀網站，不允許修改資料' });
+  }
+
+  if (WRITE_ACTIONS.indexOf(b.action) >= 0) {
+    if (!process.env.ADMIN_PASSWORD) return res.status(500).json({ error: '尚未設定環境變數 ADMIN_PASSWORD' });
+    if (!passOk(b.adminKey)) {
+      await new Promise(r => setTimeout(r, 800)); // 減緩暴力猜密碼
+      return res.status(401).json({ error: '密碼錯誤', auth: false });
+    }
+    if (b.action === 'auth') return res.json({ ok: true });
+  }
 
   try {
-
-    // ── SCHEMA (cached 24h) ─────────────────────────────────────
-    if (action === 'schema') {
-      const res  = await fetch(`https://api.notion.com/v1/databases/${DB_REQ}`, { headers: nHeaders() });
-      const data = await res.json();
-      if (!data.properties) return json({ error: 'Schema error', detail: data }, 500);
-      const ID_KEY = {
-        'SAe%60':'商店','TtRR':'發貨客戶','ZFWL':'付款狀態',
-        '%5Dyoq':'商品類型','_o~%7B':'購買屬性','ko~P':'發貨狀態','lA%3A_':'購買狀態',
-      };
-      const schema = {};
-      for (const p of Object.values(data.properties)) {
-        // Match both encoded and decoded IDs
-        const key = ID_KEY[p.id] || ID_KEY[encodeURIComponent(p.id)];
-        if (!key) continue;
-        const type = p.type === 'select' ? 'select' : p.type === 'status' ? 'status' : null;
-        if (type) schema[key] = { type, options: p[p.type].options.map(o => o.name) };
+    switch (b.action) {
+      case 'schema': {
+        const db = await notion('/databases/' + DB);
+        const sel = db.properties[P.cat] && db.properties[P.cat].select;
+        const tg = db.properties[P.tags] && db.properties[P.tags].multi_select;
+        // 回傳選用欄位是否存在，前端只送出 Notion 有建立的欄位
+        const has = {};
+        ['desc', 'tags', 'weight', 'isNew'].forEach(k => { has[k] = !!db.properties[P[k]]; });
+        return res.json({ categories: sel ? sel.options.map(o => o.name) : [], tagOptions: tg ? tg.options.map(o => o.name) : [], has });
       }
-      return new Response(JSON.stringify(schema), { headers: {
-        ...cors, 'Content-Type': 'application/json; charset=utf-8',
-        'Cache-Control': 'no-store'
-      }});
-    }
 
-    // ── SHIPTO DEBUG ─────────────────────────────────────────────
-    if (action === 'shipto_debug') {
-      const results = await queryAll(DB_SHIPTO, []);
-      if (!results.length) return json({ error: 'no records' });
-      const props = results[0].properties || {};
-      // Return all property names, ids, types, and values
-      const debug = Object.entries(props).map(([name, v]) => ({
-        name,
-        id: v.id,
-        type: v.type,
-        value: v.type === 'number' ? v.number : v.type === 'title' ? v.title?.[0]?.plain_text : v.type === 'rich_text' ? v.rich_text?.[0]?.plain_text : '...',
-      }));
-      return json(debug);
-    }
-
-    // ── SHIPTO LIST ──────────────────────────────────────────────
-    if (action === 'shipto_list') {
-      const results = await queryAll(DB_SHIPTO, []);
-      const list = results.map(page => {
-        const props    = page.properties || {};
-        const titleP   = Object.values(props).find(v => v.type === 'title');
-        const nameP    = Object.values(props).find(v => v.id === '~zOg');
-        const coShipP  = props['co_ship']  || Object.values(props).find(v => v.id === 'co_ship');
-        const cusShipP = props['cus_ship'] || Object.values(props).find(v => v.id === 'cus_ship');
-        const code     = titleP?.title?.[0]?.plain_text || '';
-        const name     = nameP?.rich_text?.[0]?.plain_text || '';
-        return {
-          id: page.id,
-          code,
-          name,
-          co_ship:  coShipP?.number  ?? null,
-          cus_ship: cusShipP?.number ?? null,
-        };
-      }).filter(r => r.code);
-      return json(list);
-    }
-
-    // ── REQ LIST STATS (全量，只取統計需要的欄位) ──────────────
-    if (action === 'list_stats') {
-      let results = [], cursor;
-      while (true) {
-        const body = {
-          page_size: 100,
-          sorts: [{ timestamp: 'created_time', direction: 'descending' }],
-          // 只 filter properties 裡有 id 的欄位，減少回傳資料量
-        };
-        if (cursor) body.start_cursor = cursor;
-        const res = await nFetch(`https://api.notion.com/v1/databases/${DB_REQ}/query`, {
-          method: 'POST', headers: nHeaders(), body: JSON.stringify(body),
-        });
-        const data = await res.json();
-        if (!data.results) throw new Error(data.message || 'Query failed');
-        // 只保留統計需要的欄位
-        for (const page of data.results) {
-          const p = page.properties || {};
-          const g = id => val(prop(p, id));
-          results.push({
-            buy:   g('lA%3A_') || '',
-            pay:   g('ZFWL')   || '',
-            ship:  g('ko~P')   || '',
-            total: g('cECx')   || 0,
-            quote: g('cAk\\')  || 0,
+      case 'list': {
+        let results = [];
+        let cursor;
+        do {
+          const q = await notion('/databases/' + DB + '/query', 'POST', {
+            page_size: 100,
+            start_cursor: cursor,
+            sorts: [{ timestamp: 'last_edited_time', direction: 'descending' }]
           });
+          results = results.concat(q.results);
+          cursor = q.has_more ? q.next_cursor : undefined;
+        } while (cursor);
+        return res.json({ items: results.map(simplify) });
+      }
+
+      case 'upload': {
+        if (!b.data) return res.status(400).json({ error: '沒有照片資料' });
+        const url = await uploadCloudinary(b.data, b.contentType);
+        return res.json({ url });
+      }
+
+      case 'checkCode': {
+        const name = await findDupCode(DB, b.code, b.pageId);
+        return res.json({ duplicate: !!name, name });
+      }
+
+      case 'create': {
+        if (b.data && b.data.code) {
+          const dup = await findDupCode(DB, b.data.code);
+          if (dup) return res.status(409).json({ error: dupMsg(String(b.data.code).trim(), dup) });
         }
-        if (!data.has_more) break;
-        cursor = data.next_cursor;
-      }
-      // 計算統計
-      const unstarted   = results.filter(r => r.buy === '未開始').length;
-      const unpaidBase  = results.filter(r => r.pay === '未付款' && r.buy !== '缺貨' && r.buy !== '不購買');
-      const collecting  = results.filter(r => r.ship === '集貨中').length;
-      const unpaidAmt   = unpaidBase.reduce((s, r) => s + (Number(r.quote) || 0), 0);
-      return json({
-        total: results.length,
-        unstarted,
-        unpaid: unpaidBase.length,
-        unpaidAmt,
-        collecting,
-      });
-    }
-
-    // ── REQ LIST ────────────────────────────────────────────────
-    if (action === 'list') {
-      const cursor    = url.searchParams.get('cursor') || undefined;
-      const page_size = Math.min(parseInt(url.searchParams.get('limit') || '100'), 100);
-
-      // Fetch one page of req results and full shipto DB in parallel
-      const [reqRes, shiptoResults] = await Promise.all([
-        nFetch(`https://api.notion.com/v1/databases/${DB_REQ}/query`, {
-          method: 'POST', headers: nHeaders(),
-          body: JSON.stringify({
-            page_size,
-            sorts: [{ timestamp: 'created_time', direction: 'descending' }],
-            ...(cursor ? { start_cursor: cursor } : {}),
-          }),
-        }).then(r => r.json()),
-        queryAll(DB_SHIPTO, []),
-      ]);
-
-      if (!reqRes.results) throw new Error(reqRes.message || 'Query failed');
-      const results = reqRes.results;
-
-      // Build shipto map from full DB (one query instead of N queries)
-      const shiptoMap = {};
-      for (const page of shiptoResults) {
-        const props  = page.properties || {};
-        const titleP = Object.values(props).find(v => v.type === 'title');
-        const nameP  = Object.values(props).find(v => v.id === '~zOg');
-        shiptoMap[page.id] = {
-          code: titleP?.title?.[0]?.plain_text || '',
-          name: nameP?.rich_text?.[0]?.plain_text || '',
-        };
+        const page = await notion('/pages', 'POST', { parent: { database_id: DB }, properties: buildProps(b.data) });
+        return res.json({ item: simplify(page) });
       }
 
-      // Only fetch pack pages that are actually referenced
-      const packIds = collectRelIds(results, 'R_%3D%3A');
-      const packTitles = await batchFetchPages(packIds, page => {
-        const titleP = Object.values(page.properties || {}).find(v => v.type === 'title');
-        return { label: titleP?.title?.[0]?.plain_text || '' };
-      });
-
-      const mapped = results.map(page => {
-        const p = page.properties || {};
-        const g = id => val(prop(p, id));
-        const packRel   = prop(p, 'R_%3D%3A');
-        const packIds_  = packRel?.relation || [];
-        const shiptoRel = prop(p, 'QUXO');
-        const shiptoIds_= shiptoRel?.relation || [];
-        return {
-          _pageId:    page.id,
-          id:         g('yHX%7B') || Object.values(p).find(v => v.type==='title')?.title?.[0]?.plain_text || page.id.slice(0,8),
-          client:     g('A%3A%3Ei') || '',
-          name:       g('Tcrm') || '',
-          code:       g('%60AG%5B') || '',
-          qty:        g('Poce') || 0,
-          price:      g('UISe') || 0,
-          quote:      g('cAk%5C') || 0,
-          total:      g('cECx') || 0,
-          shop:       g('SAe%60') || '',
-          shipto:     shiptoIds_.map(r => shiptoMap[r.id]?.code || '').filter(Boolean).join(', '),
-          shiptoName: shiptoIds_.map(r => shiptoMap[r.id]?.name || '').filter(Boolean).join(', '),
-          type:       g('%5Dyoq') || '',
-          attr:       g('_o~%7B') || '',
-          submit:     g('uF%3AY') || '',
-          done:       g('ExlH') || '',
-          pay:        g('ZFWL') || '',
-          ship:       g('ko~P') || '',
-          buy:        g('lA%3A_') || '',
-          estWeight:  g('%5ECer') || 0,
-          twQuote:    g('X%3E%7BZ') || 0,
-          pack:       packIds_.map(r => packTitles[r.id]?.label || '').filter(Boolean).join(', '),
-          _packIds:   packIds_.map(r => r.id),
-        };
-      });
-      return json({
-        records:     mapped,
-        has_more:    reqRes.has_more || false,
-        next_cursor: reqRes.next_cursor || null,
-      });
-    }
-
-    // ── REQ CREATE ──────────────────────────────────────────────
-    if (action === 'create') {
-      const body = await req.json();
-      const props = reqToProps(body);
-      const res  = await fetch('https://api.notion.com/v1/pages', {
-        method: 'POST', headers: nHeaders(),
-        body: JSON.stringify({ parent: { database_id: DB_REQ }, properties: props }),
-      });
-      const data = await res.json();
-      if (data.object === 'error') return json({ error: data.message }, 500);
-      return json({ ok: true, id: data.id });
-    }
-
-    // ── REQ UPDATE ──────────────────────────────────────────────
-    if (action === 'update') {
-      const pageId = url.searchParams.get('id');
-      const body   = await req.json();
-      const res    = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-        method: 'PATCH', headers: nHeaders(),
-        body: JSON.stringify({ properties: reqToProps(body) }),
-      });
-      const data = await res.json();
-      if (data.object === 'error') return json({ error: data.message }, 500);
-      return json({ ok: true });
-    }
-
-    // ── REQ DELETE ──────────────────────────────────────────────
-    if (action === 'delete') {
-      const pageId = url.searchParams.get('id');
-      const delRes = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-        method: 'PATCH', headers: nHeaders(),
-        body: JSON.stringify({ archived: true }),
-      });
-      if (!delRes.ok) {
-        const errData = await delRes.json().catch(() => ({}));
-        return json({ ok: false, error: errData.message || `Notion error ${delRes.status}` }, 500);
-      }
-      return json({ ok: true });
-    }
-
-    // ── UNLINKED REQS (for pack create) ─────────────────────────
-    // ── REQS BY IDS（出貨單詳細頁顯示已關聯需求單用）────────────
-    if (action === 'reqs_by_ids') {
-      const ids = (url.searchParams.get('ids') || '').split(',').filter(Boolean);
-      const map = await batchFetchPages(new Set(ids), page => {
-        const props = page.properties || {};
-        const titleP  = Object.values(props).find(v => v.type === 'title');
-        const nameP   = Object.values(props).find(v => v.id === 'Tcrm');
-        const clientP = Object.values(props).find(v => v.id === 'A%3A%3Ei');
-        const weightP = Object.values(props).find(v => v.id === '%5ECer');
-        return {
-          id:        page.id,
-          label:     titleP?.title?.[0]?.plain_text || page.id.slice(0,8),
-          name:      nameP?.rich_text?.[0]?.plain_text || '',
-          client:    clientP?.rich_text?.[0]?.plain_text || '',
-          estWeight: weightP?.number ?? 0,
-        };
-      });
-      return json(ids.map(id => map[id]).filter(Boolean));
-    }
-
-    if (action === 'unlinked_reqs') {
-      const results = await queryAll(DB_REQ);
-      const unlinked = results.filter(page => {
-        const p = prop(page.properties, 'R_%3D%3A');
-        return !p?.relation?.length;
-      }).map(page => {
-        const props = page.properties || {};
-        const titleP  = Object.values(props).find(v => v.type === 'title');
-        const nameP   = Object.values(props).find(v => v.id === 'Tcrm');
-        const clientP = Object.values(props).find(v => v.id === 'A%3A%3Ei');
-        const shipP    = Object.values(props).find(v => v.id === 'ko~P');
-        const weightP  = Object.values(props).find(v => v.id === '%5ECer');
-        return {
-          id:        page.id,
-          label:     titleP?.title?.[0]?.plain_text || page.id.slice(0,8),
-          name:      nameP?.rich_text?.[0]?.plain_text || '',
-          client:    clientP?.rich_text?.[0]?.plain_text || '',
-          ship:      shipP?.status?.name || '',
-          estWeight: weightP?.number ?? 0,
-        };
-      });
-      return json(unlinked);
-    }
-
-    // ── PACK SCHEMA ──────────────────────────────────────────────
-    if (action === 'pack_schema') {
-      const res  = await fetch(`https://api.notion.com/v1/databases/${DB_PACK}`, { headers: nHeaders() });
-      const data = await res.json();
-      if (!data.properties) return json({ error: 'Schema error' }, 500);
-      const schema = {};
-      for (const p of Object.values(data.properties)) {
-        if (p.type === 'status') {
-          const key = { 'm%7CyI':'封箱狀態','yQKS':'發貨狀態' }[p.id];
-          if (key) schema[key] = { type:'status', options: p.status.options.map(o => o.name) };
+      case 'update': {
+        if (!b.pageId) return res.status(400).json({ error: '缺少 pageId' });
+        if (b.data && b.data.code) {
+          const dup = await findDupCode(DB, b.data.code, b.pageId);
+          if (dup) return res.status(409).json({ error: dupMsg(String(b.data.code).trim(), dup) });
         }
-      }
-      return new Response(JSON.stringify(schema), { headers: {
-        ...cors, 'Content-Type': 'application/json; charset=utf-8',
-        'Cache-Control': 'no-store',
-      }});
-    }
-
-    // ── PACK LIST ───────────────────────────────────────────────
-    if (action === 'pack_list') {
-      const results = await queryAll(DB_PACK, []);  // no sort to avoid timeout
-      return json(results.map(page => {
-        const p   = page.properties || {};
-        const g   = id => val(prop(p, id));
-        const rel = prop(p, 'z%7D_K')?.relation || [];
-        // Return req page IDs - frontend will resolve labels from cached req data
-        return {
-          _pageId:  page.id,
-          id:       g('title'),
-          box:      g('llSb'),
-          weight:   g('uStz'),
-          seal:     g('m%7CyI'),
-          ship:     g('yQKS'),
-          arrive:   g('%5B~Wz'),
-          note:      g('FuLG'),
-          shipDate:  g('tH%5C%5D'),
-          barcode:   (bp => bp?.type === 'number' ? String(bp.number ?? '') : String(val(bp) ?? ''))(barcodeProp(p)),
-          reqIds:    rel.map(r => r.id),
-          reqCount:  rel.length,
-        };
-      }));
-    }
-
-    // ── PACK DETAIL (single pack with estWeight) ────────────────
-    if (action === 'pack_detail') {
-      const pageId = url.searchParams.get('id');
-      const page = await fetchPage(pageId);
-      if (page.object === 'error') return json({ error: page.message }, 500);
-      const p = page.properties || {};
-      const g = id => val(prop(p, id));
-      const rel = prop(p, 'z%7D_K')?.relation || [];
-      // Fetch req pages for estWeight
-      const reqPages = await batchFetchPages(new Set(rel.map(r=>r.id)), pg => {
-        const props = pg.properties || {};
-        const titleP  = Object.values(props).find(v => v.type === 'title');
-        const clientP = Object.values(props).find(v => v.id === 'A%3A%3Ei');
-        const weightP = Object.values(props).find(v => v.id === '%5ECer');
-        return {
-          label:     titleP?.title?.[0]?.plain_text || '',
-          client:    clientP?.rich_text?.[0]?.plain_text || '',
-          estWeight: weightP?.number ?? 0,
-        };
-      });
-      const reqs      = rel.map(r => reqPages[r.id]?.label || '').filter(Boolean);
-      const clients   = [...new Set(rel.map(r => reqPages[r.id]?.client || '').filter(Boolean))];
-      const estWeight = rel.reduce((s,r) => s + (reqPages[r.id]?.estWeight || 0), 0);
-      return json({
-        _pageId:   page.id,
-        id:        g('title'),
-        box:       g('llSb'),
-        weight:    g('uStz'),
-        seal:      g('m%7CyI'),
-        ship:      g('yQKS'),
-        arrive:    g('%5B~Wz'),
-        note:      g('FuLG'),
-        reqs,
-        clients,
-        estWeight: Math.round(estWeight * 10) / 10,
-        reqCount:  rel.length,
-      });
-    }
-
-    // ── PACK UPDATE ──────────────────────────────────────────────
-    if (action === 'pack_update') {
-      const pageId = url.searchParams.get('id');
-      const body   = await req.json();
-      const props  = {};
-      if (body.box    !== undefined) props['llSb']     = { rich_text: [{ text: { content: body.box || '' } }] };
-      if (body.barcode !== undefined) { const b = await barcodeWriteProp(body.barcode); if (b) props[b.id] = b.prop; }
-      if (body.weight !== undefined) props['uStz']     = { number: Number(body.weight) || 0 };
-      if (body.seal)                 props['m|yI']     = { status: { name: body.seal } };
-      if (body.ship)                 props['yQKS']     = { status: { name: body.ship } };
-      if (body.arrive)               props['[~Wz']     = { date: { start: body.arrive } };
-      if (body.note     !== undefined) props['FuLG']      = { rich_text: [{ text: { content: body.note || '' } }] };
-      if (body.shipDate)               props['tH%5C%5D'] = { date: { start: body.shipDate } };
-      const res = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-        method: 'PATCH', headers: nHeaders(), body: JSON.stringify({ properties: props }),
-      });
-      const data = await res.json();
-      if (data.object === 'error') return json({ error: data.message }, 500);
-
-      // 發貨狀態改成「完成」時，把關聯的需求單發貨狀態也改成「完成」
-      if (body.ship === '完成' && body.reqIds?.length) {
-        await Promise.all(body.reqIds.map(reqId =>
-          nFetch(`https://api.notion.com/v1/pages/${reqId}`, {
-            method: 'PATCH', headers: nHeaders(),
-            body: JSON.stringify({ properties: { 'ko~P': { status: { name: '完成' } } } }),
-          })
-        ));
+        const page = await notion('/pages/' + b.pageId, 'PATCH', { properties: buildProps(b.data) });
+        return res.json({ item: simplify(page) });
       }
 
-      return json({ ok: true });
-    }
-
-    // ── PACK CREATE ──────────────────────────────────────────────
-    if (action === 'pack_create') {
-      const body  = await req.json();
-      const props = {};
-      if (body.packId)          props['title']  = { title: [{ text: { content: body.packId } }] };
-      if (body.box)             props['llSb']   = { rich_text: [{ text: { content: body.box } }] };
-      if (body.barcode)         { const b = await barcodeWriteProp(body.barcode); if (b) props[b.id] = b.prop; }
-      if (body.weight)          props['uStz']   = { number: Number(body.weight) || 0 };
-      if (body.seal)            props['m|yI']   = { status: { name: body.seal } };
-      if (body.ship)            props['yQKS']   = { status: { name: body.ship } };
-      if (body.arrive)          props['[~Wz']   = { date: { start: body.arrive } };
-      if (body.note)             props['FuLG']      = { rich_text: [{ text: { content: body.note } }] };
-      if (body.shipDate)         props['tH%5C%5D'] = { date: { start: body.shipDate } };
-      if (body.reqPageIds?.length) props['z}_K'] = { relation: body.reqPageIds.map(id => ({ id })) };
-      const res = await fetch('https://api.notion.com/v1/pages', {
-        method: 'POST', headers: nHeaders(),
-        body: JSON.stringify({ parent: { database_id: DB_PACK }, properties: props }),
-      });
-      const packPage = await res.json();
-      if (packPage.object === 'error') return json({ error: packPage.message }, 500);
-      // Write back to req pages: set pack relation + 發貨狀態 → 已出貨
-      if (body.reqPageIds?.length) {
-        await Promise.all(body.reqPageIds.map(reqId =>
-          fetch(`https://api.notion.com/v1/pages/${reqId}`, {
-            method: 'PATCH', headers: nHeaders(),
-            body: JSON.stringify({ properties: {
-              'R_%3D%3A': { relation: [{ id: packPage.id }] },
-              'ko~P': { status: { name: '已出貨' } },
-            }}),
-          })
-        ));
-      }
-      return json({ ok: true, id: packPage.id });
-    }
-
-    // ── PACK UPDATE REQS ─────────────────────────────────────────
-    if (action === 'pack_update_reqs') {
-      const pageId = url.searchParams.get('id');
-      const body = await req.json();
-      const { reqIds, addedIds, removedIds, packId } = body;
-
-      // Update pack's relation
-      await nFetch(`https://api.notion.com/v1/pages/${pageId}`, {
-        method: 'PATCH', headers: nHeaders(),
-        body: JSON.stringify({ properties: { 'z}_K': { relation: reqIds.map(id=>({id})) } } }),
-      });
-
-      // Update added reqs: set their pack relation to this pack
-      if (addedIds?.length) {
-        await Promise.all(addedIds.map(reqId =>
-          nFetch(`https://api.notion.com/v1/pages/${reqId}`, {
-            method: 'PATCH', headers: nHeaders(),
-            body: JSON.stringify({ properties: {
-              'R_%3D%3A': { relation: [{ id: packId }] },
-              'ko~P': { status: { name: '已出貨' } },
-            }}),
-          })
-        ));
+      case 'archive': {
+        if (!b.pageId) return res.status(400).json({ error: '缺少 pageId' });
+        await notion('/pages/' + b.pageId, 'PATCH', { archived: true });
+        return res.json({ ok: true });
       }
 
-      // Update removed reqs: clear their pack relation
-      if (removedIds?.length) {
-        await Promise.all(removedIds.map(reqId =>
-          nFetch(`https://api.notion.com/v1/pages/${reqId}`, {
-            method: 'PATCH', headers: nHeaders(),
-            body: JSON.stringify({ properties: {
-              'R_%3D%3A': { relation: [] },
-            }}),
-          })
-        ));
-      }
-
-      return json({ ok: true });
+      default:
+        return res.status(400).json({ error: '未知的 action' });
     }
-
-    // ── UNLINKED PACKS (for freight create) ─────────────────────
-    if (action === 'unlinked_packs') {
-      const [packs, freightResults] = await Promise.all([
-        queryAll(DB_PACK),
-        queryAll(DB_FREIGHT),
-      ]);
-      const linkedPackIds = new Set();
-      for (const page of freightResults) {
-        const p = prop(page.properties, 'Dj%7Dq');
-        if (p?.relation?.length) p.relation.forEach(r => linkedPackIds.add(r.id));
-      }
-      const unlinked = packs.filter(p => !linkedPackIds.has(p.id)).map(page => {
-        const props  = page.properties || {};
-        const titleP = Object.values(props).find(v => v.type === 'title');
-        const boxP   = Object.values(props).find(v => v.id === 'llSb');
-        return {
-          id:    page.id,
-          label: titleP?.title?.[0]?.plain_text || '',
-          box:   boxP?.rich_text?.[0]?.plain_text || '',
-        };
-      }).filter(r => r.label);
-      return json(unlinked);
-    }
-
-    // ── FREIGHT SCHEMA ───────────────────────────────────────────
-    if (action === 'freight_schema') {
-      const res  = await fetch(`https://api.notion.com/v1/databases/${DB_FREIGHT}`, { headers: nHeaders() });
-      const data = await res.json();
-      if (!data.properties) return json({ error: 'Schema error' }, 500);
-      const schema = {};
-      for (const p of Object.values(data.properties)) {
-        const key = { 'EmmN':'公司狀態','NInZ':'客戶狀態' }[p.id];
-        if (key && p.type === 'select') schema[key] = { type:'select', options: p.select.options.map(o => o.name) };
-      }
-      return new Response(JSON.stringify(schema), { headers: {
-        ...cors, 'Content-Type': 'application/json; charset=utf-8',
-        'Cache-Control': 'no-store',
-      }});
-    }
-
-    // ── FREIGHT LIST ─────────────────────────────────────────────
-    if (action === 'freight_list') {
-      const results = await queryAll(DB_FREIGHT);
-
-      // Fetch full shipto DB + pack pages in parallel
-      const packRelIds = collectRelIds(results, 'Dj%7Dq');
-      const [shiptoResultsF, packTitleMap] = await Promise.all([
-        queryAll(DB_SHIPTO, []),
-        batchFetchPages(packRelIds, page => {
-          const titleP = Object.values(page.properties || {}).find(v => v.type === 'title');
-          return { label: titleP?.title?.[0]?.plain_text || '' };
-        }),
-      ]);
-
-      // Build client map from full shipto DB
-      const clientMap = {};
-      for (const page of shiptoResultsF) {
-        const props  = page.properties || {};
-        const titleP = Object.values(props).find(v => v.type === 'title');
-        const nameP  = Object.values(props).find(v => v.id === '~zOg');
-        clientMap[page.id] = {
-          code: titleP?.title?.[0]?.plain_text || '',
-          name: nameP?.rich_text?.[0]?.plain_text || '',
-        };
-      }
-
-      return json(results.map(page => {
-        const p = page.properties || {};
-        const g = id => val(prop(p, id));
-        const clientRel = prop(p, 'mar%5B')?.relation || [];
-        const packRel   = prop(p, 'Dj%7Dq')?.relation  || [];
-        return {
-          _pageId:       page.id,
-          id:            g('title'),
-          pack:          packRel.map(r => packTitleMap[r.id]?.label || '').filter(Boolean).join(', '),
-          pjBox:         g('E%3BJR'),
-          weight:        g('%7CHtj'),
-          companyPrice:  g('%3DMBG'),
-          clientPrice:   g('OWfD'),
-          companyAmount: g('xmsH'),
-          clientAmount:  g('ecPw'),
-          diff:          g('%3FZZO'),
-          companyStatus: g('EmmN'),
-          clientStatus:  g('NInZ'),
-          note:          g('MfK%60'),
-          weightDiff:    g('hVw%60'),
-          date:          g('JEQR'),
-          clientCode:    clientRel.map(r => clientMap[r.id]?.code || '').filter(Boolean).join(', '),
-          clientName:    clientRel.map(r => clientMap[r.id]?.name || '').filter(Boolean).join(', '),
-        };
-      }));
-    }
-
-    // ── FREIGHT UPDATE ───────────────────────────────────────────
-    if (action === 'freight_update') {
-      const pageId = url.searchParams.get('id');
-      const body   = await req.json();
-      const props  = {};
-      if (body.companyPrice  !== undefined) props['%3DMBG']   = { number: Number(body.companyPrice) || 0 };
-      if (body.clientPrice   !== undefined) props['OWfD']     = { number: Number(body.clientPrice)  || 0 };
-      if (body.companyStatus)               props['EmmN']     = { select: { name: body.companyStatus } };
-      if (body.clientStatus)                props['NInZ']     = { select: { name: body.clientStatus  } };
-      if (body.note          !== undefined) props['MfK%60']   = { rich_text: [{ text: { content: body.note || '' } }] };
-      if (body.weightDiff    !== undefined) props['hVw%60']   = { rich_text: [{ text: { content: body.weightDiff || '' } }] };
-      const res = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-        method: 'PATCH', headers: nHeaders(), body: JSON.stringify({ properties: props }),
-      });
-      const data = await res.json();
-      if (data.object === 'error') return json({ error: data.message }, 500);
-      return json({ ok: true });
-    }
-
-    // ── FREIGHT CREATE ───────────────────────────────────────────
-    if (action === 'freight_create') {
-      const body  = await req.json();
-      const props = {};
-      if (body.freightId)    props['title']    = { title: [{ text: { content: body.freightId } }] };
-      if (body.packPageId)   props['Dj}q']     = { relation: [{ id: body.packPageId }] };
-      if (body.clientPageId) props['mar[']     = { relation: [{ id: body.clientPageId }] };
-      if (body.companyPrice !== undefined) props['%3DMBG'] = { number: Number(body.companyPrice) || 0 };
-      if (body.clientPrice  !== undefined) props['OWfD']   = { number: Number(body.clientPrice)  || 0 };
-      if (body.companyStatus) props['EmmN']    = { select: { name: body.companyStatus } };
-      if (body.clientStatus)  props['NInZ']    = { select: { name: body.clientStatus  } };
-      if (body.note)          props['MfK%60']  = { rich_text: [{ text: { content: body.note } }] };
-      if (body.weightDiff)    props['hVw%60']  = { rich_text: [{ text: { content: body.weightDiff } }] };
-      const res = await fetch('https://api.notion.com/v1/pages', {
-        method: 'POST', headers: nHeaders(),
-        body: JSON.stringify({ parent: { database_id: DB_FREIGHT }, properties: props }),
-      });
-      const data = await res.json();
-      if (data.object === 'error') return json({ error: data.message }, 500);
-      return json({ ok: true, id: data.id });
-    }
-
-    // ── STATS ALL（統計頁：一次讀全部需求單／出貨單／運費的精簡欄位）──
-    if (action === 'stats_all') {
-      const [reqPages, packPages, freightPages, shiptoPages] = await Promise.all([
-        queryAll(DB_REQ),
-        queryAll(DB_PACK, []),
-        queryAll(DB_FREIGHT),
-        queryAll(DB_SHIPTO, []),
-      ]);
-      const day = v => (v || '').slice(0, 10);
-      const clientMap = {};
-      shiptoPages.forEach(pg => {
-        const p = pg.properties || {};
-        const t = Object.values(p).find(v => v.type === 'title');
-        const n = Object.values(p).find(v => v.id === '~zOg');
-        clientMap[pg.id] = n?.rich_text?.[0]?.plain_text || t?.title?.[0]?.plain_text || '';
-      });
-      const reqs = reqPages.map(page => {
-        const p = page.properties || {};
-        const g = id => val(prop(p, id));
-        return {
-          date:    day(g('uF%3AY')) || day(page.created_time),   // 提交日，沒填就用建立日
-          client:  g('A%3A%3Ei') || '',
-          type:    g('%5Dyoq')   || '',
-          shop:    g('SAe%60')   || '',
-          quote:   Number(g('cAk%5C')) || 0,
-          twQuote: Number(g('X%3E%7BZ')) || 0,
-          buy:     g('lA%3A_') || '',
-          pay:     g('ZFWL')   || '',
-          ship:    g('ko~P')   || '',
-        };
-      });
-      const packs = packPages.map(page => {
-        const p = page.properties || {};
-        const g = id => val(prop(p, id));
-        return { date: day(g('tH%5C%5D')), weight: Number(g('uStz')) || 0 };   // 出貨日期
-      });
-      const freights = freightPages.map(page => {
-        const p = page.properties || {};
-        const g = id => val(prop(p, id));
-        const rel = prop(p, 'mar%5B')?.relation || [];
-        return {
-          date:          day(g('JEQR')) || day(page.created_time),
-          client:        rel.map(r => clientMap[r.id] || '').filter(Boolean).join(', '),
-          companyAmount: Number(g('xmsH')) || 0,
-          clientAmount:  Number(g('ecPw')) || 0,
-          diff:          Number(g('%3FZZO')) || 0,
-          weight:        Number(g('%7CHtj')) || 0,
-          companyStatus: g('EmmN') || '',
-          clientStatus:  g('NInZ') || '',
-        };
-      });
-      return json({ reqs, packs, freights, at: new Date().toISOString() });
-    }
-
-    // ── PRODUCT SEARCH ──────────────────────────────────────────
-    // ── PRODUCT DEBUG（檢查新商品資料庫連線與欄位）──────────────
-    if (action === 'product_debug') {
-      const out = { 資料庫ID: DB_PRODUCT };
-      const r1 = await nFetch(`https://api.notion.com/v1/databases/${DB_PRODUCT}`, { headers: nHeaders() });
-      const db = await r1.json();
-      if (db.object === 'error') {
-        out.第1步_連線 = `失敗：${db.code} - ${db.message}`;
-        return json(out);
-      }
-      out.第1步_連線 = `成功（資料庫名稱：${db.title?.map(t => t.plain_text).join('') || '未命名'}）`;
-      out.第2步_欄位 = Object.entries(db.properties || {}).map(([n, v]) => `${JSON.stringify(n)}（${v.type}）`);
-      out.第3步_需要的欄位 = Object.fromEntries(Object.entries(PROD_F).map(([, n]) => {
-        const k = Object.keys(db.properties || {}).find(x => _norm(x) === _norm(n));
-        return [n, k ? `找到（${db.properties[k].type}）` : '找不到'];
-      }));
-      const r2 = await nFetch(`https://api.notion.com/v1/databases/${DB_PRODUCT}/query`, {
-        method: 'POST', headers: nHeaders(), body: JSON.stringify({ page_size: 3 }),
-      });
-      const q = await r2.json();
-      if (!q.results) { out.第4步_讀資料 = `失敗：${q.message}`; return json(out); }
-      out.第4步_讀資料 = q.results.length ? `成功，前 ${q.results.length} 筆：` : '資料庫是空的';
-      out.前幾筆 = q.results.map(pg => ({
-        商品編號: prodText(prodProp(pg.properties, PROD_F.code)),
-        商品名稱: prodText(prodProp(pg.properties, PROD_F.name)),
-        現場價錢: prodProp(pg.properties, PROD_F.price)?.number ?? null,
-        重量:     prodProp(pg.properties, PROD_F.weight)?.number ?? null,
-      }));
-      return json(out);
-    }
-
-    if (action === 'product_search') {
-      const code = url.searchParams.get('code') || '';
-      if (!code) return json([]);
-      // 依新商品資料庫的「商品編號」（文字欄）搜尋
-      let filter;
-      try { filter = await prodCodeFilter(code, false); }
-      catch (e) { return json({ error: e.message }, 500); }
-      const res = await nFetch(`https://api.notion.com/v1/databases/${DB_PRODUCT}/query`, {
-        method: 'POST', headers: nHeaders(),
-        body: JSON.stringify({ page_size: 5, filter }),
-      });
-      const data = await res.json();
-      if (!data.results) return json({ error: `商品資料庫查詢失敗：${data.message || '未知錯誤'}` }, 500);
-      const results = data.results.map(page => {
-        const props  = page.properties || {};
-        return {
-          code:   prodText(prodProp(props, PROD_F.code)),
-          name:   prodText(prodProp(props, PROD_F.name)),
-          price:  prodPrice(prodProp(props, PROD_F.price)),
-          weight: prodWeight(prodProp(props, PROD_F.weight)),
-        };
-      }).filter(r => r.code);
-      return json(results);
-    }
-
-    // ── DB STATS ─────────────────────────────────────────────────
-    if (action === 'db_stats') {
-      const results = await queryAll(DB_REQ);
-      const ids = results.map(page => {
-        const props = page.properties || {};
-        const titleP = Object.values(props).find(v => v.type === 'title');
-        const displayP = Object.values(props).find(v => v.id === 'yHX%7B');
-        return displayP?.formula?.string || titleP?.title?.[0]?.plain_text || '';
-      }).filter(Boolean);
-      // Find RE numbers
-      const nums = ids.map(id => { const m = id.match(/^RE(\d+)$/i); return m ? parseInt(m[1]) : null; }).filter(n => n !== null).sort((a,b)=>a-b);
-      const max = nums.length ? Math.max(...nums) : 0;
-      const missing = [];
-      for (let i = 1; i <= max; i++) { if (!nums.includes(i)) missing.push(`RE${i}`); }
-      return json({ total: results.length, maxId: `RE${max}`, idCount: nums.length, missing });
-    }
-
-    // ── BATCH FILL EST WEIGHT ───────────────────────────────────
-    if (action === 'batch_fill_weight') {
-      // 1. Get all req pages missing estWeight
-      const results = await queryAll(DB_REQ);
-      const needsFill = results.filter(page => {
-        const props = page.properties || {};
-        const weightP = Object.values(props).find(v => v.id === '%5ECer');
-        const codeP   = Object.values(props).find(v => v.id === '%60AG%5B');
-        const hasWeight = weightP?.number > 0;
-        const hasCode   = codeP?.rich_text?.[0]?.plain_text;
-        return hasCode && !hasWeight;
-      });
-
-      if (!needsFill.length) return json({ ok: true, updated: 0, message: '沒有需要補齊的資料' });
-
-      // 2. Get unique codes
-      const codeMap = {}; // code -> { weight }
-      const codes = [...new Set(needsFill.map(page => {
-        const codeP = Object.values(page.properties).find(v => v.id === '%60AG%5B');
-        return codeP?.rich_text?.[0]?.plain_text || '';
-      }).filter(Boolean))];
-
-      // 3. Query product DB for each code
-      await Promise.all(codes.map(async code => {
-        try {
-          const res = await nFetch(`https://api.notion.com/v1/databases/${DB_PRODUCT}/query`, {
-            method: 'POST', headers: nHeaders(),
-            body: JSON.stringify({ page_size: 1, filter: await prodCodeFilter(code, true) }),
-          });
-          const data = await res.json();
-          const page = data.results?.[0];
-          if (page) {
-            codeMap[code] = prodWeight(prodProp(page.properties, PROD_F.weight));
-          }
-        } catch(e) { codeMap[code] = 0; }
-      }));
-
-      // 4. Update each req page
-      let updated = 0, skipped = 0;
-      await Promise.all(needsFill.map(async page => {
-        const props = page.properties || {};
-        const codeP  = Object.values(props).find(v => v.id === '%60AG%5B');
-        const qtyP   = Object.values(props).find(v => v.id === 'Poce');
-        const code   = codeP?.rich_text?.[0]?.plain_text || '';
-        const qty    = qtyP?.number ?? 1;
-        const unitW  = codeMap[code] ?? 0;
-        if (!unitW) { skipped++; return; }
-        const estWeight = unitW * qty;
-        try {
-          await nFetch(`https://api.notion.com/v1/pages/${page.id}`, {
-            method: 'PATCH', headers: nHeaders(),
-            body: JSON.stringify({ properties: { '%5ECer': { number: estWeight } } }),
-          });
-          updated++;
-        } catch(e) { skipped++; }
-      }));
-
-      return json({ ok: true, updated, skipped, total: needsFill.length });
-    }
-
-    return json({ error: 'Unknown action' }, 400);
-
   } catch (e) {
-    return json({ error: e.message }, 500);
+    return res.status(500).json({ error: e.message || String(e) });
   }
-}
-
-// ── REQ property writer ──────────────────────────────────────────
-function reqToProps(r) {
-  const p = {};
-  if (r.notionId)            p['title']      = { title:      [{ text: { content: r.notionId } }] };
-  if (r.client  !== undefined) p['A:>i']     = { rich_text:  [{ text: { content: r.client  || '' } }] };
-  if (r.name    !== undefined) p['Tcrm']     = { rich_text:  [{ text: { content: r.name    || '' } }] };
-  if (r.code    !== undefined) p['`AG[']     = { rich_text:  [{ text: { content: r.code    || '' } }] };
-  if (r.qty     !== undefined) p['Poce']     = { number:     Number(r.qty)   || 0 };
-  if (r.price   !== undefined) p['UISe']     = { number:     Number(r.price) || 0 };
-  if (r.quote   !== undefined) p['cAk\\']    = { number:     Number(r.quote) || 0 };
-  if (r.shop)                  p['SAe`']     = { select:     { name: r.shop   } };
-  if (r.shiptoPageId)          p['QUXO']     = { relation:   [{ id: r.shiptoPageId }] };
-  if (r.type)                  p[']yoq']     = { select:     { name: r.type   } };
-  if (r.attr)                  p['_o~{']     = { select:     { name: r.attr   } };
-  if (r.submit)                p['uF:Y']     = { date:       { start: r.submit } };
-  if (r.done)                  p['ExlH']     = { date:       { start: r.done   } };
-  if (r.pay)                   p['ZFWL']     = { status:     { name: r.pay  } };
-  if (r.ship)                  p['ko~P']     = { status:     { name: r.ship } };
-  if (r.buy)                   p['lA:_']     = { status:     { name: r.buy  } };
-  if (r.estWeight !== undefined) p['%5ECer']  = { number: Number(r.estWeight) || 0 };
-  if (r.twQuote  !== undefined) p['X%3E%7BZ'] = { number: Number(r.twQuote)   || 0 };
-  return p;
-}
+};
